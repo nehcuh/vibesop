@@ -34,7 +34,7 @@
 - **Self-verify**: Run lint/build/test before declaring done, read output to confirm PASS
 - **Banned phrases**: "I fixed it, you try" / "Should be fine" / "Probably passes" / "Theoretically correct" / "I think it's fixed"
 
-Multi-model cross-check (for financial/critical logic): Claude analysis → Codex verification → label `✅ reviewed / ⚠️ unverified`
+Multi-model cross-check (for critical logic): Claude analysis → Codex verification → label `✅ reviewed / ⚠️ unverified`
 
 ### Handoff Checklist (before session-end)
 

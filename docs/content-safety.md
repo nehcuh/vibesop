@@ -53,14 +53,14 @@ Source: [URL] - Paragraph X / Line Y / Tweet Z
 1. **Content to be posted** (detected "post/tweet/share" keywords)
 2. **Citing others' views** (contains @username or "XXX said/thinks/suggests")
 3. **Data/number reasoning** (specific numbers, percentages, amounts)
-4. **Strategy/financial decisions** (involving bets/positions/adjustments)
+4. **Critical business decisions** (involving important parameters/configurations)
 
 **Auto-execution flow**:
 ```
 Step 1: Detect critical content
   |
 Step 2: Output prompt
-  "This is critical content (citation/numbers/financial), need multi-model verification?
+  "This is critical content (citation/numbers/business logic), need multi-model verification?
    - [y] Claude -> Codex/other cross-verification
    - [n] Skip verification (at your own risk)
    - [s] Save draft, manual check later"
@@ -136,7 +136,7 @@ Is this correct? Please point out any drift.
 
 ### Adversarial Error-Checking (Critical Code)
 - During verification: "If I were an attacker, how would I find vulnerabilities?" / "What happens in extreme cases?" / "Any edge cases missed?"
-- Financial code -> Must list 3 potential risk points
+- Critical business code -> Must list 3 potential risk points
 
 ---
 

@@ -30,7 +30,6 @@
 
 | Scenario | Action | ❌ NOT when |
 |----------|--------|------------|
-| URL/article/"analyze this" | insight-extractor | User just wants quick summary; URL is tool docs for implementation |
 | Stuck >15min | experience-evolution | Known issue in patterns.md; fix is obvious just time-consuming |
 | 3 consecutive failures | Pause, revert to debugging Phase 1 | Each failure is a different problem (not same root cause) |
 | Complex task >5 files | Suggest planning-with-files | User gave step-by-step instructions; many files but each <10 lines |

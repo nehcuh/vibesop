@@ -1,6 +1,6 @@
 # Builder Workflow Template for Claude Code
 
-A battle-tested workflow system for Claude Code, built from months of daily 8h+ usage across content creation, quantitative trading, and open-source projects.
+A battle-tested workflow system for Claude Code, built from months of daily 8h+ usage across multiple projects.
 
 **Not a tutorial. Not a toy config. A production workflow that actually ships.**
 
@@ -62,11 +62,11 @@ builder-workflow-template/
 │   └── active-tasks.json         # Cross-session task registry
 │
 ├── skills/                       # Reusable skill definitions
-│   ├── session-end/              # Auto wrap-up: save progress + commit + record
-│   ├── verification-before-completion/  # "Run the test. Read the output. THEN claim."
-│   ├── systematic-debugging/     # 5-phase debugging (recall → root cause → fix)
-│   ├── planning-with-files/      # File-based planning for complex tasks
-│   └── experience-evolution/     # Auto-accumulate project knowledge
+│   ├── session-end/SKILL.md              # Auto wrap-up: save progress + commit + record
+│   ├── verification-before-completion/SKILL.md  # "Run the test. Read the output. THEN claim."
+│   ├── systematic-debugging/SKILL.md     # 5-phase debugging (recall → root cause → fix)
+│   ├── planning-with-files/SKILL.md      # File-based planning for complex tasks
+│   └── experience-evolution/SKILL.md     # Auto-accumulate project knowledge
 │
 ├── agents/                       # Custom agent definitions
 │   ├── pr-reviewer.md            # Code review agent
@@ -136,7 +136,7 @@ The most impactful rule: Claude cannot claim work is done without running the ve
 ### Three-Tier Task Routing
 
 Not every task needs Opus. The routing system automatically matches task complexity to model tier:
-- **Opus**: Financial logic, security-critical, complex reasoning
+- **Opus**: Critical logic, security-sensitive, complex reasoning
 - **Sonnet**: Daily development, analysis, most coding tasks
 - **Haiku**: Simple queries, subagent tasks, quick lookups
 - **Codex**: Cross-verification, code review, second opinions
@@ -214,8 +214,7 @@ This template encodes several principles learned from daily AI-assisted developm
 This template draws from:
 - [Manus](https://manus.im/) file-based planning approach
 - OWASP Top 10 for security review patterns
-- Kelly Criterion for position sizing frameworks
-- Real-world experience from building [x-reader](https://github.com/runesleo/x-reader) (600+ stars) and other open-source projects
+- Real-world experience from building [x-reader](https://github.com/runesleo/x-reader) (650+ stars) and other open-source projects
 
 ## License
 

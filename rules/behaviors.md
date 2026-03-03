@@ -19,10 +19,10 @@ Violating this = branch divergence → pull conflicts → 10x cleanup time. **No
 ### Tier 1: Sonnet Evaluates Escalation
 
 **Immediately escalate to Opus (keyword match)**:
-- Financial logic/secrets/wallets
-- Data analysis/PnL/backtesting/core logic
+- Critical business logic/secrets/credentials
+- Data analysis/metrics/core business logic
 - Critical project core code modifications
-- Calculations involving money, position sizing
+- Calculations involving important business metrics
 
 **Sonnet handles directly**:
 - Docs/comments/README/daily Q&A

@@ -6,11 +6,11 @@
 
 ## Agent Task Assignment
 
-### Opus Tier (Financial/Critical, highest quality)
+### Opus Tier (Critical, highest quality)
 
 | Agent | Scope | Core Duty |
 |-------|-------|-----------|
-| **your-critical-agent** | Critical business logic | Strategy validation, risk control |
+| **your-critical-agent** | Critical business logic | Validation, quality control |
 
 ### Sonnet Tier (Complex tasks, balance quality/speed)
 
@@ -98,10 +98,10 @@ You are working on [project-name].
 
 ### Sensitive Code (Never outsource)
 
-- Transaction execution logic (orders, cancellations, settlements)
-- Wallet operations (signing, transfers, authorizations)
+- Critical execution logic (orders, state changes, settlements)
+- Credential operations (signing, auth, key management)
 - Secret/Token handling
-- Financial calculations (positions, risk control)
+- Core business calculations (metrics, risk assessment)
 
 ---
 
@@ -113,7 +113,7 @@ You are working on [project-name].
 
 | Scenario | Must Cross-Verify |
 |----------|-------------------|
-| **Financial/P&L analysis** | Yes |
+| **Critical business analysis** | Yes |
 | **Architecture/system design** | Yes |
 | **Strategy decisions** | Yes |
 | **Risk assessment** | Yes |

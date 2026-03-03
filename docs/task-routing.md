@@ -6,8 +6,8 @@
 
 | Task Type | Route | Notes |
 |-----------|-------|-------|
-| Critical logic/financial/secrets/wallet | **Opus exclusive** | Safety floor, never outsource |
-| Data analysis/backtesting/P&L | **Opus exclusive** | Optional: Opus -> Codex verify |
+| Critical logic/secrets/credentials | **Opus exclusive** | Safety floor, never outsource |
+| Data analysis/core metrics/business logic | **Opus exclusive** | Optional: Opus -> Codex verify |
 | Critical code review | **Opus lead -> Codex audit** | Multi-model cross-check |
 | New feature >50 lines (critical) | **Opus write -> Codex review** | Maker-checker |
 | Bug fix (critical) | **Opus fix -> Codex verify** | Prevent regression |
@@ -41,7 +41,7 @@
 
 | Tier | Model | Source | Monthly | Typical Scenario | Method | Status |
 |------|-------|--------|---------|-----------------|--------|--------|
-| **L1 Top** | Opus | Claude Max | $200-250 | Critical/financial/reasoning | Main session | Active |
+| **L1 Top** | Opus | Claude Max | $200-250 | Critical/complex reasoning | Main session | Active |
 | **L2 Workhorse** | Sonnet | Claude Max | Included | Daily dev/analysis | Main/subagent | Active |
 | **L3 Economy** | Haiku | Claude Max | Included | Simple queries/subagent | `Task(model="haiku")` | Active |
 | **L3 Audit** | Codex (GPT) | ChatGPT Plus | $20 | Code review/cross-verify | MCP or CLI | Active |
