@@ -216,6 +216,10 @@ This template draws from:
 - OWASP Top 10 for security review patterns
 - Real-world experience from building [x-reader](https://github.com/runesleo/x-reader) (650+ stars) and other open-source projects
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=runesleo/claude-code-workflow&type=Date)](https://star-history.com/#runesleo/claude-code-workflow&Date)
+
 ## License
 
 MIT — Use it, fork it, make it yours.
