@@ -6,6 +6,22 @@ A battle-tested workflow foundation for Claude Code today, evolving into a porta
 
 **Not a tutorial. Not a toy config. A production workflow that actually ships — now with a provider-neutral core spec in phase 1.**
 
+## Origin & Fork Status
+
+This project is a fork of [runesleo/claude-code-workflow](https://github.com/runesleo/claude-code-workflow) with substantial architectural refactoring:
+
+- **Original Author**: [@runes_leo](https://x.com/runes_leo)
+- **Fork Maintainer**: [@nehcuh](https://github.com/nehcuh)
+- **Major Changes**:
+  - Modularized CLI into 6 Ruby library modules (`lib/vibe/*.rb`)
+  - Added comprehensive unit test suite (`test/`)
+  - Added Chinese documentation (`README.zh-CN.md`)
+  - Enhanced overlay system with runtime preference examples (`examples/`)
+  - Improved path safety and symlink handling for macOS compatibility
+  - Refactored generator architecture for better maintainability
+
+While this fork maintains the original MIT license and credits the original author, the codebase has diverged significantly through refactoring and new features.
+
 ## Why This Exists
 
 Claude Code is powerful out of the box, but without structure it becomes a smart assistant that forgets everything between sessions. This template turns it into a **persistent, self-improving development partner** that:
@@ -362,6 +378,15 @@ This template draws from:
 - OWASP Top 10 for security review patterns
 - Real-world experience from building [x-reader](https://github.com/runesleo/x-reader) (650+ stars) and other open-source projects
 
+## Contributors
+
+- **Original Author**: [@runes_leo](https://x.com/runes_leo) - Initial workflow design and implementation
+- **Fork Maintainer**: [@nehcuh](https://github.com/nehcuh) - Modularization, testing, and Chinese localization
+
+## Acknowledgments
+
+This project builds upon the excellent foundation laid by [@runes_leo](https://x.com/runes_leo)'s original claude-code-workflow. The fork aims to enhance maintainability and extend the workflow to serve Chinese-speaking developers while preserving the core philosophy.
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=runesleo/claude-code-workflow&type=Date)](https://star-history.com/#runesleo/claude-code-workflow&Date)
@@ -370,6 +395,10 @@ This template draws from:
 
 MIT — Use it, fork it, make it yours.
 
+Original work Copyright (c) 2024 runes_leo
+Modified work Copyright (c) 2025 nehcuh
+
 ---
 
-Built by [@runes_leo](https://x.com/runes_leo) — more AI tools at [leolabs.me](https://leolabs.me) — [Telegram Community](https://t.me/runesgang)
+**Original Author**: [@runes_leo](https://x.com/runes_leo) — more AI tools at [leolabs.me](https://leolabs.me) — [Telegram Community](https://t.me/runesgang)
+**Fork Maintainer**: [@nehcuh](https://github.com/nehcuh)

@@ -6,6 +6,22 @@
 
 **不是教程，不是玩具配置。是一套真正能落地交付的生产工作流——现已具备跨工具的可移植核心规范。**
 
+## 项目来源与 Fork 状态
+
+本项目 fork 自 [runesleo/claude-code-workflow](https://github.com/runesleo/claude-code-workflow)，并进行了大量架构重构：
+
+- **原作者**：[@runes_leo](https://x.com/runes_leo)
+- **Fork 维护者**：[@nehcuh](https://github.com/nehcuh)
+- **主要变更**：
+  - 将 CLI 模块化为 6 个 Ruby 库模块（`lib/vibe/*.rb`）
+  - 添加完整的单元测试套件（`test/`）
+  - 添加中文文档（`README.zh-CN.md`）
+  - 增强 overlay 系统，提供运行时偏好示例（`examples/`）
+  - 改进路径安全和符号链接处理，提升 macOS 兼容性
+  - 重构生成器架构，提升可维护性
+
+本 fork 保持原始 MIT 许可证并致谢原作者，但代码库已通过重构和新功能产生显著差异。
+
 ## 为什么需要它
 
 Claude Code 开箱即强大，但缺乏结构时它只是一个「每次重新开始」的智能助手。这套模板将它变成一个**持久化、可自我进化的开发伙伴**：
@@ -346,10 +362,23 @@ bin/vibe-smoke
 - 可选：Codex CLI 用于交叉验证
 - 可选：Ollama 用于本地模型回退
 
+## 贡献者
+
+- **原作者**：[@runes_leo](https://x.com/runes_leo) - 初始工作流设计与实现
+- **Fork 维护者**：[@nehcuh](https://github.com/nehcuh) - 模块化、测试和中文本地化
+
+## 致谢
+
+本项目基于 [@runes_leo](https://x.com/runes_leo) 的原始 claude-code-workflow 优秀基础构建。本 fork 旨在提升可维护性并扩展工作流以服务中文开发者，同时保留核心理念。
+
 ## 许可
 
 MIT — 随意使用、fork、改造。
 
+原始作品版权所有 (c) 2024 runes_leo
+修改作品版权所有 (c) 2025 nehcuh
+
 ---
 
-构建者 [@runes_leo](https://x.com/runes_leo) — 更多 AI 工具见 [leolabs.me](https://leolabs.me) — [Telegram 社区](https://t.me/runesgang)
+**原作者**：[@runes_leo](https://x.com/runes_leo) — 更多 AI 工具见 [leolabs.me](https://leolabs.me) — [Telegram 社区](https://t.me/runesgang)
+**Fork 维护者**：[@nehcuh](https://github.com/nehcuh)
