@@ -1,7 +1,7 @@
 # Vibe workflow for Warp
 
 Generated from the portable `core/` spec with profile `warp-default`.
-Applied overlay: `none`
+Applied overlay: `example-regulated-project` from `examples/project-overlay.yaml`
 
 This file is intended as the Warp project rule entrypoint for the repository.
 
@@ -14,13 +14,15 @@ This file is intended as the Warp project rule entrypoint for the repository.
 - `root-cause-debugging` (`mandatory`) — Investigate root cause before attempting fixes and reassess after repeated failures.
 - `security-escalation` (`mandatory`) — Treat destructive commands, network egress, secret access, and obfuscation as security-sensitive actions.
 - `record-reusable-learning` (`recommended`) — Record user corrections, repeated failures, and counter-intuitive discoveries for reuse.
+- `project-context-is-release-log` (`recommended`) — Keep `PROJECT_CONTEXT.md` current for release blockers, migrations, and rollback notes.
+- `regulated-data-review` (`mandatory`) — Treat customer-data exports, redaction, and retention changes as review-required work.
 
 ## Capability routing
 
-- `critical_reasoner` → `warp.primary-frontier-model`
+- `critical_reasoner` → `openai.high-reasoning`
 - `workhorse_coder` → `warp.default-agent-model`
 - `fast_router` → `warp.fast-model`
-- `independent_verifier` → `second-model.or.manual-review`
+- `independent_verifier` → `second-model.cross-family`
 - `cheap_local` → `local.external-runner`
 
 ## Mandatory portable skills

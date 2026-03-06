@@ -1,7 +1,7 @@
 # Warp workflow notes
 
 Generated target: `warp`
-Applied overlay: `none`
+Applied overlay: `example-regulated-project` from `examples/project-overlay.yaml`
 
 ## Conservative mapping
 

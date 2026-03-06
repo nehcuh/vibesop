@@ -1,10 +1,11 @@
 # Safety policy
 
-Applied overlay: `none`
+Applied overlay: `example-regulated-project` from `examples/project-overlay.yaml`
 
 ## Safety behavior policy
 
 - `security-escalation` (`mandatory`) — Treat destructive commands, network egress, secret access, and obfuscation as security-sensitive actions.
+- `regulated-data-review` (`mandatory`) — Treat customer-data exports, redaction, and retention changes as review-required work.
 
 ## Native config overlay
 

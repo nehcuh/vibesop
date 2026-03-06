@@ -2,7 +2,7 @@
 
 Generated target: `warp`
 Active profile: `warp-default`
-Applied overlay: `none`
+Applied overlay: `example-regulated-project` from `examples/project-overlay.yaml`
 
 ## Routing behavior policies
 
@@ -62,10 +62,10 @@ Applied overlay: `none`
 
 ## Active mapping
 
-- `critical_reasoner` → `warp.primary-frontier-model`
+- `critical_reasoner` → `openai.high-reasoning`
 - `workhorse_coder` → `warp.default-agent-model`
 - `fast_router` → `warp.fast-model`
-- `independent_verifier` → `second-model.or.manual-review`
+- `independent_verifier` → `second-model.cross-family`
 - `cheap_local` → `local.external-runner`
 
 ## Routing defaults

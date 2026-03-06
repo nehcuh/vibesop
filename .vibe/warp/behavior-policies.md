@@ -1,7 +1,7 @@
 # Behavior policies
 
 Generated target: `warp`
-Applied overlay: `none`
+Applied overlay: `example-regulated-project` from `examples/project-overlay.yaml`
 
 > **Note:** Source refs refer to files in the portable workflow repository, not this generated output directory.
 
@@ -29,3 +29,9 @@ Applied overlay: `none`
 - `sunday-rule` (workflow, recommended, group: optional)
   - Batch workflow or system optimization separately from delivery work unless it blocks production.
   - source refs: `rules/behaviors.md`
+- `project-context-is-release-log` (project_memory, recommended, group: always_on)
+  - Keep `PROJECT_CONTEXT.md` current for release blockers, migrations, and rollback notes.
+  - source refs: `examples/project-overlay.yaml`
+- `regulated-data-review` (safety, mandatory, group: safety)
+  - Treat customer-data exports, redaction, and retention changes as review-required work.
+  - source refs: `examples/project-overlay.yaml`
