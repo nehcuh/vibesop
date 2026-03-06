@@ -86,8 +86,16 @@ module Vibe
     end
 
     def paths_overlap?(left, right)
-      left_root = File.expand_path(left)
-      right_root = File.expand_path(right)
+      # Resolve symlinks to detect real path overlaps
+      begin
+        left_root = File.realpath(File.expand_path(left))
+        right_root = File.realpath(File.expand_path(right))
+      rescue Errno::ENOENT
+        # If paths don't exist yet, fall back to string comparison
+        left_root = File.expand_path(left)
+        right_root = File.expand_path(right)
+      end
+
       left_root.start_with?("#{right_root}/") || right_root.start_with?("#{left_root}/")
     end
 

@@ -342,10 +342,28 @@ class VibeCLI
     return output_root unless paths_overlap?(output_root, destination_root)
 
     destination_name = File.basename(destination_root)
-    destination_name = "root" if destination_name.nil? || destination_name.empty? || destination_name == File::SEPARATOR
+    destination_name = sanitize_directory_name(destination_name)
+    destination_name = "root" if destination_name.empty?
     destination_digest = Digest::SHA256.hexdigest(destination_root)[0, 12]
 
-    File.join(Dir.home, ".vibe-generated", "#{destination_name}-#{destination_digest}", target)
+    home_dir = Dir.home
+    abort "Cannot determine home directory for external staging" if home_dir.nil? || home_dir.empty?
+
+    File.join(home_dir, ".vibe-generated", "#{destination_name}-#{destination_digest}", target)
+  end
+
+  def sanitize_directory_name(name)
+    return "root" if name.nil? || name.empty? || name == File::SEPARATOR
+
+    # Replace special characters with hyphens, preserve alphanumeric, underscore, and hyphen
+    sanitized = name.gsub(/[^a-zA-Z0-9_-]/, "-")
+    # Collapse consecutive hyphens
+    sanitized = sanitized.gsub(/-+/, "-")
+    # Remove leading/trailing hyphens (use gsub to handle both ends)
+    sanitized = sanitized.gsub(/^-+|-+$/, "")
+
+    # Return "root" if sanitization resulted in empty string
+    sanitized.empty? ? "root" : sanitized
   end
 
   def resolve_profile(target, requested_profile)

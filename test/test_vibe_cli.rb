@@ -70,6 +70,42 @@ class TestVibeCLI < Minitest::Test
     FileUtils.rm_rf(switch_repo_root) if switch_repo_root && File.exist?(switch_repo_root)
   end
 
+  def test_sanitize_directory_name_with_special_chars
+    assert_equal "my-project", @cli.send(:sanitize_directory_name, "my project")
+    assert_equal "my-project", @cli.send(:sanitize_directory_name, "my@project")
+    assert_equal "project-name", @cli.send(:sanitize_directory_name, "project/name")
+    assert_equal "root", @cli.send(:sanitize_directory_name, "///")
+    assert_equal "test", @cli.send(:sanitize_directory_name, "-test-")
+    assert_equal "my-project", @cli.send(:sanitize_directory_name, "my---project")
+  end
+
+  def test_sanitize_directory_name_with_unicode
+    assert_equal "my-project", @cli.send(:sanitize_directory_name, "my项目project")
+    assert_equal "test-123", @cli.send(:sanitize_directory_name, "test-123")
+  end
+
+  def test_resolve_output_root_with_special_char_destination
+    # Create a destination that will overlap with default output root
+    # Default output root is "generated/warp" relative to repo root
+    # Make destination a parent of the output root to trigger overlap
+    dest_with_spaces = File.join(@repo_root, "generated")
+    FileUtils.mkdir_p(dest_with_spaces)
+
+    output = @cli.send(
+      :resolve_output_root_for_use,
+      target: "warp",
+      destination_root: dest_with_spaces,
+      explicit_output: nil
+    )
+
+    # Should use external staging due to overlap
+    assert_includes output, ".vibe-generated"
+    # Should contain sanitized name
+    assert_match %r{generated-[a-f0-9]{12}/warp$}, output
+  ensure
+    # Don't remove generated dir as it's part of the repo
+  end
+
   private
 
   def build_manifest(target)
