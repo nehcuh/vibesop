@@ -126,3 +126,110 @@ skills:
       - Read
       - Bash
     safety_level: trusted_builtin
+
+  # External Superpowers skill pack (conditional on installation)
+  - id: superpowers/tdd
+    namespace: superpowers
+    entrypoint: external
+    intent: Test-driven development workflow with red-green-refactor cycle.
+    trigger_mode: suggest
+    priority: P2
+    supported_targets:
+      claude-code: external-skill
+      codex-cli: manual
+      cursor: manual
+      opencode: external-skill
+      warp: manual
+    safety_level: external_reviewed
+    conditional: superpowers_installed
+
+  - id: superpowers/brainstorm
+    namespace: superpowers
+    entrypoint: external
+    intent: Structured brainstorming and ideation sessions.
+    trigger_mode: manual
+    priority: P2
+    supported_targets:
+      claude-code: external-skill
+      codex-cli: manual
+      cursor: manual
+      opencode: external-skill
+      warp: manual
+    safety_level: external_reviewed
+    conditional: superpowers_installed
+
+  - id: superpowers/refactor
+    namespace: superpowers
+    entrypoint: external
+    intent: Systematic code refactoring with safety checks.
+    trigger_mode: suggest
+    priority: P2
+    supported_targets:
+      claude-code: external-skill
+      codex-cli: manual
+      cursor: manual
+      opencode: external-skill
+      warp: manual
+    safety_level: external_reviewed
+    conditional: superpowers_installed
+
+  - id: superpowers/debug
+    namespace: superpowers
+    entrypoint: external
+    intent: Advanced debugging workflows beyond systematic-debugging.
+    trigger_mode: suggest
+    priority: P2
+    supported_targets:
+      claude-code: external-skill
+      codex-cli: manual
+      cursor: manual
+      opencode: external-skill
+      warp: manual
+    safety_level: external_reviewed
+    conditional: superpowers_installed
+
+  - id: superpowers/architect
+    namespace: superpowers
+    entrypoint: external
+    intent: System architecture design and documentation.
+    trigger_mode: manual
+    priority: P2
+    supported_targets:
+      claude-code: external-skill
+      codex-cli: manual
+      cursor: manual
+      opencode: external-skill
+      warp: manual
+    safety_level: external_reviewed
+    conditional: superpowers_installed
+
+  - id: superpowers/review
+    namespace: superpowers
+    entrypoint: external
+    intent: Code review with comprehensive quality checks.
+    trigger_mode: suggest
+    priority: P2
+    supported_targets:
+      claude-code: external-skill
+      codex-cli: manual
+      cursor: manual
+      opencode: external-skill
+      warp: manual
+    safety_level: external_reviewed
+    conditional: superpowers_installed
+
+  - id: superpowers/optimize
+    namespace: superpowers
+    entrypoint: external
+    intent: Performance optimization and profiling guidance.
+    trigger_mode: manual
+    priority: P2
+    supported_targets:
+      claude-code: external-skill
+      codex-cli: manual
+      cursor: manual
+      opencode: external-skill
+      warp: manual
+    safety_level: external_reviewed
+    conditional: superpowers_installed
+

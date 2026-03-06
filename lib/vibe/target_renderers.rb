@@ -34,6 +34,23 @@ module Vibe
         end
       end
 
+      # Conditionally include skill-triggers.md with Superpowers integration info
+      superpowers_status = detect_superpowers
+      if superpowers_status != :not_installed
+        skill_triggers_source = File.join(@repo_root, "rules", "skill-triggers.md")
+        skill_triggers_dest = File.join(output_root, "rules", "skill-triggers.md")
+
+        if File.exist?(skill_triggers_source)
+          content = File.read(skill_triggers_source)
+
+          # Append Superpowers integration section
+          superpowers_section = generate_superpowers_section(superpowers_status)
+          enhanced_content = content + "\n" + superpowers_section
+
+          File.write(skill_triggers_dest, enhanced_content)
+        end
+      end
+
       write_json(File.join(output_root, "settings.json"), claude_settings_config(manifest))
 
       claude_dir = File.join(output_root, ".vibe", "claude-code")
@@ -255,6 +272,48 @@ module Vibe
       File.write(File.join(warp_dir, "skills.md"), render_skills_doc(manifest))
       File.write(File.join(warp_dir, "safety.md"), render_safety_doc(manifest))
       File.write(File.join(warp_dir, "workflow-notes.md"), render_warp_workflow_notes_doc(manifest))
+    end
+
+    private
+
+    def generate_superpowers_section(status)
+      config = load_integration_config("superpowers")
+      return "" unless config
+
+      skills = config.dig("skills") || []
+      location = case status
+                 when :claude_plugin then "~/.claude/plugins/superpowers"
+                 when :skills_symlink then "~/.claude/skills/superpowers-*"
+                 when :local_clone then "~/superpowers"
+                 when :cursor_plugin then "Cursor plugins"
+                 else "Unknown"
+                 end
+
+      <<~MD
+
+        ## Superpowers Skill Pack Integration
+
+        **Status**: ✅ Installed (#{location})
+
+        The following Superpowers skills are available for on-demand invocation:
+
+        | Skill | Trigger | Description |
+        |-------|---------|-------------|
+      MD
+        .concat(
+          skills.map do |skill|
+            "| `#{skill['id']}` | #{skill['trigger'] || 'Manual'} | #{skill['description']} |"
+          end.join("\n")
+        )
+        .concat(<<~MD
+
+
+          **Usage**: Invoke skills using `/skill <skill-id>` or let automatic triggers activate them.
+
+          **Security**: All Superpowers skills have been reviewed and are considered safe for use.
+          See `core/integrations/superpowers.yaml` for full skill definitions.
+        MD
+        )
     end
   end
 end
