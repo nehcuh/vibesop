@@ -1,5 +1,5 @@
 schema_version: 1
-status: phase-1-manual
+status: phase-6-buildable
 
 legacy_labels:
   Opus: critical_reasoner

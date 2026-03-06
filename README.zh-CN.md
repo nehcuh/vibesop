@@ -1,0 +1,384 @@
+# Claude Code Workflow
+
+[English](README.md) | **中文**
+
+经过实战检验的 AI 编程工作流基础设施。从 Claude Code 起步，已演化为支持 Claude Code、Codex CLI、OpenCode、Cursor、Warp 等多目标的可移植 vibe coding 配置平台。
+
+**不是教程，不是玩具配置。是一套真正能落地交付的生产工作流——现已具备跨工具的可移植核心规范。**
+
+## 项目来源与 Fork 状态
+
+本项目 fork 自 [runesleo/claude-code-workflow](https://github.com/runesleo/claude-code-workflow)，并进行了大量架构重构：
+
+- **原作者**：[@runes_leo](https://x.com/runes_leo)
+- **Fork 维护者**：[@nehcuh](https://github.com/nehcuh)
+- **主要变更**：
+  - 将 CLI 模块化为 6 个 Ruby 库模块（`lib/vibe/*.rb`）
+  - 添加完整的单元测试套件（`test/`）
+  - 添加中文文档（`README.zh-CN.md`）
+  - 增强 overlay 系统，提供运行时偏好示例（`examples/`）
+  - 改进路径安全和符号链接处理，提升 macOS 兼容性
+  - 重构生成器架构，提升可维护性
+
+本 fork 保持原始 MIT 许可证并致谢原作者，但代码库已通过重构和新功能产生显著差异。
+
+## 为什么需要它
+
+Claude Code 开箱即强大，但缺乏结构时它只是一个「每次重新开始」的智能助手。这套模板将它变成一个**持久化、可自我进化的开发伙伴**：
+
+- 记住过去的错误并自动应用经验教训
+- 跨长会话管理上下文而不偏离
+- 按能力层级将任务路由到正确的模型
+- 强制在声称完成前进行验证（不再有「应该可以了」）
+- 自动保存进度——关闭窗口不会丢失任何工作
+
+## 架构概览
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    项目 Overlay                       │
+│  .vibe/overlay.yaml 或 --overlay FILE               │
+│  项目级自定义: 配置映射 / 行为策略 / 原生配置补丁     │
+└──────────────────────┬──────────────────────────────┘
+                       │ 合并
+┌──────────────────────▼──────────────────────────────┐
+│                  可移植核心 (core/)                    │
+│                                                      │
+│  models/tiers.yaml      能力层级定义                  │
+│  models/providers.yaml  目标/供应商配置映射            │
+│  skills/registry.yaml   可移植技能注册表              │
+│  security/policy.yaml   P0/P1/P2 安全策略             │
+│  policies/behaviors.yaml 可移植行为策略               │
+└──────────────────────┬──────────────────────────────┘
+                       │ bin/vibe build
+┌──────────────────────▼──────────────────────────────┐
+│               目标适配器 (targets/)                    │
+│                                                      │
+│  claude-code.md   codex-cli.md   cursor.md           │
+│  opencode.md      warp.md                            │
+└──────────────────────┬──────────────────────────────┘
+                       │ 渲染
+┌──────────────────────▼──────────────────────────────┐
+│              生成输出 (generated/<target>/)            │
+│                                                      │
+│  Claude Code → CLAUDE.md + rules/ + settings.json    │
+│  Codex CLI   → AGENTS.md + .vibe/codex-cli/*         │
+│  Cursor      → AGENTS.md + .cursor/rules/*.mdc       │
+│  OpenCode    → AGENTS.md + opencode.json             │
+│  Warp        → WARP.md   + .vibe/warp/*              │
+└─────────────────────────────────────────────────────┘
+```
+
+### 数据分层
+
+| 层级 | 目录 | 加载策略 | 用途 |
+|------|------|----------|------|
+| Layer 0 | `rules/` | 始终加载 | 核心行为规则、技能触发、自动保存 |
+| Layer 1 | `docs/` | 按需加载 | 多模型协作、安全审查、路由参考 |
+| Layer 2 | `memory/` | 热数据 | 每日进度、活跃任务、项目状态 |
+| 技能 | `skills/` | 按触发条件 | 系统调试、完成验证、会话结束 |
+| 代理 | `agents/` | 按需分派 | PR 审查、安全审计、性能分析 |
+
+### 模块化 CLI 架构
+
+`bin/vibe` 由 6 个 Ruby 模块组成：
+
+| 模块 | 职责 |
+|------|------|
+| `Vibe::Utils` | 通用工具：深度合并、I/O、路径处理、格式化 |
+| `Vibe::DocRendering` | Markdown 文档渲染：inspect 输出、行为/路由/安全文档 |
+| `Vibe::OverlaySupport` | Overlay 解析、发现、策略合并 |
+| `Vibe::NativeConfigs` | 原生配置构建：Claude settings.json、Cursor cli.json、OpenCode opencode.json |
+| `Vibe::PathSafety` | 输出路径安全守卫、目标冲突检查、文件树复制 |
+| `Vibe::TargetRenderers` | 5 个目标的文件渲染器 |
+
+## 快速配置
+
+### 方式一：直接使用 Claude Code（最快上手）
+
+```bash
+# 克隆仓库
+git clone https://github.com/nehcuh/claude-code-workflow.git
+
+# 复制到 Claude Code 配置目录
+cp -r claude-code-workflow/* ~/.claude/
+```
+
+然后编辑 `~/.claude/CLAUDE.md`，填入你的信息：
+
+```markdown
+## User Info
+- **Name**: 你的名字 | **Project dir**: /path/to/projects
+- **Identity**: 全栈开发者
+```
+
+启动 Claude Code 即可：
+
+```bash
+claude
+```
+
+### 方式二：使用生成器（推荐，支持多目标）
+
+```bash
+# 构建指定目标
+bin/vibe build claude-code
+bin/vibe build warp
+bin/vibe build cursor
+bin/vibe build codex-cli
+bin/vibe build opencode
+
+# 应用到目标目录
+bin/vibe use claude-code --destination ~/.claude
+bin/vibe use cursor --destination /path/to/project
+
+# 快速切换当前仓库的目标配置
+bin/vibe switch warp
+bin/vibe switch cursor
+
+# 查看当前状态
+bin/vibe inspect
+bin/vibe inspect --json
+```
+
+### 方式三：使用项目 Overlay（团队/项目定制）
+
+在你的项目根目录创建 `.vibe/overlay.yaml`：
+
+```yaml
+name: my-project
+description: 项目级工作流定制
+
+profile:
+  mapping_overrides:
+    workhorse_coder: openai.gpt-4o
+  note_append:
+    - 本项目使用 Python + uv 管理依赖
+
+policies:
+  append:
+    - id: python-uv-preference
+      category: project
+      enforcement: recommended
+      target_render_group: always_on
+      summary: 优先使用 uv run、uv sync 管理 Python 环境
+
+targets:
+  claude-code:
+    permissions:
+      ask:
+        - "Bash(docker:*)"
+```
+
+然后构建时会自动发现并应用：
+
+```bash
+bin/vibe build cursor                   # 自动发现 .vibe/overlay.yaml
+bin/vibe build warp --overlay my.yaml   # 或显式指定
+```
+
+仓库已附带三个示例 overlay：
+
+- `examples/python-uv-overlay.yaml` — Python/uv 项目偏好
+- `examples/node-nvm-overlay.yaml` — Node/nvm 项目偏好
+- `examples/project-overlay.yaml` — 严格审查流程示例
+
+## 目录结构
+
+```
+claude-code-workflow/
+├── CLAUDE.md                     # 入口文件 — Claude 首先读取此文件
+├── README.md                     # 英文说明
+├── README.zh-CN.md               # 中文说明（本文件）
+│
+├── bin/
+│   ├── vibe                      # 生成器 CLI（build/use/inspect/switch）
+│   └── vibe-smoke                # 冒烟测试（所有目标 + overlay 构建）
+│
+├── lib/vibe/                     # CLI 模块化实现
+│   ├── utils.rb                  # 通用工具
+│   ├── doc_rendering.rb          # 文档渲染
+│   ├── overlay_support.rb        # Overlay 支持
+│   ├── native_configs.rb         # 原生配置构建
+│   ├── path_safety.rb            # 路径安全
+│   └── target_renderers.rb       # 目标渲染器
+│
+├── test/                         # 单元测试（minitest）
+│   ├── test_vibe_utils.rb
+│   ├── test_vibe_path_safety.rb
+│   └── test_vibe_overlay.rb
+│
+├── core/                         # 可移植核心规范
+│   ├── models/                   # 能力层级 + 供应商配置
+│   ├── skills/                   # 技能注册表
+│   ├── security/                 # 安全策略
+│   └── policies/                 # 行为策略
+│
+├── targets/                      # 目标适配器契约文档
+│   ├── claude-code.md
+│   ├── codex-cli.md
+│   ├── cursor.md
+│   ├── opencode.md
+│   └── warp.md
+│
+├── generated/                    # 构建输出（默认 gitignore）
+├── examples/                     # 示例 overlay 文件
+│
+├── rules/                        # Layer 0: 始终加载
+│   ├── behaviors.md              # 核心行为规则
+│   ├── skill-triggers.md         # 技能触发条件
+│   └── memory-flush.md           # 自动保存触发器
+│
+├── docs/                         # Layer 1: 按需加载
+│   ├── agents.md                 # 多模型协作框架
+│   ├── task-routing.md           # 任务路由参考
+│   ├── project-overlays.md       # Overlay 机制文档
+│   └── ...
+│
+├── memory/                       # Layer 2: 工作状态
+│   ├── today.md                  # 每日会话日志
+│   ├── projects.md               # 跨项目状态
+│   └── active-tasks.json         # 跨会话任务注册表
+│
+├── skills/                       # 可复用技能定义
+│   ├── systematic-debugging/     # 五阶段系统调试
+│   ├── verification-before-completion/
+│   ├── session-end/
+│   ├── planning-with-files/
+│   └── experience-evolution/
+│
+├── agents/                       # 自定义代理
+│   ├── pr-reviewer.md
+│   ├── security-reviewer.md
+│   └── performance-analyzer.md
+│
+├── commands/                     # 自定义斜杠命令
+│   ├── debug.md                  # /debug — 启动系统调试
+│   ├── deploy.md                 # /deploy — 部署前检查清单
+│   ├── exploration.md            # /exploration — 编码前 CTO 挑战
+│   └── review.md                 # /review — 准备代码审查
+│
+└── patterns.md                   # 跨项目可复用模式和陷阱记录
+```
+
+## 核心概念
+
+### SSOT（单一事实来源）
+
+每条信息有且仅有一个规范位置。`CLAUDE.md` 中的 SSOT 表将信息类型映射到文件，Claude 在写入前会先检查 SSOT，防止「同一信息散落在 5 个地方，全部过时」的问题。
+
+### 能力层级路由
+
+按能力而非模型名称路由任务，然后映射到当前活跃的供应商配置：
+
+| 层级 | 用途 | 典型场景 |
+|------|------|----------|
+| `critical_reasoner` | 关键推理 | 安全敏感逻辑、架构决策 |
+| `workhorse_coder` | 日常开发 | 大部分编码任务、分析、重构 |
+| `fast_router` | 快速响应 | 简单查询、子代理任务 |
+| `independent_verifier` | 独立验证 | 交叉验证、代码审查 |
+| `cheap_local` | 本地廉价 | 提交消息、格式化、离线工作 |
+
+### 完成前验证
+
+最具影响力的规则：Claude 在声称工作完成前，必须运行验证命令并读取输出。消除 AI 编码的头号失败模式——「应该可以了」但没有实际检查。
+
+### 自动保存
+
+Claude 在每次任务完成、每次提交和每次退出信号时自动保存进度。关闭窗口不会丢失任何工作。
+
+### 项目 Overlay
+
+消费仓库可以通过 `.vibe/overlay.yaml` 自定义：
+- **配置映射覆盖** — 重定义能力层级到具体模型的映射
+- **行为策略追加** — 添加项目级的行为规则
+- **原生配置补丁** — 修改目标工具的权限设置
+- **技术栈偏好** — 编码 `uv`、`nvm` 等运行时偏好
+
+所有定制均不需要 fork 或修改 `core/`。
+
+## 定制指南
+
+### 添加新项目
+
+1. 在 `memory/projects.md` 中添加项目条目
+2. 在 `CLAUDE.md` 的 Sub-project Memory Routes 中添加路由
+3. 在项目根目录创建 `PROJECT_CONTEXT.md`
+
+### 添加新技能
+
+创建 `skills/your-skill/SKILL.md`：
+
+```yaml
+---
+name: your-skill
+description: 技能描述
+allowed-tools:
+  - Read
+  - Write
+  - Bash
+---
+
+# 你的技能
+
+[Claude 调用此技能时的执行指令]
+```
+
+然后在 `core/skills/registry.yaml` 中注册元数据。
+
+### 调整模型路由
+
+1. 编辑 `core/models/tiers.yaml` 和 `core/models/providers.yaml`
+2. 同步 `rules/behaviors.md` 和 `docs/task-routing.md`
+3. 或使用项目 overlay 局部覆盖，无需修改全局配置
+
+### 运行验证
+
+```bash
+# 语法检查
+ruby -c bin/vibe
+
+# 单元测试
+ruby test/test_vibe_utils.rb
+ruby test/test_vibe_path_safety.rb
+ruby test/test_vibe_overlay.rb
+
+# 完整冒烟测试（包含所有目标构建 + overlay + 安全检查）
+bin/vibe-smoke
+```
+
+## 设计哲学
+
+1. **结构 > 提示词**：组织良好的配置文件胜过巧妙的一次性提示
+2. **记忆 > 智能**：记住你过去错误的 AI 比更聪明但每次重新开始的 AI 更有价值
+3. **验证 > 自信**：运行测试的成本永远低于发布 broken build 的成本
+4. **分层加载 > 平铺配置**：不要把所有东西塞进上下文——规则始终加载、文档按需加载、数据在需要时加载
+5. **自动保存 > 手动保存**：如果需要用户记住，就一定会被遗忘
+
+## 环境要求
+
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI（Claude Max 或 API 订阅）
+- Ruby（用于 `bin/vibe` 生成器，macOS 自带）
+- 可选：Codex CLI 用于交叉验证
+- 可选：Ollama 用于本地模型回退
+
+## 贡献者
+
+- **原作者**：[@runes_leo](https://x.com/runes_leo) - 初始工作流设计与实现
+- **Fork 维护者**：[@nehcuh](https://github.com/nehcuh) - 模块化、测试和中文本地化
+
+## 致谢
+
+本项目基于 [@runes_leo](https://x.com/runes_leo) 的原始 claude-code-workflow 优秀基础构建。本 fork 旨在提升可维护性并扩展工作流以服务中文开发者，同时保留核心理念。
+
+## 许可
+
+MIT — 随意使用、fork、改造。
+
+原始作品版权所有 (c) 2024 runes_leo
+修改作品版权所有 (c) 2025 nehcuh
+
+---
+
+**原作者**：[@runes_leo](https://x.com/runes_leo) — 更多 AI 工具见 [leolabs.me](https://leolabs.me) — [Telegram 社区](https://t.me/runesgang)
+**Fork 维护者**：[@nehcuh](https://github.com/nehcuh)

@@ -1,5 +1,5 @@
 schema_version: 1
-status: phase-4-portable
+status: phase-6-buildable
 
 policies:
   - id: ssot-first

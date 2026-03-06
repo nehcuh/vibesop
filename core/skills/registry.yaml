@@ -1,5 +1,5 @@
 schema_version: 1
-status: phase-1-manual
+status: phase-6-buildable
 
 namespaces:
   builtin:
@@ -48,6 +48,7 @@ skills:
       codex-cli: agents-md-or-wrapper
       cursor: rule-or-manual-invocation
       opencode: native-skill
+      warp: rule-or-manual-invocation
     requires_tools:
       - Read
       - Grep
@@ -65,6 +66,7 @@ skills:
       codex-cli: agents-md-or-wrapper
       cursor: rule
       opencode: native-skill
+      warp: rule-or-checklist
     requires_tools:
       - Read
       - Bash
@@ -81,6 +83,7 @@ skills:
       codex-cli: wrapper-or-checklist
       cursor: manual-or-rule
       opencode: native-skill
+      warp: checklist-or-rule
     requires_tools:
       - Read
       - Edit
@@ -98,6 +101,7 @@ skills:
       codex-cli: project-plan-template
       cursor: manual-or-rule
       opencode: native-skill
+      warp: manual-or-template
     requires_tools:
       - Read
       - Write
@@ -117,6 +121,7 @@ skills:
       codex-cli: review-template
       cursor: manual
       opencode: native-skill
+      warp: manual
     requires_tools:
       - Read
       - Bash

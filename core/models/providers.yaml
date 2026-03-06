@@ -1,5 +1,5 @@
 schema_version: 1
-status: phase-1-manual
+status: phase-6-buildable
 
 profiles:
   claude-code-default:
@@ -78,5 +78,6 @@ profiles:
       independent_verifier: separate-model-family
       cheap_local: locally-hosted-default
     notes:
+      - Exploratory placeholder profile only; `generic-open-weight` is not a build target in `bin/vibe`.
       - Benchmark each tier against your own tasks before enabling it by default.
       - Keep local deployment concerns outside the portable routing policy.

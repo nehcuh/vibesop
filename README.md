@@ -1,8 +1,26 @@
 # Claude Code Workflow
 
+**English** | [中文](README.zh-CN.md)
+
 A battle-tested workflow foundation for Claude Code today, evolving into a portable vibe coding config base for Claude Code, Codex CLI, OpenCode, Cursor, Warp, and similar agentic tools.
 
 **Not a tutorial. Not a toy config. A production workflow that actually ships — now with a provider-neutral core spec in phase 1.**
+
+## Origin & Fork Status
+
+This project is a fork of [runesleo/claude-code-workflow](https://github.com/runesleo/claude-code-workflow) with substantial architectural refactoring:
+
+- **Original Author**: [@runes_leo](https://x.com/runes_leo)
+- **Fork Maintainer**: [@nehcuh](https://github.com/nehcuh)
+- **Major Changes**:
+  - Modularized CLI into 6 Ruby library modules (`lib/vibe/*.rb`)
+  - Added comprehensive unit test suite (`test/`)
+  - Added Chinese documentation (`README.zh-CN.md`)
+  - Enhanced overlay system with runtime preference examples (`examples/`)
+  - Improved path safety and symlink handling for macOS compatibility
+  - Refactored generator architecture for better maintainability
+
+While this fork maintains the original MIT license and credits the original author, the codebase has diverged significantly through refactoring and new features.
 
 ## Why This Exists
 
@@ -59,7 +77,8 @@ claude-code-workflow/
 ├── README.md                     # You are here
 │
 ├── bin/
-│   └── vibe                      # Phase-6 generator CLI (build/use/inspect/overlay-aware targets)
+│   ├── vibe                      # Phase-6 generator CLI (build/use/inspect/overlay-aware targets)
+│   └── vibe-smoke                # Smoke test for generator target builds + overlays
 │
 ├── core/                         # Portable SSOT (phase 1)
 │   ├── README.md                 # Portable architecture + migration rules
@@ -104,10 +123,14 @@ claude-code-workflow/
 │   └── task-routing.md           # Model tier routing + target profiles
 │
 ├── memory/                       # Layer 2: Your working state (templates)
+│   ├── infra.md                  # Infrastructure SSOT template
 │   ├── today.md                  # Daily session log
 │   ├── projects.md               # Cross-project status overview
 │   ├── goals.md                  # Week/month/quarter goals
+│   ├── sunday-backlog.md         # System optimization backlog template
 │   └── active-tasks.json         # Cross-session task registry
+│
+├── patterns.md                   # Cross-project reusable patterns and pitfalls
 │
 ├── skills/                       # Reusable skill definitions
 │   ├── session-end/SKILL.md              # Auto wrap-up: save progress + commit + record
@@ -134,7 +157,7 @@ claude-code-workflow/
 
 ```bash
 # Clone the template
-git clone https://github.com/runesleo/claude-code-workflow.git
+git clone https://github.com/nehcuh/claude-code-workflow.git
 
 # Copy to your Claude Code config directory
 cp -r claude-code-workflow/* ~/.claude/
@@ -180,6 +203,7 @@ bin/vibe build --target cursor
 bin/vibe build --target opencode
 bin/vibe build --target warp
 bin/vibe inspect
+bin/vibe-smoke
 ```
 
 By default, each build goes to `generated/<target>/`.
@@ -220,6 +244,9 @@ bin/vibe inspect --overlay examples/project-overlay.yaml
 # Build or apply with a project overlay
 bin/vibe build cursor --overlay examples/project-overlay.yaml
 bin/vibe use --target opencode --destination /path/to/project --overlay /path/to/project/.vibe/overlay.yaml
+
+# Run smoke checks (all targets + overlay builds)
+bin/vibe-smoke
 ```
 
 Current phase-6 behavior:
@@ -351,6 +378,15 @@ This template draws from:
 - OWASP Top 10 for security review patterns
 - Real-world experience from building [x-reader](https://github.com/runesleo/x-reader) (650+ stars) and other open-source projects
 
+## Contributors
+
+- **Original Author**: [@runes_leo](https://x.com/runes_leo) - Initial workflow design and implementation
+- **Fork Maintainer**: [@nehcuh](https://github.com/nehcuh) - Modularization, testing, and Chinese localization
+
+## Acknowledgments
+
+This project builds upon the excellent foundation laid by [@runes_leo](https://x.com/runes_leo)'s original claude-code-workflow. The fork aims to enhance maintainability and extend the workflow to serve Chinese-speaking developers while preserving the core philosophy.
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=runesleo/claude-code-workflow&type=Date)](https://star-history.com/#runesleo/claude-code-workflow&Date)
@@ -359,6 +395,10 @@ This template draws from:
 
 MIT — Use it, fork it, make it yours.
 
+Original work Copyright (c) 2024 runes_leo
+Modified work Copyright (c) 2025 nehcuh
+
 ---
 
-Built by [@runes_leo](https://x.com/runes_leo) — more AI tools at [leolabs.me](https://leolabs.me) — [Telegram Community](https://t.me/runesgang)
+**Original Author**: [@runes_leo](https://x.com/runes_leo) — more AI tools at [leolabs.me](https://leolabs.me) — [Telegram Community](https://t.me/runesgang)
+**Fork Maintainer**: [@nehcuh](https://github.com/nehcuh)
