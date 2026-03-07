@@ -29,8 +29,19 @@ module Vibe
     end
 
     def deep_copy(value)
-      return value if value.nil? || value == true || value == false || value.is_a?(Numeric)
-      JSON.parse(JSON.generate(value))
+      return value if value.nil? || value == true || value == false || value.is_a?(Numeric) || value.is_a?(Symbol)
+
+      case value
+      when String
+        value.dup
+      when Array
+        value.map { |item| deep_copy(item) }
+      when Hash
+        value.transform_keys { |k| deep_copy(k) }.transform_values { |v| deep_copy(v) }
+      else
+        # Fallback to Marshal for other types (preserves type information)
+        Marshal.load(Marshal.dump(value))
+      end
     end
 
     def blankish?(value)
