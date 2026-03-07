@@ -58,7 +58,7 @@ Target adapters decide whether a portable skill ID becomes a native skill, a rul
   | User pastes address + "analyze" | profile-address | Not your domain's address type |
 -->
 
-## URL Fetch Routing (One-shot, no blind retry)
+## URL Fetch Routing (Local Overlay)
 
 **When user shares URL, pick optimal tool by platform. Only fallback on first-choice failure.**
 
@@ -78,3 +78,4 @@ Target adapters decide whether a portable skill ID becomes a native skill, a rul
 - **Never** try >2 tools on same URL (2 failures → tell user, change approach)
 
 Banned: Scenario matches but doesn't trigger / waiting for manual trigger / downgrading P0
+
