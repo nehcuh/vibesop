@@ -501,6 +501,15 @@ claude-code-workflow/
 │
 └── patterns.md                   # 跨项目可复用模式和陷阱记录
 ```
+## Git 与提交边界
+
+这个仓库有意把「共享工作流文件」和「一次性构建/本地状态」分开管理：
+
+- 应提交：`core/`、`targets/`、`rules/`、`docs/`、`CLAUDE.md`、`WARP.md`，以及当前仓库中已纳入版本控制的 `.vibe/` 支撑文件。
+- 不应提交：`generated/` 和 `.vibe-target.json` 这类 staging 输出与本地 apply marker。
+- `.vibe/overlay.yaml` 只有在它代表团队共享的项目策略时才建议提交；如果只是个人或本地偏好，应放在仓库外部，或在消费仓库的 `.gitignore` 中忽略。
+
+完整说明请参阅 `docs/git-workflow.md`，其中包含消费仓库的提交建议、`memory/` 目录策略，以及 secrets / 本地状态文件的处理原则。
 
 ## 核心概念
 

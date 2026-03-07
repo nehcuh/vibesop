@@ -467,6 +467,15 @@ Current phase-6 behavior:
 - overlays → let a consuming repo remap capability tiers, add behavior deltas, patch native target config, and encode stack preferences like `uv` or `nvm` without editing `core/`
 
 `bin/vibe` is intentionally conservative: it only renders the parts that are already modeled in `core/` and documented in `targets/`.
+## Git & tracked files
+
+This repository intentionally separates shared workflow files from disposable staging output:
+
+- Commit the portable spec and checked-in target-facing files: `core/`, `targets/`, `rules/`, `docs/`, `CLAUDE.md`, `WARP.md`, and the tracked `.vibe/` support files that describe the active Warp target.
+- Do not commit staging output or local apply markers: `generated/` and `.vibe-target.json` are intentionally ignored.
+- Treat `.vibe/overlay.yaml` as project policy only when it should be shared. Keep personal or local-only overlays outside the repo, or ignore them in the consuming project's `.gitignore`.
+
+See `docs/git-workflow.md` for the full commit policy, including consuming-repo guidance, `memory/` handling, and secrets/local-state rules.
 
 ## Key Concepts
 
