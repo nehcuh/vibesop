@@ -116,6 +116,10 @@ class VibeCLI
     target = require_target!(options)
     profile_name, profile = resolve_profile(target, options[:profile])
     output_root = File.expand_path(options[:output] || default_output_root(target))
+
+    # Validate output path if explicitly provided
+    validate_path!(options[:output], context: "output") if options[:output]
+
     overlay = resolve_overlay(explicit_path: options[:overlay], search_roots: [@repo_root])
 
     manifest = build_target(
@@ -145,6 +149,9 @@ class VibeCLI
     options[:destination] ||= default_destination_for_target(target) if switch_mode
     destination = options[:destination]
     raise Vibe::ValidationError, "Missing required destination. Pass DESTINATION or --destination DIR." if destination.nil? || destination.strip.empty?
+
+    # Validate destination path
+    validate_path!(destination, context: "destination")
 
     profile_name, profile = resolve_profile(target, options[:profile])
     destination_root = File.expand_path(destination)
@@ -261,14 +268,17 @@ class VibeCLI
       end
 
       opts.on("--output DIR", "Write generated files to DIR instead of generated/<target>") do |value|
+        validate_path!(value, context: "output")
         options[:output] = value
       end
 
       opts.on("--destination DIR", "Destination root for `use`") do |value|
+        validate_path!(value, context: "destination")
         options[:destination] = value
       end
 
       opts.on("--overlay FILE", "Apply a project overlay file while rendering") do |value|
+        validate_path!(value, context: "overlay")
         options[:overlay] = value
       end
 
