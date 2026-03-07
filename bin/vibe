@@ -7,6 +7,7 @@ require "optparse"
 require "time"
 require "digest"
 require "yaml"
+require_relative "../lib/vibe/errors"
 require_relative "../lib/vibe/utils"
 require_relative "../lib/vibe/doc_rendering"
 require_relative "../lib/vibe/native_configs"
@@ -70,7 +71,7 @@ class VibeCLI
     when "help", "--help", "-h", nil
       puts usage
     else
-      abort "Unknown command: #{command}
+      raise Vibe::ValidationError, "Unknown command: #{command}
 
 #{usage}"
     end
@@ -143,7 +144,7 @@ class VibeCLI
     target = require_target!(options)
     options[:destination] ||= default_destination_for_target(target) if switch_mode
     destination = options[:destination]
-    abort "Missing required destination. Pass DESTINATION or --destination DIR." if destination.nil? || destination.strip.empty?
+    raise Vibe::ValidationError, "Missing required destination. Pass DESTINATION or --destination DIR." if destination.nil? || destination.strip.empty?
 
     profile_name, profile = resolve_profile(target, options[:profile])
     destination_root = File.expand_path(destination)
@@ -238,7 +239,7 @@ class VibeCLI
         HELP
         return
       else
-        abort "Unknown option: #{arg}\n\nRun 'bin/vibe init --help' for usage."
+        raise Vibe::ValidationError, "Unknown option: #{arg}\n\nRun 'bin/vibe init --help' for usage."
       end
     end
 
@@ -308,19 +309,19 @@ class VibeCLI
   def ensure_no_remaining_args!(remaining)
     return if remaining.empty?
 
-    abort "Unexpected arguments: #{remaining.join(' ')}"
+    raise Vibe::ValidationError, "Unexpected arguments: #{remaining.join(' ')}"
   end
 
   def require_target!(options)
     target = options[:target]
-    abort "Missing required target. Pass TARGET or --target TARGET." if target.nil?
+    raise Vibe::ValidationError, "Missing required target. Pass TARGET or --target TARGET." if target.nil?
 
     target
   end
 
   def normalize_target(value)
     normalized = TARGET_ALIASES[value]
-    abort "Unsupported target: #{value}" if normalized.nil? || !SUPPORTED_TARGETS.include?(normalized)
+    raise Vibe::ValidationError, "Unsupported target: #{value}" if normalized.nil? || !SUPPORTED_TARGETS.include?(normalized)
 
     normalized
   end
@@ -349,7 +350,7 @@ class VibeCLI
     destination_digest = Digest::SHA256.hexdigest(destination_root)[0, 12]
 
     home_dir = Dir.home
-    abort "Cannot determine home directory for external staging" if home_dir.nil? || home_dir.empty?
+    raise Vibe::ConfigurationError, "Cannot determine home directory for external staging" if home_dir.nil? || home_dir.empty?
 
     File.join(home_dir, ".vibe-generated", "#{destination_name}-#{destination_digest}", target)
   end
@@ -373,8 +374,8 @@ class VibeCLI
 
     if requested_profile
       profile = profiles[requested_profile]
-      abort "Unknown profile: #{requested_profile}" if profile.nil?
-      abort "Profile #{requested_profile} does not target #{target}" unless profile["target"] == target
+      raise Vibe::ConfigurationError, "Unknown profile: #{requested_profile}" if profile.nil?
+      raise Vibe::ValidationError, "Profile #{requested_profile} does not target #{target}" unless profile["target"] == target
 
       return [requested_profile, profile]
     end
@@ -384,7 +385,7 @@ class VibeCLI
 
   def default_profile_for_target(target)
     profiles = @providers.fetch("profiles").select { |_name, profile| profile["target"] == target }
-    abort "No profile found for target #{target}" if profiles.empty?
+    raise Vibe::ConfigurationError, "No profile found for target #{target}" if profiles.empty?
 
     profiles.sort_by do |_name, profile|
       case profile["maturity"]
@@ -422,7 +423,7 @@ class VibeCLI
     when "warp"
       render_warp(output_root, manifest)
     else
-      abort "Target renderer not implemented: #{target}"
+      raise Vibe::ConfigurationError, "Target renderer not implemented: #{target}"
     end
 
     vibe_dir = File.join(output_root, ".vibe")
@@ -537,6 +538,14 @@ class VibeCLI
   end
 end
 if __FILE__ == $PROGRAM_NAME
-  repo_root = File.expand_path("..", __dir__)
-  VibeCLI.new(repo_root).run(ARGV)
+  begin
+    repo_root = File.expand_path("..", __dir__)
+    VibeCLI.new(repo_root).run(ARGV)
+  rescue Vibe::PathSafetyError, Vibe::SecurityError, Vibe::ValidationError, Vibe::ConfigurationError => e
+    warn "Error: #{e.message}"
+    exit 1
+  rescue Vibe::Error => e
+    warn "Vibe error: #{e.message}"
+    exit 1
+  end
 end

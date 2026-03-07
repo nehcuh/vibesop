@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative 'errors'
+
 module Vibe
   # Overlay parsing, discovery, merging, and policy resolution.
   #
@@ -18,10 +20,10 @@ module Vibe
       path = explicit_path ? File.expand_path(explicit_path) : discover_overlay(search_roots)
       return nil if path.nil?
 
-      abort "Overlay file not found: #{path}" unless File.file?(path)
+      raise ConfigurationError, "Overlay file not found: #{path}" unless File.file?(path)
 
       doc = read_yaml_abs(path) || {}
-      abort "Overlay file must contain a YAML mapping: #{path}" unless doc.is_a?(Hash)
+      raise ValidationError, "Overlay file must contain a YAML mapping: #{path}" unless doc.is_a?(Hash)
 
       known_keys = %w[schema_version name description profile policies targets]
       unknown_keys = doc.keys - known_keys
@@ -130,7 +132,7 @@ module Vibe
       return {} if overlay.nil?
 
       overrides = overlay.dig("profile", "mapping_overrides") || {}
-      abort "Overlay profile.mapping_overrides must be a mapping" unless overrides.is_a?(Hash)
+      raise ValidationError, "Overlay profile.mapping_overrides must be a mapping" unless overrides.is_a?(Hash)
 
       overrides
     end
@@ -139,7 +141,7 @@ module Vibe
       return [] if overlay.nil?
 
       notes = overlay.dig("profile", "note_append") || []
-      abort "Overlay profile.note_append must be a list" unless notes.is_a?(Array)
+      raise ValidationError, "Overlay profile.note_append must be a list" unless notes.is_a?(Array)
 
       notes
     end
@@ -148,15 +150,15 @@ module Vibe
       return [] if overlay.nil?
 
       policies = overlay.dig("policies", "append") || []
-      abort "Overlay policies.append must be a list" unless policies.is_a?(Array)
+      raise ValidationError, "Overlay policies.append must be a list" unless policies.is_a?(Array)
 
       overlay_ref = display_path(overlay["path"])
       policies.map do |policy|
-        abort "Each overlay policy must be a mapping" unless policy.is_a?(Hash)
+        raise ValidationError, "Each overlay policy must be a mapping" unless policy.is_a?(Hash)
 
         required = %w[id category enforcement target_render_group summary]
         missing = required.select { |key| blankish?(policy[key]) }
-        abort "Overlay policy is missing required keys: #{missing.join(', ')}" unless missing.empty?
+        raise ValidationError, "Overlay policy is missing required keys: #{missing.join(', ')}" unless missing.empty?
 
         {
           "id" => policy["id"],
@@ -173,7 +175,7 @@ module Vibe
       return {} if overlay.nil?
 
       patch = overlay.dig("targets", target) || {}
-      abort "Overlay targets.#{target} must be a mapping" unless patch.is_a?(Hash)
+      raise ValidationError, "Overlay targets.#{target} must be a mapping" unless patch.is_a?(Hash)
 
       deep_copy(patch)
     end
