@@ -3,3 +3,12 @@
 .alma-snapshots
 /AGENTS.md
 /WARP.md
+
+# Review files (temporary)
+/review-*.md
+/review/
+
+# Applied Kimi Code config (temporary for review)
+/KIMI.md
+/.kimi/
+/.vibe/kimi-code/

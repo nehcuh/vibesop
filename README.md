@@ -150,6 +150,30 @@ claude-code-workflow/
     └── review.md                 # /review — Prepare code review
 ```
 
+## Documentation Map
+
+Documentation is organized by purpose:
+
+| Need | Entry Point |
+|------|-------------|
+| **Project overview & quick start** | This README |
+| **Complete documentation index** | [docs/README.md](docs/README.md) |
+| **Portable core architecture** | [core/README.md](core/README.md) |
+| **Target adapter contracts** | [targets/README.md](targets/README.md) |
+| **Behavior rules (always loaded)** | [rules/behaviors.md](rules/behaviors.md) |
+| **Task routing details** | [docs/task-routing.md](docs/task-routing.md) |
+| **Content safety** | [docs/content-safety.md](docs/content-safety.md) |
+| **Context management** | [docs/context-management.md](docs/context-management.md) |
+| **Multi-model collaboration** | [docs/agents.md](docs/agents.md) |
+| **Testing standards** | [core/policies/test-standards.yaml](core/policies/test-standards.yaml) |
+
+### By Task
+
+- **Adding a new target** → See [targets/README.md](targets/README.md) and existing target adapters
+- **Customizing for your project** → See [examples/](examples/) and [docs/project-overlays.md](docs/project-overlays.md)
+- **Understanding capability tiers** → See [core/models/tiers.yaml](core/models/tiers.yaml)
+- **Running tests** → `make validate` or `make generate`
+
 ## Quick Start
 
 ### 1. Copy to your Claude Code config (current first-class target)

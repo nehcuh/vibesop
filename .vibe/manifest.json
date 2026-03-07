@@ -1,21 +1,22 @@
 {
   "schema_version": 5,
-  "generated_at": "2026-03-07T07:56:54Z",
+  "generated_at": "2026-03-07T13:42:36Z",
   "source_repo": ".",
-  "output_root": "/Users/huchen/.vibe-generated/claude-code-workflow-653a9fb4dbb6/antigravity",
-  "target": "antigravity",
-  "profile": "antigravity-default",
+  "output_root": "/Users/huchen/.vibe-generated/claude-code-workflow-653a9fb4dbb6/kimi-code",
+  "target": "kimi-code",
+  "profile": "kimi-code-default",
   "profile_maturity": "planned",
   "profile_notes": [
-    "Antigravity uses multi-agent workflows and task tracking markdown documents natively.",
-    "Generated files provide the routing, instructions, and capability baselines."
+    "Kimi Code uses SKILL.md files for capabilities. Generate portable skills into `.kimi/skills/`.",
+    "Use `KIMI.md` as the project entrypoint for top-level instructions.",
+    "Tool restrictions in skills enforce safety policy at the capability level."
   ],
   "profile_mapping": {
-    "critical_reasoner": "antigravity.primary-frontier-model",
-    "workhorse_coder": "antigravity.default-agent-model",
-    "fast_router": "antigravity.fast-model",
+    "critical_reasoner": "kimi.k1.5-class",
+    "workhorse_coder": "kimi.default-class",
+    "fast_router": "kimi.fast-class",
     "independent_verifier": "second-model.or.manual-review",
-    "cheap_local": "local.external-runner"
+    "cheap_local": "local.ollama-class"
   },
   "overlay": null,
   "native_config_overlay": {
@@ -110,7 +111,7 @@
       "intent": "Find root cause before attempting fixes.",
       "trigger_mode": "mandatory",
       "priority": "P0",
-      "target_support": "native-skill"
+      "target_support": null
     },
     {
       "id": "verification-before-completion",
@@ -118,7 +119,7 @@
       "intent": "Require fresh verification evidence before claiming completion.",
       "trigger_mode": "mandatory",
       "priority": "P0",
-      "target_support": "native-skill"
+      "target_support": null
     },
     {
       "id": "session-end",
@@ -126,7 +127,7 @@
       "intent": "Capture handoff, memory, and wrap-up state before ending a session.",
       "trigger_mode": "mandatory",
       "priority": "P0",
-      "target_support": "native-skill"
+      "target_support": null
     },
     {
       "id": "planning-with-files",
@@ -134,7 +135,7 @@
       "intent": "Use persistent files as working memory for complex multi-step tasks.",
       "trigger_mode": "suggest",
       "priority": "P1",
-      "target_support": "native-skill"
+      "target_support": null
     },
     {
       "id": "experience-evolution",
@@ -142,7 +143,7 @@
       "intent": "Capture reusable lessons and patterns from repeated work.",
       "trigger_mode": "suggest",
       "priority": "P1",
-      "target_support": "manual"
+      "target_support": null
     }
   ],
   "policies": [
@@ -330,9 +331,9 @@
       "obfuscation_or_evasion"
     ],
     "target_actions": {
-      "P0": "Surface as a blocking project rule or execution deny logic.",
-      "P1": "Ask through manual notification tool or review approval.",
-      "P2": "Warn and continue."
+      "P0": "Surface as a blocking rule in KIMI.md and skill tool restrictions.",
+      "P1": "Require manual review or user confirmation before execution.",
+      "P2": "Warn in skill output and continue with traceable reasoning."
     }
   }
 }

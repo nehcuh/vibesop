@@ -1,18 +1,18 @@
 # Generated target summary
 
-- Target: `antigravity`
-- Profile: `antigravity-default`
+- Target: `kimi-code`
+- Profile: `kimi-code-default`
 - Profile maturity: `planned`
-- Generated at: `2026-03-07T07:56:54Z`
+- Generated at: `2026-03-07T13:42:36Z`
 - Applied overlay: `none`
 
 ## Capability mapping
 
-- `critical_reasoner` → `antigravity.primary-frontier-model`
-- `workhorse_coder` → `antigravity.default-agent-model`
-- `fast_router` → `antigravity.fast-model`
+- `critical_reasoner` → `kimi.k1.5-class`
+- `workhorse_coder` → `kimi.default-class`
+- `fast_router` → `kimi.fast-class`
 - `independent_verifier` → `second-model.or.manual-review`
-- `cheap_local` → `local.external-runner`
+- `cheap_local` → `local.ollama-class`
 
 ## Overlay
 

@@ -1,4 +1,4 @@
-.PHONY: all validate generate inspect clean
+.PHONY: all validate generate inspect clean test schema
 
 # List of supported targets for generation
 TARGETS = claude-code codex-cli cursor kimi-code opencode vscode warp antigravity
@@ -10,6 +10,11 @@ validate:
 	@ruby -ryaml -e "Dir.glob('core/**/*.yaml').each { |f| begin; YAML.load_file(f); rescue => e; puts \"Invalid YAML: #{f}\"; exit 1; end }"
 	@echo "✅ Core YAML files are well-formed."
 	@bin/vibe inspect --json > /dev/null && echo "✅ Vibe inspect succeeded." || (echo "❌ Vibe inspect failed." && exit 1)
+	@echo "✅ Validation complete."
+
+schema:
+	@echo "🔍 Validating YAML files against JSON Schema..."
+	@bin/validate-schemas
 
 generate:
 	@echo "🚀 Generating target Markdown from core specs..."
