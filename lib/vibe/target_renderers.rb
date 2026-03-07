@@ -284,6 +284,90 @@ module Vibe
       File.write(File.join(warp_dir, "workflow-notes.md"), render_warp_workflow_notes_doc(manifest))
     end
 
+    def render_antigravity(output_root, manifest)
+      ag_dir = File.join(output_root, ".vibe", "antigravity")
+      FileUtils.mkdir_p(ag_dir)
+
+      File.write(File.join(output_root, "AGENTS.md"), <<~MD)
+        # Vibe workflow for Antigravity
+
+        Generated from the portable `core/` spec with profile `#{manifest["profile"]}`.
+        Applied overlay: #{overlay_sentence(manifest)}
+
+        Primary behavior is defined here, with supporting notes under `.vibe/antigravity/`.
+
+        Keep repository files as the SSOT, verify before claiming completion, and follow the generated routing + safety rules.
+
+        ## Non-negotiable rules
+
+        #{bullet_policy_summary(filtered_policies(manifest, %w[always_on routing safety]))}
+
+        ## Capability routing
+
+        #{bullet_mapping(manifest["profile_mapping"])}
+
+        ## Mandatory portable skills
+
+        #{bullet_skill_summary(mandatory_skills(manifest))}
+
+        ## Target requirements
+
+        - Understand task tracking files and project documentation before execution.
+        - Treat `.vibe/antigravity/` documents as authoritative framework conventions.
+        - Escalations and security policy constraints are detailed in `.vibe/antigravity/safety.md`.
+
+        ## Safety floor
+
+        #{bullet_target_actions(manifest)}
+      MD
+
+      File.write(File.join(ag_dir, "behavior-policies.md"), render_behavior_doc(manifest))
+      File.write(File.join(ag_dir, "routing.md"), render_routing_doc(manifest))
+      File.write(File.join(ag_dir, "safety.md"), render_safety_doc(manifest))
+      File.write(File.join(ag_dir, "skills.md"), render_skills_doc(manifest))
+      File.write(File.join(ag_dir, "task-routing.md"), render_task_routing_doc(manifest))
+      File.write(File.join(ag_dir, "test-standards.md"), render_test_standards_doc(manifest))
+    end
+
+    def render_vscode(output_root, manifest)
+      vscode_dir = File.join(output_root, ".vscode")
+      vibe_dir = File.join(output_root, ".vibe", "vscode")
+      FileUtils.mkdir_p(vscode_dir)
+      FileUtils.mkdir_p(vibe_dir)
+
+      File.write(File.join(output_root, "AGENTS.md"), <<~MD)
+        # Vibe workflow for VS Code
+
+        Generated from the portable `core/` spec with profile `#{manifest["profile"]}`.
+        Applied overlay: #{overlay_sentence(manifest)}
+
+        VS Code (Copilot Chat) instructions use these generated guidelines as the baseline.
+
+        ## Non-negotiable rules
+
+        #{bullet_policy_summary(filtered_policies(manifest, %w[always_on routing safety]))}
+
+        ## Capability routing
+
+        #{bullet_mapping(manifest["profile_mapping"])}
+
+        ## Mandatory portable skills
+
+        #{bullet_skill_summary(mandatory_skills(manifest))}
+
+        ## Safety floor
+
+        #{bullet_target_actions(manifest)}
+      MD
+
+      File.write(File.join(vibe_dir, "behavior-policies.md"), render_behavior_doc(manifest))
+      File.write(File.join(vibe_dir, "routing.md"), render_routing_doc(manifest))
+      File.write(File.join(vibe_dir, "safety.md"), render_safety_doc(manifest))
+      File.write(File.join(vibe_dir, "skills.md"), render_skills_doc(manifest))
+      File.write(File.join(vibe_dir, "task-routing.md"), render_task_routing_doc(manifest))
+      File.write(File.join(vibe_dir, "test-standards.md"), render_test_standards_doc(manifest))
+    end
+
     private
 
     def generate_superpowers_section(status, manifest)

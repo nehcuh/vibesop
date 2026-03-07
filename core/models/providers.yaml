@@ -68,6 +68,32 @@ profiles:
       - Use WARP.md as the project rule entrypoint and keep repo-local files as the SSOT.
       - Treat Warp workflows as wrappers around project commands, not as canonical state.
 
+  antigravity-default:
+    target: antigravity
+    maturity: planned
+    mapping:
+      critical_reasoner: antigravity.primary-frontier-model
+      workhorse_coder: antigravity.default-agent-model
+      fast_router: antigravity.fast-model
+      independent_verifier: second-model.or.manual-review
+      cheap_local: local.external-runner
+    notes:
+      - Antigravity uses multi-agent workflows and task tracking markdown documents natively.
+      - Generated files provide the routing, instructions, and capability baselines.
+
+  vscode-default:
+    target: vscode
+    maturity: planned
+    mapping:
+      critical_reasoner: copilot.primary-model
+      workhorse_coder: copilot.default-agent-model
+      fast_router: copilot.fast-model
+      independent_verifier: second-model.or.manual-review
+      cheap_local: local.external-runner
+    notes:
+      - VS Code settings integrate these rules as workspace-level instructions for GitHub Copilot.
+      - The `AGENTS.md` and `.vibe/vscode/` docs serve as an explicit capability baseline.
+
   glm-family-default:
     target: generic-open-weight
     maturity: exploratory

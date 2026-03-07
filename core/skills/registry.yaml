@@ -49,6 +49,8 @@ skills:
       cursor: rule-or-manual-invocation
       opencode: native-skill
       warp: rule-or-manual-invocation
+      antigravity: rule-or-manual-invocation
+      vscode: rule-or-manual-invocation
     requires_tools:
       - Read
       - Grep
@@ -67,6 +69,8 @@ skills:
       cursor: rule
       opencode: native-skill
       warp: rule-or-checklist
+      antigravity: rule-or-checklist
+      vscode: rule-or-checklist
     requires_tools:
       - Read
       - Bash
@@ -84,6 +88,8 @@ skills:
       cursor: manual-or-rule
       opencode: native-skill
       warp: checklist-or-rule
+      antigravity: checklist-or-rule
+      vscode: manual-or-rule
     requires_tools:
       - Read
       - Edit
@@ -102,6 +108,8 @@ skills:
       cursor: manual-or-rule
       opencode: native-skill
       warp: manual-or-template
+      antigravity: manual-or-template
+      vscode: manual-or-rule
     requires_tools:
       - Read
       - Write
@@ -122,6 +130,8 @@ skills:
       cursor: manual
       opencode: native-skill
       warp: manual
+      antigravity: manual
+      vscode: manual
     requires_tools:
       - Read
       - Bash
@@ -140,6 +150,8 @@ skills:
       cursor: manual
       opencode: external-skill
       warp: manual
+      antigravity: manual
+      vscode: manual
     safety_level: external_reviewed
     conditional: superpowers_installed
 
@@ -155,6 +167,8 @@ skills:
       cursor: manual
       opencode: external-skill
       warp: manual
+      antigravity: manual
+      vscode: manual
     safety_level: external_reviewed
     conditional: superpowers_installed
 
@@ -170,6 +184,8 @@ skills:
       cursor: manual
       opencode: external-skill
       warp: manual
+      antigravity: manual
+      vscode: manual
     safety_level: external_reviewed
     conditional: superpowers_installed
 
@@ -185,6 +201,8 @@ skills:
       cursor: manual
       opencode: external-skill
       warp: manual
+      antigravity: manual
+      vscode: manual
     safety_level: external_reviewed
     conditional: superpowers_installed
 
@@ -200,6 +218,8 @@ skills:
       cursor: manual
       opencode: external-skill
       warp: manual
+      antigravity: manual
+      vscode: manual
     safety_level: external_reviewed
     conditional: superpowers_installed
 
@@ -215,6 +235,8 @@ skills:
       cursor: manual
       opencode: external-skill
       warp: manual
+      antigravity: manual
+      vscode: manual
     safety_level: external_reviewed
     conditional: superpowers_installed
 
@@ -230,6 +252,8 @@ skills:
       cursor: manual
       opencode: external-skill
       warp: manual
+      antigravity: manual
+      vscode: manual
     safety_level: external_reviewed
     conditional: superpowers_installed
 

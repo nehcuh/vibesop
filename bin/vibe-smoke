@@ -14,7 +14,7 @@ done
 "${REPO_ROOT}/bin/vibe" init --help >/dev/null || { echo "FAIL: init --help"; exit 1; }
 "${REPO_ROOT}/bin/vibe" init --verify >/dev/null || { echo "FAIL: init --verify"; exit 1; }
 
-TARGETS=(claude-code codex-cli cursor opencode warp)
+TARGETS=(antigravity claude-code codex-cli cursor opencode vscode warp)
 
 "${REPO_ROOT}/bin/vibe" help >/dev/null
 TARGET_OUTPUT="$("${REPO_ROOT}/bin/vibe" targets)"
@@ -46,7 +46,7 @@ test -d "${TMP_DIR}/generated/claude-code/memory" || { echo "FAIL: claude-code m
 test -f "${TMP_DIR}/generated/claude-code/patterns.md" || { echo "FAIL: claude-code missing patterns.md"; exit 1; }
 
 # All non-claude targets must have behavior-policies.md
-for target in codex-cli cursor opencode warp; do
+for target in antigravity codex-cli cursor opencode vscode warp; do
   target_slug="${target}"
   test -f "${TMP_DIR}/generated/${target}/.vibe/${target_slug}/behavior-policies.md" || { echo "FAIL: ${target} missing behavior-policies.md"; exit 1; }
 done

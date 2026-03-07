@@ -34,10 +34,12 @@ class VibeCLI
     "codex-cli" => "codex-cli",
     "cursor" => "cursor",
     "opencode" => "opencode",
-    "warp" => "warp"
+    "warp" => "warp",
+    "vscode" => "vscode",
+    "antigravity" => "antigravity"
   }.freeze
 
-  SUPPORTED_TARGETS = %w[claude-code codex-cli cursor opencode warp].freeze
+  SUPPORTED_TARGETS = %w[antigravity claude-code codex-cli cursor opencode vscode warp].freeze
   MARKER_FILENAME = ".vibe-target.json"
 
   def initialize(repo_root)
@@ -455,6 +457,10 @@ class VibeCLI
       render_opencode(output_root, manifest)
     when "warp"
       render_warp(output_root, manifest)
+    when "antigravity"
+      render_antigravity(output_root, manifest)
+    when "vscode"
+      render_vscode(output_root, manifest)
     else
       raise Vibe::ConfigurationError, "Target renderer not implemented: #{target}"
     end
