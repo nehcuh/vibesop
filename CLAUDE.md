@@ -174,6 +174,7 @@ Routes determine write targets. Unlisted projects share the main MEMORY.md.
 | Extended behaviors (knowledge base, etc.) | `Read docs/behaviors-extended.md` |
 | Cross-day goals/todos | `Read memory/goals.md` |
 | Pattern library | `Read patterns.md` |
+| Context management/compression recovery | `Read docs/context-management.md` |
 
 ---
 
