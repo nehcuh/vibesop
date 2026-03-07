@@ -121,7 +121,7 @@ module Vibe
     end
 
     def core_policies
-      @policies_doc.fetch("policies").map do |policy|
+      policies_doc.fetch("policies").map do |policy|
         {
           "id" => policy["id"],
           "category" => policy["category"],

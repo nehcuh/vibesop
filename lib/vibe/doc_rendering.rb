@@ -372,9 +372,9 @@ module Vibe
     end
 
     def render_task_routing_doc(manifest)
-      return "" unless defined?(@task_routing_doc) && @task_routing_doc
+      return "" unless task_routing_doc
 
-      complexity_sections = @task_routing_doc.fetch("complexity_levels", {}).map do |level, config|
+      complexity_sections = task_routing_doc.fetch("complexity_levels", {}).map do |level, config|
         criteria = config.fetch("criteria", {}).map { |k, v| "  - #{k}: #{v}" }.join("\n")
         examples = config.fetch("examples", []).map { |ex| "  - #{ex}" }.join("\n")
         requirements = config.fetch("process_requirements", {}).map { |k, v| "  - #{k}: #{v}" }.join("\n")
@@ -397,7 +397,7 @@ module Vibe
         SECTION
       end.join("\n\n")
 
-      auto_rules = @task_routing_doc.fetch("auto_detection", {}).fetch("rules", []).map do |rule|
+      auto_rules = task_routing_doc.fetch("auto_detection", {}).fetch("rules", []).map do |rule|
         "- #{rule["condition"]} → `#{rule["complexity"]}` (#{rule["reason"]})"
       end.join("\n")
 
@@ -427,9 +427,9 @@ module Vibe
     end
 
     def render_test_standards_doc(manifest)
-      return "" unless defined?(@test_standards_doc) && @test_standards_doc
+      return "" unless test_standards_doc
 
-      coverage_sections = @test_standards_doc.fetch("coverage_by_complexity", {}).map do |level, config|
+      coverage_sections = test_standards_doc.fetch("coverage_by_complexity", {}).map do |level, config|
         <<~SECTION.chomp
           ### #{level.capitalize}
 
@@ -441,11 +441,11 @@ module Vibe
         SECTION
       end.join("\n\n")
 
-      critical_paths = @test_standards_doc.fetch("critical_paths", []).map do |path|
+      critical_paths = test_standards_doc.fetch("critical_paths", []).map do |path|
         "- `#{path["path_pattern"] || path["function_pattern"]}` → #{path["coverage"]}% (#{path["reason"]})"
       end.join("\n")
 
-      test_types = @test_standards_doc.fetch("test_types", {}).map do |type, config|
+      test_types = test_standards_doc.fetch("test_types", {}).map do |type, config|
         required = config.fetch("required_for", []).map { |r| "`#{r}`" }.join(", ")
         examples = config.fetch("examples", []).map { |ex| "  - #{ex}" }.join("\n")
 
