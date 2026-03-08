@@ -27,6 +27,8 @@ class VibeCLI
   include Vibe::ExternalTools
   include Vibe::InitSupport
 
+  attr_accessor :skip_integrations
+
   TARGET_ALIASES = {
     "claude" => "claude-code",
     "claude-code" => "claude-code",
@@ -93,6 +95,8 @@ class VibeCLI
       run_inspect(argv)
     when "init"
       run_init_command(argv)
+    when "quickstart"
+      run_quickstart_command(argv)
     when "targets"
       puts SUPPORTED_TARGETS.join("
 ")
@@ -110,12 +114,22 @@ class VibeCLI
   def usage
     <<~TEXT
       Usage:
+        bin/vibe quickstart [--force]
         bin/vibe build TARGET [--profile PROFILE] [--output DIR] [--overlay FILE]
         bin/vibe use TARGET DESTINATION [--profile PROFILE] [--output DIR] [--overlay FILE] [--force]
         bin/vibe switch TARGET [--profile PROFILE] [--output DIR] [--overlay FILE] [--force]
         bin/vibe inspect [TARGET] [--overlay FILE] [--json]
         bin/vibe init [--verify]
         bin/vibe targets
+
+      Commands:
+        quickstart  One-command setup for Claude Code in ~/.claude
+        build       Generate target-specific configuration files
+        use         Materialize a target into a specific destination
+        switch      Quick-apply a target into the current repository or ~/.claude
+        inspect     Preview resolved profiles and generated state
+        init        Initialize external tool integrations (Superpowers, RTK)
+        targets     List all supported targets
 
       Overlay discovery:
         - If --overlay FILE is provided, that file is used.
@@ -250,6 +264,19 @@ class VibeCLI
     else
       puts render_inspect(payload)
     end
+  end
+
+  def run_quickstart_command(argv)
+    options = { force: false }
+    parser = OptionParser.new do |opts|
+      opts.banner = "Usage: bin/vibe quickstart [--force]"
+      opts.on("--force", "Overwrite existing configuration without asking") do
+        options[:force] = true
+      end
+    end
+    parser.parse(argv)
+
+    run_quickstart(options)
   end
 
   def run_init_command(argv)

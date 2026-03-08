@@ -101,8 +101,10 @@ class TestVibeInit < Minitest::Test
   end
 
   def test_detect_rtk_not_installed
-    status = detect_rtk
-    assert_equal :not_installed, status
+    self.stub(:system, false) do
+      status = detect_rtk
+      assert_equal :not_installed, status
+    end
   end
 
   def test_detect_rtk_hook_configured_without_binary
@@ -125,8 +127,10 @@ class TestVibeInit < Minitest::Test
   end
 
   def test_verify_rtk_not_installed
-    result = verify_rtk
-    refute result[:installed]
+    self.stub(:system, false) do
+      result = verify_rtk
+      refute result[:installed]
+    end
   end
 
   def test_verify_rtk_hook_configured_without_binary_is_not_ready
@@ -155,10 +159,12 @@ class TestVibeInit < Minitest::Test
   end
 
   def test_missing_integrations
-    missing = missing_integrations
-    assert missing.is_a?(Array)
-    assert_includes missing, :superpowers
-    assert_includes missing, :rtk
+    self.stub(:system, false) do
+      missing = missing_integrations
+      assert missing.is_a?(Array)
+      assert_includes missing, :superpowers
+      assert_includes missing, :rtk
+    end
   end
 
   def test_superpowers_location_not_installed
@@ -176,8 +182,10 @@ class TestVibeInit < Minitest::Test
   end
 
   def test_rtk_version_not_installed
-    version = rtk_version
-    assert_nil version
+    self.stub(:system, false) do
+      version = rtk_version
+      assert_nil version
+    end
   end
 
   def test_check_environment

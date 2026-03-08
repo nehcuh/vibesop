@@ -176,19 +176,17 @@ Documentation is organized by purpose:
 
 ## Quick Start
 
-### 1. Copy to your Claude Code config (current first-class target)
+### 1. One-command setup (Recommended)
+
+The simplest way to get started is using the `quickstart` command, which automatically installs the workflow into your Claude Code configuration directory (`~/.claude`).
 
 ```bash
 # Clone the template
 git clone https://github.com/nehcuh/claude-code-workflow.git
+cd claude-code-workflow
 
-# Copy to your Claude Code config directory
-cp -r claude-code-workflow/* ~/.claude/
-
-# Or symlink if you want to keep it as a git repo
-ln -sf ~/claude-code-workflow/rules ~/.claude/rules
-ln -sf ~/claude-code-workflow/docs ~/.claude/docs
-# ... etc
+# Run quickstart
+bin/vibe quickstart
 ```
 
 ### 2. Customize CLAUDE.md
@@ -204,6 +202,24 @@ Open `~/.claude/CLAUDE.md` and fill in:
 
 ```bash
 claude
+```
+
+Claude will automatically load your rules and start following the workflow.
+
+---
+
+### Advanced: Manual Installation
+
+If you prefer to maintain the workflow files in a specific location or use symlinks:
+
+```bash
+# Copy to your Claude Code config directory
+cp -r claude-code-workflow/* ~/.claude/
+
+# Or symlink to keep it as a git repo
+ln -sf ~/claude-code-workflow/rules ~/.claude/rules
+ln -sf ~/claude-code-workflow/docs ~/.claude/docs
+# ... etc
 ```
 
 Claude will automatically load your rules and start following the workflow. Try:

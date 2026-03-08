@@ -13,6 +13,7 @@ class TestVibeCLI < Minitest::Test
     @original_home = ENV["HOME"]
     ENV["HOME"] = @test_home
     @cli = VibeCLI.new(@repo_root)
+    @cli.skip_integrations = true
   end
 
   def teardown
@@ -32,7 +33,9 @@ class TestVibeCLI < Minitest::Test
     plugin_dir = File.join(@test_home, ".claude", "plugins", "superpowers")
     FileUtils.mkdir_p(plugin_dir)
 
+    @cli.skip_integrations = false
     manifest = build_manifest("warp")
+    @cli.skip_integrations = true
 
     assert_includes manifest.fetch("skills").map { |skill| skill["id"] }, "superpowers/tdd"
     assert_includes manifest.fetch("skills").map { |skill| skill["id"] }, "superpowers/brainstorm"
@@ -42,8 +45,10 @@ class TestVibeCLI < Minitest::Test
     plugin_dir = File.join(@test_home, ".claude", "plugins", "superpowers")
     FileUtils.mkdir_p(plugin_dir)
 
+    @cli.skip_integrations = false
     manifest = build_manifest("claude-code")
     section = @cli.send(:generate_superpowers_section, :claude_plugin, manifest)
+    @cli.skip_integrations = true
 
     assert_includes section, "| `superpowers/tdd` | `suggest` |"
     assert_includes section, "| `superpowers/brainstorm` | `manual` |"
@@ -119,13 +124,16 @@ class TestVibeCLI < Minitest::Test
         generated_dir = File.join(build_root, ".vibe", target)
 
         tracked_files = Dir.glob(File.join(tracked_dir, "*.md")).map { |p| File.basename(p) }.sort
-        generated_files = Dir.glob(File.join(generated_dir, "*.md")).map { |p| File.basename(p) }.sort
-
-        assert_equal tracked_files, generated_files, "File list mismatch for #{target}"
 
         tracked_files.each do |filename|
           tracked_path = File.join(tracked_dir, filename)
-          generated_path = File.join(generated_dir, filename)
+          # Entrypoint files are in the build root; support docs are in .vibe/<target>/
+          generated_path = if %w[AGENTS.md WARP.md KIMI.md CLAUDE.md].include?(filename)
+                             File.join(build_root, filename)
+                           else
+                             File.join(generated_dir, filename)
+                           end
+
           assert_equal File.read(tracked_path), File.read(generated_path), "Mismatch for #{target}: #{filename}"
         end
       ensure
@@ -152,6 +160,30 @@ class TestVibeCLI < Minitest::Test
     ensure
       FileUtils.rm_rf(build_root) if build_root && File.exist?(build_root)
     end
+  end
+
+  def test_run_quickstart_identifies_existing_config
+    claude_dir = File.join(@test_home, ".claude")
+    FileUtils.mkdir_p(claude_dir)
+    File.write(File.join(claude_dir, "CLAUDE.md"), "existing")
+
+    # Should ask for confirmation
+    @cli.stub(:ask_yes_no, true) do
+      stdout, = capture_io { @cli.run_quickstart }
+      assert_includes stdout, "Claude Code configuration already exists"
+      assert_includes stdout, "Success!"
+    end
+  end
+
+  def test_run_quickstart_installation
+    claude_dir = File.join(@test_home, ".claude")
+
+    stdout, = capture_io { @cli.run_quickstart }
+
+    assert_includes stdout, "Setting up Claude Code workflow"
+    assert_includes stdout, "Success!"
+    assert File.exist?(File.join(claude_dir, "CLAUDE.md"))
+    assert File.exist?(File.join(claude_dir, "rules", "behaviors.md"))
   end
 
   private

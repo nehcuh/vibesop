@@ -15,6 +15,33 @@ module Vibe
   module TargetRenderers
     COPY_RUNTIME_ENTRIES = %w[CLAUDE.md rules docs skills agents commands memory patterns.md].freeze
 
+    def write_target_docs(output_dir, manifest, doc_types)
+      doc_types.each do |type|
+        filename = "#{type.to_s.gsub('_', '-')}.md"
+        # Special cases for filenames
+        filename = "behavior-policies.md" if type == :behavior
+        filename = "execution-policy.md" if type == :execution_policy
+        filename = "execution.md" if type == :execution
+
+        content = case type
+                  when :behavior then render_behavior_doc(manifest)
+                  when :routing then render_routing_doc(manifest)
+                  when :safety then render_safety_doc(manifest)
+                  when :skills then render_skills_doc(manifest)
+                  when :task_routing then render_task_routing_doc(manifest)
+                  when :test_standards then render_test_standards_doc(manifest)
+                  when :execution_policy then render_execution_policy_doc(manifest)
+                  when :execution then render_execution_policy_doc(manifest)
+                  when :general then render_general_doc(manifest)
+                  when :workflow_notes then render_warp_workflow_notes_doc(manifest)
+                  else
+                    raise Vibe::Error, "Unknown doc type: #{type}"
+                  end
+
+        File.write(File.join(output_dir, filename), content)
+      end
+    end
+
     def render_claude(output_root, manifest)
       COPY_RUNTIME_ENTRIES.each do |entry|
         source = File.join(@repo_root, entry)
@@ -75,57 +102,24 @@ module Vibe
         Applied overlay: #{overlay_sentence(manifest)}
         Generated summary: `.vibe/target-summary.md`
       MD
-      File.write(File.join(claude_dir, "behavior-policies.md"), render_behavior_doc(manifest))
-      File.write(File.join(claude_dir, "safety.md"), render_safety_doc(manifest))
-      File.write(File.join(claude_dir, "task-routing.md"), render_task_routing_doc(manifest))
-      File.write(File.join(claude_dir, "test-standards.md"), render_test_standards_doc(manifest))
+      write_target_docs(claude_dir, manifest, %i[behavior safety task_routing test_standards])
     end
 
     def render_codex(output_root, manifest)
       codex_dir = File.join(output_root, ".vibe", "codex-cli")
       FileUtils.mkdir_p(codex_dir)
-      File.write(File.join(codex_dir, "behavior-policies.md"), render_behavior_doc(manifest))
-      File.write(File.join(codex_dir, "routing.md"), render_routing_doc(manifest))
-      File.write(File.join(codex_dir, "skills.md"), render_skills_doc(manifest))
-      File.write(File.join(codex_dir, "safety.md"), render_safety_doc(manifest))
-      File.write(File.join(codex_dir, "execution-policy.md"), render_execution_policy_doc(manifest))
-      File.write(File.join(codex_dir, "task-routing.md"), render_task_routing_doc(manifest))
-      File.write(File.join(codex_dir, "test-standards.md"), render_test_standards_doc(manifest))
+      write_target_docs(codex_dir, manifest, %i[behavior routing skills safety execution_policy task_routing test_standards])
 
-      # Check integration status
-      superpowers_status = detect_superpowers
-      rtk_status = verify_rtk
-      integrations_section = generate_agents_integrations_section(superpowers_status, rtk_status, "Codex CLI")
-
-      File.write(File.join(output_root, "AGENTS.md"), <<~MD)
-        # Vibe workflow for Codex CLI
-
-        Generated from the portable `core/` spec with profile `#{manifest["profile"]}`.#{integrations_section}
-        Applied overlay: #{overlay_sentence(manifest)}
-
-        ## Non-negotiable rules
-
-        #{bullet_policy_summary(filtered_policies(manifest, %w[always_on routing safety]))}
-
-        ## Capability routing
-
-        #{bullet_mapping(manifest["profile_mapping"])}
-
-        ## Mandatory portable skills
-
-        #{bullet_skill_summary(mandatory_skills(manifest))}
-
+      extra = <<~MD
         ## Execution model
 
         - Use `.vibe/codex-cli/execution-policy.md` for the default flow and review protocol.
         - Use `.vibe/codex-cli/routing.md` when task routing is ambiguous.
         - Use `.vibe/codex-cli/safety.md` when a task touches risky behavior or permissions.
         - Use `.vibe/codex-cli/behavior-policies.md` for the portable behavior baseline.
-
-        ## Safety floor
-
-        #{bullet_target_actions(manifest)}
       MD
+
+      File.write(File.join(output_root, "AGENTS.md"), render_target_entrypoint_md("Codex CLI", manifest, extra_sections: extra))
     end
 
     def render_cursor(output_root, manifest)
@@ -134,29 +128,10 @@ module Vibe
       FileUtils.mkdir_p(cursor_rules_dir)
       FileUtils.mkdir_p(cursor_support_dir)
 
-      # Check integration status
-      superpowers_status = detect_superpowers
-      rtk_status = verify_rtk
-      integrations_section = generate_agents_integrations_section(superpowers_status, rtk_status, "Cursor")
-
-      File.write(File.join(output_root, "AGENTS.md"), <<~MD)
-        # Vibe workflow for Cursor
-
-        Generated from the portable `core/` spec with profile `#{manifest["profile"]}`.#{integrations_section}
-        Applied overlay: #{overlay_sentence(manifest)}
-
-        Primary behavior is defined in `.cursor/rules/*.mdc`, with supporting notes under `.vibe/cursor/`.
-
-        Keep repository files as the SSOT, verify before claiming completion, and follow the generated routing + safety rules.
-      MD
+      File.write(File.join(output_root, "AGENTS.md"), render_target_entrypoint_md("Cursor", manifest))
 
       write_json(File.join(output_root, ".cursor", "cli.json"), cursor_cli_permissions_config(manifest))
-      File.write(File.join(cursor_support_dir, "behavior-policies.md"), render_behavior_doc(manifest))
-      File.write(File.join(cursor_support_dir, "routing.md"), render_routing_doc(manifest))
-      File.write(File.join(cursor_support_dir, "safety.md"), render_safety_doc(manifest))
-      File.write(File.join(cursor_support_dir, "skills.md"), render_skills_doc(manifest))
-      File.write(File.join(cursor_support_dir, "task-routing.md"), render_task_routing_doc(manifest))
-      File.write(File.join(cursor_support_dir, "test-standards.md"), render_test_standards_doc(manifest))
+      write_target_docs(cursor_support_dir, manifest, %i[behavior routing safety skills task_routing test_standards])
 
       File.write(File.join(cursor_rules_dir, "00-vibe-core.mdc"), <<~MDC)
         ---
@@ -224,29 +199,9 @@ module Vibe
     def render_opencode(output_root, manifest)
       opencode_dir = File.join(output_root, ".vibe", "opencode")
       FileUtils.mkdir_p(opencode_dir)
+      write_target_docs(opencode_dir, manifest, %i[behavior general routing skills safety execution])
 
-      File.write(File.join(opencode_dir, "behavior-policies.md"), render_behavior_doc(manifest))
-      File.write(File.join(opencode_dir, "general.md"), render_general_doc(manifest))
-      File.write(File.join(opencode_dir, "routing.md"), render_routing_doc(manifest))
-      File.write(File.join(opencode_dir, "skills.md"), render_skills_doc(manifest))
-      File.write(File.join(opencode_dir, "safety.md"), render_safety_doc(manifest))
-      File.write(File.join(opencode_dir, "execution.md"), render_execution_policy_doc(manifest))
-
-      # Check integration status
-      superpowers_status = detect_superpowers
-      rtk_status = verify_rtk
-      integrations_section = generate_agents_integrations_section(superpowers_status, rtk_status, "OpenCode")
-
-      File.write(File.join(output_root, "AGENTS.md"), <<~MD)
-        # Vibe workflow for OpenCode
-
-        Generated from the portable `core/` spec with profile `#{manifest["profile"]}`.#{integrations_section}
-        Applied overlay: #{overlay_sentence(manifest)}
-
-        Project rules are split into modular instruction files loaded from `opencode.json`.
-
-        Keep repository files as the single source of truth, verify before claiming completion, and follow the generated safety policy.
-      MD
+      File.write(File.join(output_root, "AGENTS.md"), render_target_entrypoint_md("OpenCode", manifest))
 
       write_json(File.join(output_root, "opencode.json"), opencode_config(manifest))
     end
@@ -255,31 +210,7 @@ module Vibe
       warp_dir = File.join(output_root, ".vibe", "warp")
       FileUtils.mkdir_p(warp_dir)
 
-      # Check integration status
-      superpowers_status = detect_superpowers
-      rtk_status = verify_rtk
-      integrations_section = generate_warp_integrations_section(superpowers_status, rtk_status)
-
-      File.write(File.join(output_root, "WARP.md"), <<~MD)
-        # Vibe workflow for Warp
-
-        Generated from the portable `core/` spec with profile `#{manifest["profile"]}`.#{integrations_section}
-        Applied overlay: #{overlay_sentence(manifest)}
-
-        This file is intended as the Warp project rule entrypoint for the repository.
-
-        ## Non-negotiable rules
-
-        #{bullet_policy_summary(filtered_policies(manifest, %w[always_on routing safety]))}
-
-        ## Capability routing
-
-        #{bullet_mapping(manifest["profile_mapping"])}
-
-        ## Mandatory portable skills
-
-        #{bullet_skill_summary(mandatory_skills(manifest))}
-
+      extra = <<~MD
         ## Supporting files
 
         - Use `.vibe/warp/behavior-policies.md` for the full portable behavior baseline.
@@ -289,69 +220,28 @@ module Vibe
         - Use `.vibe/warp/task-routing.md` for task complexity classification and process requirements.
         - Use `.vibe/warp/test-standards.md` for test coverage standards by complexity.
         - Use `.vibe/warp/workflow-notes.md` for conservative workflow guidance in Warp.
-
-        ## Safety floor
-
-        #{bullet_target_actions(manifest)}
       MD
 
-      File.write(File.join(warp_dir, "behavior-policies.md"), render_behavior_doc(manifest))
-      File.write(File.join(warp_dir, "routing.md"), render_routing_doc(manifest))
-      File.write(File.join(warp_dir, "skills.md"), render_skills_doc(manifest))
-      File.write(File.join(warp_dir, "safety.md"), render_safety_doc(manifest))
-      File.write(File.join(warp_dir, "task-routing.md"), render_task_routing_doc(manifest))
-      File.write(File.join(warp_dir, "test-standards.md"), render_test_standards_doc(manifest))
-      File.write(File.join(warp_dir, "workflow-notes.md"), render_warp_workflow_notes_doc(manifest))
+      File.write(File.join(output_root, "WARP.md"), render_target_entrypoint_md("Warp", manifest, extra_sections: extra))
+
+      write_target_docs(warp_dir, manifest, %i[behavior routing skills safety task_routing test_standards workflow_notes])
     end
 
     def render_antigravity(output_root, manifest)
       ag_dir = File.join(output_root, ".vibe", "antigravity")
       FileUtils.mkdir_p(ag_dir)
 
-      # Check integration status
-      superpowers_status = detect_superpowers
-      rtk_status = verify_rtk
-      integrations_section = generate_agents_integrations_section(superpowers_status, rtk_status, "Antigravity")
-
-      File.write(File.join(output_root, "AGENTS.md"), <<~MD)
-        # Vibe workflow for Antigravity
-
-        Generated from the portable `core/` spec with profile `#{manifest["profile"]}`.#{integrations_section}
-        Applied overlay: #{overlay_sentence(manifest)}
-
-        Primary behavior is defined here, with supporting notes under `.vibe/antigravity/`.
-
-        Keep repository files as the SSOT, verify before claiming completion, and follow the generated routing + safety rules.
-
-        ## Non-negotiable rules
-
-        #{bullet_policy_summary(filtered_policies(manifest, %w[always_on routing safety]))}
-
-        ## Capability routing
-
-        #{bullet_mapping(manifest["profile_mapping"])}
-
-        ## Mandatory portable skills
-
-        #{bullet_skill_summary(mandatory_skills(manifest))}
-
+      extra = <<~MD
         ## Target requirements
 
         - Understand task tracking files and project documentation before execution.
         - Treat `.vibe/antigravity/` documents as authoritative framework conventions.
         - Escalations and security policy constraints are detailed in `.vibe/antigravity/safety.md`.
-
-        ## Safety floor
-
-        #{bullet_target_actions(manifest)}
       MD
 
-      File.write(File.join(ag_dir, "behavior-policies.md"), render_behavior_doc(manifest))
-      File.write(File.join(ag_dir, "routing.md"), render_routing_doc(manifest))
-      File.write(File.join(ag_dir, "safety.md"), render_safety_doc(manifest))
-      File.write(File.join(ag_dir, "skills.md"), render_skills_doc(manifest))
-      File.write(File.join(ag_dir, "task-routing.md"), render_task_routing_doc(manifest))
-      File.write(File.join(ag_dir, "test-standards.md"), render_test_standards_doc(manifest))
+      File.write(File.join(output_root, "AGENTS.md"), render_target_entrypoint_md("Antigravity", manifest, extra_sections: extra))
+
+      write_target_docs(ag_dir, manifest, %i[behavior routing safety skills task_routing test_standards])
     end
 
     def render_vscode(output_root, manifest)
@@ -360,42 +250,9 @@ module Vibe
       FileUtils.mkdir_p(vscode_dir)
       FileUtils.mkdir_p(vibe_dir)
 
-      # Check integration status (VS Code already had this, but let's make it consistent)
-      superpowers_status = detect_superpowers
-      rtk_status = verify_rtk
-      integrations_section = generate_agents_integrations_section(superpowers_status, rtk_status, "VS Code")
+      File.write(File.join(output_root, "AGENTS.md"), render_target_entrypoint_md("VS Code", manifest))
 
-      File.write(File.join(output_root, "AGENTS.md"), <<~MD)
-        # Vibe workflow for VS Code
-
-        Generated from the portable `core/` spec with profile `#{manifest["profile"]}`.#{integrations_section}
-        Applied overlay: #{overlay_sentence(manifest)}
-
-        VS Code (Copilot Chat) instructions use these generated guidelines as the baseline.
-
-        ## Non-negotiable rules
-
-        #{bullet_policy_summary(filtered_policies(manifest, %w[always_on routing safety]))}
-
-        ## Capability routing
-
-        #{bullet_mapping(manifest["profile_mapping"])}
-
-        ## Mandatory portable skills
-
-        #{bullet_skill_summary(mandatory_skills(manifest))}
-
-        ## Safety floor
-
-        #{bullet_target_actions(manifest)}
-      MD
-
-      File.write(File.join(vibe_dir, "behavior-policies.md"), render_behavior_doc(manifest))
-      File.write(File.join(vibe_dir, "routing.md"), render_routing_doc(manifest))
-      File.write(File.join(vibe_dir, "safety.md"), render_safety_doc(manifest))
-      File.write(File.join(vibe_dir, "skills.md"), render_skills_doc(manifest))
-      File.write(File.join(vibe_dir, "task-routing.md"), render_task_routing_doc(manifest))
-      File.write(File.join(vibe_dir, "test-standards.md"), render_test_standards_doc(manifest))
+      write_target_docs(vibe_dir, manifest, %i[behavior routing safety skills task_routing test_standards])
 
       write_json(File.join(vscode_dir, "settings.json"), vscode_settings_config(manifest))
     end
@@ -406,41 +263,10 @@ module Vibe
       FileUtils.mkdir_p(kimi_skills_dir)
       FileUtils.mkdir_p(kimi_support_dir)
 
-      # Check integration status
-      superpowers_status = detect_superpowers
-      rtk_status = verify_rtk
-
-      # Generate integration section
-      integrations_section = generate_kimi_integrations_section(superpowers_status, rtk_status)
-
-      # Generate KIMI.md project entrypoint
-      File.write(File.join(output_root, "KIMI.md"), <<~MD)
-        # Vibe workflow for Kimi Code
-
-        Generated from the portable `core/` spec with profile `#{manifest["profile"]}`.
-        Applied overlay: #{overlay_sentence(manifest)}
-
-        This file serves as the project entrypoint for Kimi Code.
-
-        ## Non-negotiable rules
-
-        #{bullet_policy_summary(filtered_policies(manifest, %w[always_on routing safety]))}
-
-        ## Capability routing
-
-        #{bullet_mapping(manifest["profile_mapping"])}
-
-        ## Mandatory portable skills
-
-        #{bullet_skill_summary(mandatory_skills(manifest))}
-
+      extra = <<~MD
         ## Skills
 
         Skills are defined in `.kimi/skills/*/SKILL.md` files.
-
-        ## Safety floor
-
-        #{bullet_target_actions(manifest)}
 
         ## Supporting documentation
 
@@ -450,17 +276,12 @@ module Vibe
         - `.vibe/kimi-code/skills.md` — Portable skill registry reference
         - `.vibe/kimi-code/task-routing.md` — Task complexity classification
         - `.vibe/kimi-code/test-standards.md` — Test coverage requirements
-
-        #{integrations_section}
       MD
 
+      File.write(File.join(output_root, "KIMI.md"), render_target_entrypoint_md("Kimi Code", manifest, extra_sections: extra))
+
       # Generate supporting documentation
-      File.write(File.join(kimi_support_dir, "behavior-policies.md"), render_behavior_doc(manifest))
-      File.write(File.join(kimi_support_dir, "routing.md"), render_routing_doc(manifest))
-      File.write(File.join(kimi_support_dir, "safety.md"), render_safety_doc(manifest))
-      File.write(File.join(kimi_support_dir, "skills.md"), render_skills_doc(manifest))
-      File.write(File.join(kimi_support_dir, "task-routing.md"), render_task_routing_doc(manifest))
-      File.write(File.join(kimi_support_dir, "test-standards.md"), render_test_standards_doc(manifest))
+      write_target_docs(kimi_support_dir, manifest, %i[behavior routing safety skills task_routing test_standards])
 
       # Generate SKILL.md files for mandatory skills
       manifest.fetch("skills", []).each do |skill|
@@ -520,216 +341,83 @@ module Vibe
       MD
     end
 
-    def generate_agents_integrations_section(superpowers_status, rtk_status, target_name)
-      sections = []
 
-      # Superpowers section
-      if superpowers_status == :not_installed
-        sections << <<~SP
 
-          ## Optional Integrations
+    def render_target_entrypoint_md(target_name, manifest, extra_sections: nil)
+      superpowers_status = detect_superpowers
+      rtk_info = verify_rtk
+      integrations = render_integrations_section(target_name, superpowers_status, rtk_info)
 
-          ### Superpowers Skill Pack
+      <<~MD
+        # Vibe workflow for #{target_name}
 
-          **Status**: ❌ Not installed
+        Generated from the portable `core/` spec with profile `#{manifest["profile"]}`.#{integrations}
+        Applied overlay: #{overlay_sentence(manifest)}
 
-          Superpowers provides advanced skills for design refinement, TDD, debugging, and more.
+        #{target_entrypoint_intent(target_name)}
 
-          **Installation for #{target_name}**:
-          ```bash
-          # Clone the repository
-          git clone https://github.com/obra/superpowers ~/superpowers
-          
-          # For #{target_name}, manually register the skills in your tool's skill system
-          # or use the skill files from ~/superpowers/skills/
-          ```
+        ## Non-negotiable rules
 
-          **Available skills**:
-          - `superpowers/tdd` — Test-driven development workflow
-          - `superpowers/brainstorm` — Structured brainstorming
-          - `superpowers/refactor` — Systematic refactoring
-          - `superpowers/debug` — Advanced debugging
-          - `superpowers/architect` — Architecture design
-          - `superpowers/review` — Code review workflow
-          - `superpowers/optimize` — Performance optimization
-        SP
-      else
-        sections << <<~SP
+        #{bullet_policy_summary(filtered_policies(manifest, %w[always_on routing safety]))}
 
-          ## Optional Integrations
+        ## Capability routing
 
-          ### Superpowers Skill Pack
+        #{bullet_mapping(manifest["profile_mapping"])}
 
-          **Status**: ✅ Installed
+        ## Mandatory portable skills
 
-          The following Superpowers skills are available:
-          - `superpowers/tdd` — Test-driven development workflow
-          - `superpowers/brainstorm` — Structured brainstorming
-          - `superpowers/refactor` — Systematic refactoring
-          - `superpowers/debug` — Advanced debugging
-          - `superpowers/architect` — Architecture design
-          - `superpowers/review` — Code review workflow
-          - `superpowers/optimize` — Performance optimization
-        SP
-      end
+        #{bullet_skill_summary(mandatory_skills(manifest))}
 
-      # RTK section
-      rtk_info = rtk_status
-      if rtk_info[:installed]
-        hook_status = rtk_info[:hook_configured] ? "✅ Configured" : "⚠️ Not configured"
-        sections << <<~RTK
+        #{extra_sections}
 
-          ### RTK Token Optimizer
+        ## Safety floor
 
-          **Status**: ✅ Installed  
-          **Hook**: #{hook_status}  
-          **Version**: #{rtk_info[:version] || "Unknown"}
-
-          RTK reduces token consumption by 60-90% on common commands.
-
-          #{rtk_info[:hook_configured] ? "" : "**To configure**: Run `rtk init --global`"}
-        RTK
-      else
-        sections << <<~RTK
-
-          ### RTK Token Optimizer
-
-          **Status**: ❌ Not installed
-
-          RTK is a CLI proxy that reduces LLM token consumption by 60-90% on common development commands.
-
-          **Installation**:
-          ```bash
-          # macOS/Linux with Homebrew
-          brew install rtk
-
-          # Or build from source
-          cargo install --git https://github.com/rtk-ai/rtk
-
-          # Then configure
-          rtk init --global
-          ```
-
-          **Note**: RTK works best with Claude Code. For #{target_name}, you may need to manually prefix commands with `rtk`.
-        RTK
-      end
-
-      sections.join("\n")
+        #{bullet_target_actions(manifest)}
+      MD
     end
 
-    def generate_warp_integrations_section(superpowers_status, rtk_status)
-      sections = []
+    private
 
-      # Superpowers section
-      if superpowers_status == :not_installed
-        sections << <<~SP
-
-          ## Optional Integrations
-
-          ### Superpowers Skill Pack
-
-          **Status**: ❌ Not installed
-
-          Superpowers provides advanced skills for design refinement, TDD, debugging, and more.
-
-          **Installation for Warp**:
-          ```bash
-          # Clone the repository
-          git clone https://github.com/obra/superpowers ~/superpowers
-          
-          # In Warp, manually add the skill paths or use as reference
-          ```
-
-          **Available skills**:
-          - `superpowers/tdd` — Test-driven development workflow
-          - `superpowers/brainstorm` — Structured brainstorming
-          - `superpowers/refactor` — Systematic refactoring
-          - `superpowers/debug` — Advanced debugging
-          - `superpowers/architect` — Architecture design
-          - `superpowers/review` — Code review workflow
-          - `superpowers/optimize` — Performance optimization
-        SP
-      else
-        sections << <<~SP
-
-          ## Optional Integrations
-
-          ### Superpowers Skill Pack
-
-          **Status**: ✅ Installed
-
-          The following Superpowers skills are available:
-          - `superpowers/tdd` — Test-driven development workflow
-          - `superpowers/brainstorm` — Structured brainstorming
-          - `superpowers/refactor` — Systematic refactoring
-          - `superpowers/debug` — Advanced debugging
-          - `superpowers/architect` — Architecture design
-          - `superpowers/review` — Code review workflow
-          - `superpowers/optimize` — Performance optimization
-        SP
+    def target_entrypoint_intent(target_name)
+      case target_name
+      when "Warp" then "This file is intended as the Warp project rule entrypoint for the repository."
+      when "Kimi Code" then "This file serves as the project entrypoint for Kimi Code."
+      when "Cursor", "Antigravity" then "Primary behavior is defined here, with supporting notes under `.vibe/#{target_name.downcase}/`.\n\nKeep repository files as the SSOT, verify before claiming completion, and follow the generated routing + safety rules."
+      when "VS Code" then "VS Code (Copilot Chat) instructions use these generated guidelines as the baseline."
+      when "OpenCode" then "Project rules are split into modular instruction files loaded from `opencode.json`.\n\nKeep repository files as the single source of truth, verify before claiming completion, and follow the generated safety policy."
+      else "Keep repository files as the SSOT, verify before claiming completion, and follow the generated routing + safety rules."
       end
-
-      # RTK section for Warp
-      rtk_info = rtk_status
-      if rtk_info[:installed]
-        sections << <<~RTK
-
-          ### RTK Token Optimizer
-
-          **Status**: ✅ Installed  
-          **Version**: #{rtk_info[:version] || "Unknown"}
-
-          RTK reduces token consumption by 60-90% on common commands.
-
-          **For Warp**: Manually prefix commands with `rtk`, e.g., `rtk git status`
-        RTK
-      else
-        sections << <<~RTK
-
-          ### RTK Token Optimizer
-
-          **Status**: ❌ Not installed
-
-          RTK is a CLI proxy that reduces LLM token consumption by 60-90% on common development commands.
-
-          **Installation**:
-          ```bash
-          # macOS/Linux with Homebrew
-          brew install rtk
-
-          # Or build from source
-          cargo install --git https://github.com/rtk-ai/rtk
-          ```
-
-          **For Warp**: Manually prefix commands with `rtk`, e.g., `rtk git status`
-        RTK
-      end
-
-      sections.join("\n")
     end
 
-    def generate_kimi_integrations_section(superpowers_status, rtk_status)
+    def render_integrations_section(target_name, superpowers_status, rtk_info)
       sections = []
+      is_kimi = target_name == "Kimi Code"
+      is_warp = target_name == "Warp"
 
       # Superpowers section
       if superpowers_status == :not_installed
+        header = is_kimi ? "## Optional: Superpowers Skill Pack" : "## Optional Integrations\n\n### Superpowers Skill Pack"
+        install_note = if is_kimi
+                         "Option 1: Manual clone\ngit clone https://github.com/obra/superpowers ~/superpowers\n\n# Then create symlinks to your skills directory\nln -s ~/superpowers/skills/* ~/.kimi/skills/  # Adjust path as needed"
+                       elsif is_warp
+                         "Clone the repository\ngit clone https://github.com/obra/superpowers ~/superpowers\n\n# In Warp, manually add the skill paths or use as reference"
+                       else
+                         "Clone the repository\ngit clone https://github.com/obra/superpowers ~/superpowers\n\n# For #{target_name}, manually register the skills in your tool's skill system\n# or use the skill files from ~/superpowers/skills/"
+                       end
+
         sections << <<~SP
-          ## Optional: Superpowers Skill Pack
+          #{header}
 
           **Status**: ❌ Not installed
 
           Superpowers provides advanced skills for design refinement, TDD, debugging, and more.
 
-          **Installation**:
+          **Installation#{is_kimi ? "" : " for #{target_name}"}**:
           ```bash
-          # Option 1: Manual clone
-          git clone https://github.com/obra/superpowers ~/superpowers
-          
-          # Then create symlinks to your skills directory
-          ln -s ~/superpowers/skills/* ~/.kimi/skills/  # Adjust path as needed
+          #{install_note}
           ```
 
-          **Available skills after installation**:
+          **Available skills#{is_kimi ? " after installation" : ""}**:
           - `superpowers/tdd` — Test-driven development workflow
           - `superpowers/brainstorm` — Structured brainstorming
           - `superpowers/refactor` — Systematic refactoring
@@ -737,19 +425,19 @@ module Vibe
           - `superpowers/architect` — Architecture design
           - `superpowers/review` — Code review workflow
           - `superpowers/optimize` — Performance optimization
-
-          See `core/integrations/superpowers.yaml` for full details.
+          #{is_kimi ? "\nSee `core/integrations/superpowers.yaml` for full details." : ""}
         SP
       else
         location = case superpowers_status
                    when :claude_plugin then "~/.claude/plugins/superpowers"
                    when :skills_symlink then "~/.claude/skills/superpowers-*"
                    when :local_clone then "~/superpowers"
-                   when :cursor_plugin then "~/.cursor/plugins/superpowers"
+                   when :cursor_plugin then (target_name == "Cursor" ? "Installed" : "Cursor plugins")
                    else "Installed"
                    end
+        header = is_kimi ? "## Superpowers Skill Pack Integration" : "## Optional Integrations\n\n### Superpowers Skill Pack"
         sections << <<~SP
-          ## Superpowers Skill Pack Integration
+          #{header}
 
           **Status**: ✅ Installed (#{location})
 
@@ -765,46 +453,40 @@ module Vibe
       end
 
       # RTK section
-      rtk_info = rtk_status
       if rtk_info[:installed]
         hook_status = rtk_info[:hook_configured] ? "✅ Configured" : "⚠️ Not configured"
+        header = is_kimi ? "## RTK Token Optimizer" : "### RTK Token Optimizer"
+        warp_note = is_warp ? "\n**For Warp**: Manually prefix commands with `rtk`, e.g., `rtk git status`" : ""
+        config_note = (!is_warp && !rtk_info[:hook_configured]) ? "\n\n**To configure**: Run `rtk init --global`" : ""
+
         sections << <<~RTK
-          ## RTK Token Optimizer
+          #{header}
 
           **Status**: ✅ Installed
-          **Hook**: #{hook_status}
-          **Version**: #{rtk_info[:version] || "Unknown"}
+          #{is_warp ? "" : "**Hook**: #{hook_status}\n"}**Version**: #{rtk_info[:version] || "Unknown"}
 
-          RTK reduces token consumption by 60-90% on common commands.
-
-          #{rtk_info[:hook_configured] ? "" : "**To configure**: Run `rtk init --global`"}
+          RTK reduces token consumption by 60-90% on common commands.#{warp_note}#{config_note}
         RTK
       else
+        header = is_kimi ? "## Optional: RTK Token Optimizer" : "### RTK Token Optimizer"
+        install_cmd = is_warp ? "brew install rtk" : "brew install rtk\n\n# Or build from source\ncargo install --git https://github.com/rtk-ai/rtk"
+        config_step = is_warp ? "" : "\n\n# Then configure\nrtk init --global"
+        warp_note = is_warp ? "\n**For Warp**: Manually prefix commands with `rtk`, e.g., `rtk git status`" : ""
+        generic_note = (!is_kimi && !is_warp) ? "\n\n**Note**: RTK works best with Claude Code. For #{target_name}, you may need to manually prefix commands with `rtk`." : ""
+
         sections << <<~RTK
-          ## Optional: RTK Token Optimizer
+          #{header}
 
           **Status**: ❌ Not installed
 
-          RTK is a CLI proxy that reduces LLM token consumption by 60-90% on common development commands (git, npm, pytest, etc.).
+          RTK is a CLI proxy that reduces LLM token consumption by 60-90% on common development commands#{is_kimi ? " (git, npm, pytest, etc.)" : ""}.
 
           **Installation**:
           ```bash
           # macOS/Linux with Homebrew
-          brew install rtk
-
-          # Or build from source with Cargo
-          cargo install --git https://github.com/rtk-ai/rtk
-
-          # Then configure the hook
-          rtk init --global
+          #{install_cmd}#{config_step}
           ```
-
-          **Benefits**:
-          - 60-90% token reduction on command outputs
-          - Less than 10ms overhead per command
-          - Works transparently via hooks
-
-          See `core/integrations/rtk.yaml` for full details.
+          #{is_kimi ? "\n**Benefits**:\n- 60-90% token reduction on command outputs\n- Less than 10ms overhead per command\n- Works transparently via hooks\n\nSee `core/integrations/rtk.yaml` for full details." : "#{warp_note}#{generic_note}"}
         RTK
       end
 
