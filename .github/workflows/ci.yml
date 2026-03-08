@@ -38,17 +38,16 @@ jobs:
       run: |
         chmod +x bin/vibe
         bin/vibe inspect --json > /dev/null
-    
-        - name: Generate all targets
-          run: |
-            make generate
-    
-        - name: Verify snapshots
-          run: |
-            make verify-snapshot
-    
-        - name: Check generated files exist
-    
+
+    - name: Generate all targets
+      run: |
+        make generate
+
+    - name: Verify snapshots
+      run: |
+        make verify-snapshot
+
+    - name: Check generated files exist
       run: |
         for target in claude-code codex-cli cursor kimi-code opencode vscode warp antigravity; do
           if [ ! -d "generated/$target" ]; then

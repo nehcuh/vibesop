@@ -18,13 +18,13 @@ git clone https://github.com/obra/superpowers ~/superpowers
 ```
 
 **Available skills**:
-- `superpowers/tdd` — Test-driven development workflow
-- `superpowers/brainstorm` — Structured brainstorming
-- `superpowers/refactor` — Systematic refactoring
-- `superpowers/debug` — Advanced debugging
-- `superpowers/architect` — Architecture design
-- `superpowers/review` — Code review workflow
-- `superpowers/optimize` — Performance optimization
+- `superpowers/brainstorming` — Design refinement and feature exploration
+- `superpowers/writing-plans` — Implementation planning for complex changes
+- `superpowers/test-driven-development` — TDD enforcement and test-first workflow
+- `superpowers/systematic-debugging` — Root cause analysis and structured debugging
+- `superpowers/subagent-driven-development` — Parallel task execution with multiple agents
+- `superpowers/using-git-worktrees` — Branch isolation using git worktrees
+- `superpowers/requesting-code-review` — Code review preparation and workflow
 
 
 ### RTK Token Optimizer

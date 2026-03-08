@@ -389,10 +389,26 @@ module Vibe
       end
     end
 
+    def superpowers_skill_list
+      yaml_path = File.join(@repo_root, "core", "integrations", "superpowers.yaml")
+      return [] unless File.exist?(yaml_path)
+
+      doc = YAML.load_file(yaml_path)
+      Array(doc["skills"]).map { |s| { "id" => s["id"], "intent" => s["intent"] } }
+    end
+
+    def format_superpowers_skill_bullets
+      skills = superpowers_skill_list
+      return "" if skills.empty?
+
+      skills.map { |s| "- `superpowers/#{s['id']}` — #{s['intent']}" }.join("\n")
+    end
+
     def render_integrations_section(target_name, superpowers_status, rtk_info)
       sections = []
       is_kimi = target_name == "Kimi Code"
       is_warp = target_name == "Warp"
+      skill_bullets = format_superpowers_skill_bullets
 
       # Superpowers section
       if superpowers_status == :not_installed
@@ -418,13 +434,7 @@ module Vibe
           ```
 
           **Available skills#{is_kimi ? " after installation" : ""}**:
-          - `superpowers/tdd` — Test-driven development workflow
-          - `superpowers/brainstorm` — Structured brainstorming
-          - `superpowers/refactor` — Systematic refactoring
-          - `superpowers/debug` — Advanced debugging
-          - `superpowers/architect` — Architecture design
-          - `superpowers/review` — Code review workflow
-          - `superpowers/optimize` — Performance optimization
+          #{skill_bullets}
           #{is_kimi ? "\nSee `core/integrations/superpowers.yaml` for full details." : ""}
         SP
       else
@@ -442,13 +452,7 @@ module Vibe
           **Status**: ✅ Installed (#{location})
 
           The following Superpowers skills are available:
-          - `superpowers/tdd` — Test-driven development workflow
-          - `superpowers/brainstorm` — Structured brainstorming
-          - `superpowers/refactor` — Systematic refactoring
-          - `superpowers/debug` — Advanced debugging
-          - `superpowers/architect` — Architecture design
-          - `superpowers/review` — Code review workflow
-          - `superpowers/optimize` — Performance optimization
+          #{skill_bullets}
         SP
       end
 
