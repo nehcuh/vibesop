@@ -31,6 +31,7 @@ Claude Code is powerful out of the box, but without structure it becomes a smart
 - Routes tasks to the right capability tier and active provider profile
 - Forces verification before claiming completion (no more "should work now")
 - Auto-saves progress so closing the window doesn't lose work
+- **Automatically suggests external skills based on context** (e.g., suggests TDD workflow when implementing features, code review workflow before PRs)
 
 ## Phase 1-7 Direction: Portable Core + Target Adapters + Generator + Project Overlays + Snapshot Testing
 
@@ -295,7 +296,12 @@ bin/vibe init --verify
 - **Superpowers**: Advanced skill pack with TDD, brainstorming, code review workflows
 - **RTK**: Token optimizer that reduces LLM costs by 30-50%
 
-See [docs/integrations.md](docs/integrations.md) for details and [docs/extending-recommendations.md](docs/extending-recommendations.md) to add your own.
+**Auto-generated trigger contexts**: When you install external skill packs, the system automatically generates trigger rules that tell LLMs when to use these skills. For example:
+- "When implementing new functionality" → suggests `superpowers/tdd`
+- "Before creating pull requests" → suggests `superpowers/review`
+- "When refactoring code" → suggests `superpowers/refactor`
+
+See [docs/integrations.md](docs/integrations.md) for details, [docs/extending-recommendations.md](docs/extending-recommendations.md) to add your own recommendations, and [docs/adding-external-skills.md](docs/adding-external-skills.md) to add new external skills.
 
 ## Model Configuration Guide
 
