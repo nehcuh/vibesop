@@ -52,32 +52,55 @@ detection:
 
 skills:
   - id: brainstorming
+    registry_id: superpowers/brainstorm
     intent: Design refinement and feature exploration
     trigger_context: When designing new features or refining ideas
 
   - id: writing-plans
+    registry_id: superpowers/plan
     intent: Implementation planning for complex changes
     trigger_context: Before starting multi-file changes
 
   - id: test-driven-development
+    registry_id: superpowers/tdd
     intent: TDD enforcement and test-first workflow
     trigger_context: When implementing new functionality
 
   - id: systematic-debugging
+    registry_id: superpowers/debug
     intent: Root cause analysis and structured debugging
     trigger_context: When encountering bugs (note - builtin equivalent exists)
 
   - id: subagent-driven-development
+    registry_id: superpowers/subagent
     intent: Parallel task execution with multiple agents
     trigger_context: For independent parallel work
 
   - id: using-git-worktrees
+    registry_id: superpowers/worktree
     intent: Branch isolation using git worktrees
     trigger_context: When working on multiple branches simultaneously
 
   - id: requesting-code-review
+    registry_id: superpowers/review
     intent: Code review preparation and workflow
     trigger_context: Before creating pull requests
+
+  # Additional skills in registry but not in original superpowers repo
+  - id: refactor
+    registry_id: superpowers/refactor
+    intent: Systematic code refactoring with safety checks
+    trigger_context: When refactoring code for better structure or maintainability
+
+  - id: architect
+    registry_id: superpowers/architect
+    intent: System architecture design and documentation
+    trigger_context: When designing system architecture or documenting design decisions
+
+  - id: optimize
+    registry_id: superpowers/optimize
+    intent: Performance optimization and profiling guidance
+    trigger_context: When optimizing performance or investigating bottlenecks
 
 integration:
   auto_enable: ask_user

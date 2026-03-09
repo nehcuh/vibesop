@@ -280,20 +280,33 @@ class VibeCLI
   end
 
   def run_init_command(argv)
-    verify_only = false
+    mode = :setup  # Default: interactive setup
 
     argv.each do |arg|
       case arg
       when "--verify"
-        verify_only = true
+        mode = :verify
+      when "--suggest"
+        mode = :suggest
+      when "--setup"
+        mode = :setup
       when "--help", "-h"
         puts <<~HELP
-          Usage: bin/vibe init [--verify]
+          Usage: bin/vibe init [options]
 
-          Initialize external integrations for Claude Code Workflow.
+          Initialize and manage external integrations for Claude Code Workflow.
 
           Options:
-            --verify    Only verify existing integrations without installing
+            (none)      Interactive setup to install integrations (default)
+            --verify    Verify existing integrations without installing
+            --suggest   Show recommendations for uninstalled integrations
+            --setup     Same as default, explicitly run interactive setup
+            --help      Show this help message
+
+          Examples:
+            bin/vibe init              # Interactive setup (asks to install)
+            bin/vibe init --verify     # Check what's installed
+            bin/vibe init --suggest    # See what's recommended
 
           Integrations:
             - Superpowers: Skill pack with advanced capabilities
@@ -305,7 +318,7 @@ class VibeCLI
       end
     end
 
-    run_init(verify_only: verify_only)
+    run_init(mode: mode)
   end
 
   def parse_common_options(argv, banner:)

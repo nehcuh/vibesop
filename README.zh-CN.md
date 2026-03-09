@@ -146,6 +146,27 @@ ln -sf ~/claude-code-workflow/docs ~/.claude/docs
 # ... 等等
 ```
 
+### 4. 探索推荐集成（可选）
+
+使用外部工具和技能包增强你的工作流：
+
+```bash
+# 查看推荐的集成
+bin/vibe init --suggest
+
+# 交互式安装集成
+bin/vibe init --setup
+
+# 验证已安装的集成
+bin/vibe init --verify
+```
+
+**推荐的集成：**
+- **Superpowers**：高级技能包，包含 TDD、头脑风暴、代码审查工作流
+- **RTK**：令牌优化器，可将 LLM 成本降低 30-50%
+
+详见 [docs/integrations.md](docs/integrations.md)，如需添加自己的推荐，请参阅 [docs/extending-recommendations.md](docs/extending-recommendations.md)。
+
 ## 模型配置指南
 
 本工作流使用**能力层级路由系统**，将任务复杂度与具体模型实现分离。理解如何为你的目标工具配置模型对于获得最佳性能至关重要。

@@ -15,17 +15,22 @@ module Vibe
   #   - JSON, YAML (stdlib) — for parsing configuration files
   module InitSupport
     # Main initialization flow
-    def run_init(verify_only: false)
+    def run_init(mode: :setup)
       puts "\n🚀 Claude Code Workflow Initialization"
       puts "=" * 50
       puts
 
       check_environment
 
-      if verify_only
+      case mode
+      when :verify
         verify_integrations
-      else
+      when :suggest
+        suggest_integrations
+      when :setup
         setup_integrations
+      else
+        raise ValidationError, "Unknown init mode: #{mode}"
       end
     end
 
@@ -127,13 +132,18 @@ module Vibe
       puts
       ensure_interactive_setup_available!
 
-      integrations = [
-        { name: "superpowers", label: "Superpowers Skill Pack", order: 1 },
-        { name: "rtk", label: "RTK (Token Optimizer)", order: 2 }
-      ]
+      # Load integrations from recommended.yaml
+      integrations = get_recommended_integration_list
+      if integrations.empty?
+        # Fallback to hardcoded list if config not available
+        integrations = [
+          { name: "superpowers", label: "Superpowers Skill Pack", priority: "P1" },
+          { name: "rtk", label: "RTK (Token Optimizer)", priority: "P2" }
+        ]
+      end
 
-      integrations.each do |integration|
-        setup_integration(integration[:name], integration[:label], integration[:order], integrations.size)
+      integrations.each_with_index do |integration, index|
+        setup_integration(integration[:name], integration[:label], index + 1, integrations.size)
       end
 
       puts
@@ -385,6 +395,65 @@ module Vibe
       end
     end
 
+    def suggest_integrations
+      puts "Checking recommended integrations..."
+      puts
+
+      recommended = load_recommended_integrations
+      unless recommended
+        puts "⚠ Could not load recommendations configuration"
+        return
+      end
+
+      suggested_by_category = {}
+      category_order = recommended["category_order"] || recommended["categories"].keys
+
+      category_order.each do |category|
+        integrations = recommended.dig("categories", category) || []
+        next if integrations.empty?
+
+        integrations.each do |integration|
+          name = integration["name"]
+          info = send("verify_#{name}")
+          next if info[:ready]  # Skip already installed
+
+          suggested_by_category[category] ||= []
+          suggested_by_category[category] << integration.merge("status" => info)
+        end
+      end
+
+      if suggested_by_category.empty?
+        puts "✓ All recommended integrations are already installed."
+        puts
+        return
+      end
+
+      puts "The following integrations are recommended but not yet installed:"
+      puts
+
+      category_order.each do |category|
+        suggestions = suggested_by_category[category]
+        next unless suggestions
+
+        metadata = recommended.dig("category_metadata", category) || {}
+        icon = metadata["icon"] || "•"
+        label = metadata["label"] || category.to_s.split("_").map(&:capitalize).join(" ")
+        description = metadata["description"]
+
+        puts "#{icon} #{label}"
+        puts "   #{description}" if description
+        puts
+
+        suggestions.each do |integration|
+          display_integration_suggestion(integration)
+        end
+      end
+
+      puts
+      puts "To install these integrations interactively, run: bin/vibe init --setup"
+      puts
+    end
+
     def verify_integrations
       puts "Verifying integrations..."
       puts
@@ -502,6 +571,98 @@ module Vibe
 
       raise ValidationError,
             "Input ended before a response was provided for '#{prompt}'. Re-run `bin/vibe init` in an interactive terminal, use `bin/vibe init --verify` to inspect current state, or follow `docs/integrations.md` for manual installation steps."
+    end
+
+    # --- Recommendation System ---
+
+    def load_recommended_integrations
+      yaml_path = File.join(@repo_root, "core", "integrations", "recommended.yaml")
+      return nil unless File.exist?(yaml_path)
+
+      YAML.safe_load(File.read(yaml_path), aliases: true)
+    rescue StandardError => e
+      warn "Warning: Failed to load recommended integrations: #{e.message}"
+      nil
+    end
+
+    def display_integration_suggestion(integration)
+      name = integration["name"]
+      priority = integration["priority"] || "P2"
+      reason = integration["reason"] || "No description available"
+      benefits = integration["benefits_summary"]
+
+      config = load_integration_config(name)
+
+      priority_label = case priority
+                       when "P1" then "Essential"
+                       when "P2" then "Recommended"
+                       when "P3" then "Optional"
+                       else priority
+                       end
+
+      puts "   • #{name} [#{priority_label}]"
+      puts "     #{reason}"
+      puts "     Benefits: #{benefits}" if benefits
+
+      if config
+        # Show installation method
+        installation_method = detect_best_installation_method(name, config)
+        if installation_method
+          puts "     Installation: #{installation_method}"
+        end
+
+        # Show source URL
+        if config["source"]
+          puts "     Source: #{config['source']}"
+        end
+      end
+
+      puts
+    end
+
+    def detect_best_installation_method(name, config)
+      methods = config["installation_methods"] || {}
+
+      # Try to detect the best method based on current environment
+      if methods["claude-code"] && Dir.exist?(File.expand_path("~/.claude"))
+        commands = methods.dig("claude-code", "commands") || []
+        return commands.first if commands.any?
+      end
+
+      if methods["manual"]
+        steps = methods.dig("manual", "steps") || []
+        return steps.first if steps.any?
+      end
+
+      nil
+    end
+
+    def get_recommended_integration_list
+      recommended = load_recommended_integrations
+      return [] unless recommended
+
+      integrations = []
+      categories = recommended["categories"] || {}
+
+      categories.each_value do |category_integrations|
+        category_integrations.each do |integration|
+          integrations << {
+            name: integration["name"],
+            label: integration_label(integration["name"]),
+            priority: integration["priority"] || "P2"
+          }
+        end
+      end
+
+      integrations
+    end
+
+    def integration_label(name)
+      case name
+      when "superpowers" then "Superpowers Skill Pack"
+      when "rtk" then "RTK (Token Optimizer)"
+      else name.to_s.split("_").map(&:capitalize).join(" ")
+      end
     end
   end
 end

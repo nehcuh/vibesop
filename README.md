@@ -276,6 +276,27 @@ Claude will automatically load your rules and start following the workflow. Try:
 
 Portable note: `core/` and `targets/` define the cross-tool contract, but Claude Code remains the directly runnable target in phase 1.
 
+### 4. Explore Recommended Integrations (Optional)
+
+Enhance your workflow with external tools and skill packs:
+
+```bash
+# See what's recommended
+bin/vibe init --suggest
+
+# Interactive setup to install integrations
+bin/vibe init --setup
+
+# Verify what's already installed
+bin/vibe init --verify
+```
+
+**Recommended integrations:**
+- **Superpowers**: Advanced skill pack with TDD, brainstorming, code review workflows
+- **RTK**: Token optimizer that reduces LLM costs by 30-50%
+
+See [docs/integrations.md](docs/integrations.md) for details and [docs/extending-recommendations.md](docs/extending-recommendations.md) to add your own.
+
 ## Model Configuration Guide
 
 This workflow uses a **capability-tier routing system** that separates task complexity from specific model implementations. Understanding how to configure models for your target is essential for optimal performance.

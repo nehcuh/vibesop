@@ -25,6 +25,9 @@ git clone https://github.com/obra/superpowers ~/superpowers
 - `superpowers/subagent-driven-development` — Parallel task execution with multiple agents
 - `superpowers/using-git-worktrees` — Branch isolation using git worktrees
 - `superpowers/requesting-code-review` — Code review preparation and workflow
+- `superpowers/refactor` — Systematic code refactoring with safety checks
+- `superpowers/architect` — System architecture design and documentation
+- `superpowers/optimize` — Performance optimization and profiling guidance
 
 
 ### RTK Token Optimizer
