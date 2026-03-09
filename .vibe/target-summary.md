@@ -1,17 +1,17 @@
 # Generated target summary
 
-- Target: `kimi-code`
-- Profile: `kimi-code-default`
+- Target: `opencode`
+- Profile: `opencode-default`
 - Profile maturity: `planned`
-- Generated at: `2026-03-07T13:42:36Z`
+- Generated at: `2026-03-09T00:52:49Z`
 - Applied overlay: `none`
 
 ## Capability mapping
 
-- `critical_reasoner` → `kimi.k1.5-class`
-- `workhorse_coder` → `kimi.default-class`
-- `fast_router` → `kimi.fast-class`
-- `independent_verifier` → `second-model.or.manual-review`
+- `critical_reasoner` → `configured.primary-high-reasoning`
+- `workhorse_coder` → `configured.primary-coder`
+- `fast_router` → `configured.fast-agent`
+- `independent_verifier` → `second-model.cross-family`
 - `cheap_local` → `local.ollama-class`
 
 ## Overlay
@@ -36,3 +36,10 @@
 - `session-end` (`P0`, `mandatory`) — Capture handoff, memory, and wrap-up state before ending a session.
 - `planning-with-files` (`P1`, `suggest`) — Use persistent files as working memory for complex multi-step tasks.
 - `experience-evolution` (`P1`, `suggest`) — Capture reusable lessons and patterns from repeated work.
+- `superpowers/tdd` (`P2`, `suggest`) — Test-driven development workflow with red-green-refactor cycle.
+- `superpowers/brainstorm` (`P2`, `manual`) — Structured brainstorming and ideation sessions.
+- `superpowers/refactor` (`P2`, `suggest`) — Systematic code refactoring with safety checks.
+- `superpowers/debug` (`P2`, `suggest`) — Advanced debugging workflows beyond systematic-debugging.
+- `superpowers/architect` (`P2`, `manual`) — System architecture design and documentation.
+- `superpowers/review` (`P2`, `suggest`) — Code review with comprehensive quality checks.
+- `superpowers/optimize` (`P2`, `manual`) — Performance optimization and profiling guidance.

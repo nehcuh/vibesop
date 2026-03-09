@@ -1,21 +1,20 @@
 {
   "schema_version": 5,
-  "generated_at": "2026-03-07T13:42:36Z",
+  "generated_at": "2026-03-09T00:52:49Z",
   "source_repo": ".",
-  "output_root": "/Users/huchen/.vibe-generated/claude-code-workflow-653a9fb4dbb6/kimi-code",
-  "target": "kimi-code",
-  "profile": "kimi-code-default",
+  "output_root": "/Users/huchen/.vibe-generated/claude-code-workflow-653a9fb4dbb6/opencode",
+  "target": "opencode",
+  "profile": "opencode-default",
   "profile_maturity": "planned",
   "profile_notes": [
-    "Kimi Code uses SKILL.md files for capabilities. Generate portable skills into `.kimi/skills/`.",
-    "Use `KIMI.md` as the project entrypoint for top-level instructions.",
-    "Tool restrictions in skills enforce safety policy at the capability level."
+    "Prefer native OpenCode rules and permissions where possible.",
+    "OpenCode can often reuse AGENTS.md and Claude-style skill assets with light adaptation."
   ],
   "profile_mapping": {
-    "critical_reasoner": "kimi.k1.5-class",
-    "workhorse_coder": "kimi.default-class",
-    "fast_router": "kimi.fast-class",
-    "independent_verifier": "second-model.or.manual-review",
+    "critical_reasoner": "configured.primary-high-reasoning",
+    "workhorse_coder": "configured.primary-coder",
+    "fast_router": "configured.fast-agent",
+    "independent_verifier": "second-model.cross-family",
     "cheap_local": "local.ollama-class"
   },
   "overlay": null,
@@ -111,7 +110,7 @@
       "intent": "Find root cause before attempting fixes.",
       "trigger_mode": "mandatory",
       "priority": "P0",
-      "target_support": null
+      "target_support": "native-skill"
     },
     {
       "id": "verification-before-completion",
@@ -119,7 +118,7 @@
       "intent": "Require fresh verification evidence before claiming completion.",
       "trigger_mode": "mandatory",
       "priority": "P0",
-      "target_support": null
+      "target_support": "native-skill"
     },
     {
       "id": "session-end",
@@ -127,7 +126,7 @@
       "intent": "Capture handoff, memory, and wrap-up state before ending a session.",
       "trigger_mode": "mandatory",
       "priority": "P0",
-      "target_support": null
+      "target_support": "native-skill"
     },
     {
       "id": "planning-with-files",
@@ -135,7 +134,7 @@
       "intent": "Use persistent files as working memory for complex multi-step tasks.",
       "trigger_mode": "suggest",
       "priority": "P1",
-      "target_support": null
+      "target_support": "native-skill"
     },
     {
       "id": "experience-evolution",
@@ -143,7 +142,63 @@
       "intent": "Capture reusable lessons and patterns from repeated work.",
       "trigger_mode": "suggest",
       "priority": "P1",
-      "target_support": null
+      "target_support": "native-skill"
+    },
+    {
+      "id": "superpowers/tdd",
+      "namespace": "superpowers",
+      "intent": "Test-driven development workflow with red-green-refactor cycle.",
+      "trigger_mode": "suggest",
+      "priority": "P2",
+      "target_support": "external-skill"
+    },
+    {
+      "id": "superpowers/brainstorm",
+      "namespace": "superpowers",
+      "intent": "Structured brainstorming and ideation sessions.",
+      "trigger_mode": "manual",
+      "priority": "P2",
+      "target_support": "external-skill"
+    },
+    {
+      "id": "superpowers/refactor",
+      "namespace": "superpowers",
+      "intent": "Systematic code refactoring with safety checks.",
+      "trigger_mode": "suggest",
+      "priority": "P2",
+      "target_support": "external-skill"
+    },
+    {
+      "id": "superpowers/debug",
+      "namespace": "superpowers",
+      "intent": "Advanced debugging workflows beyond systematic-debugging.",
+      "trigger_mode": "suggest",
+      "priority": "P2",
+      "target_support": "external-skill"
+    },
+    {
+      "id": "superpowers/architect",
+      "namespace": "superpowers",
+      "intent": "System architecture design and documentation.",
+      "trigger_mode": "manual",
+      "priority": "P2",
+      "target_support": "external-skill"
+    },
+    {
+      "id": "superpowers/review",
+      "namespace": "superpowers",
+      "intent": "Code review with comprehensive quality checks.",
+      "trigger_mode": "suggest",
+      "priority": "P2",
+      "target_support": "external-skill"
+    },
+    {
+      "id": "superpowers/optimize",
+      "namespace": "superpowers",
+      "intent": "Performance optimization and profiling guidance.",
+      "trigger_mode": "manual",
+      "priority": "P2",
+      "target_support": "external-skill"
     }
   ],
   "policies": [
@@ -331,9 +386,9 @@
       "obfuscation_or_evasion"
     ],
     "target_actions": {
-      "P0": "Surface as a blocking rule in KIMI.md and skill tool restrictions.",
-      "P1": "Require manual review or user confirmation before execution.",
-      "P2": "Warn in skill output and continue with traceable reasoning."
+      "P0": "Prefer native permission rules or wrapper deny.",
+      "P1": "Ask through configured permission flow.",
+      "P2": "Warn and continue."
     }
   }
 }

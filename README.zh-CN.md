@@ -751,7 +751,9 @@ make test
 ## 环境要求
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI（Claude Max 或 API 订阅）
-- Ruby（用于 `bin/vibe` 生成器，macOS 自带）
+- Ruby >= 2.6.0（用于 `bin/vibe` 生成器，macOS 自带）
+  - **运行时依赖**：无（仅使用 Ruby 标准库）
+  - **开发依赖**：参见 `Gemfile`（minitest 用于测试）
 - 可选：Codex CLI 用于交叉验证
 - 可选：Ollama 用于本地模型回退
 

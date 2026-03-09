@@ -12,3 +12,10 @@
 /KIMI.md
 /.kimi/
 /.vibe/kimi-code/
+
+# Applied OpenCode config (temporary for review)
+/opencode.json
+
+# Bundler
+/vendor/bundle/
+/.bundle/

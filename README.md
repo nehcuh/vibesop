@@ -694,7 +694,9 @@ This template encodes several principles learned from daily AI-assisted developm
 ## Requirements
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI (Claude Max or API subscription)
-- Ruby (for `bin/vibe` generator, comes with macOS)
+- Ruby >= 2.6.0 (for `bin/vibe` generator, comes with macOS)
+  - **Runtime dependencies**: None (uses only Ruby stdlib)
+  - **Development dependencies**: See `Gemfile` (minitest for testing)
 - Optional: Codex CLI for cross-verification
 - Optional: Ollama for local model fallback
 - Optional: other targets via `targets/` adapter docs
