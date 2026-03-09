@@ -19,3 +19,4 @@
 # Bundler
 /vendor/bundle/
 /.bundle/
+settings.json
