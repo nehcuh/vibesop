@@ -42,7 +42,15 @@ module Vibe
       end
     end
 
-    def render_claude(output_root, manifest)
+    def render_claude(output_root, manifest, project_level: false)
+      if project_level
+        render_claude_project(output_root, manifest)
+      else
+        render_claude_global(output_root, manifest)
+      end
+    end
+
+    def render_claude_global(output_root, manifest)
       COPY_RUNTIME_ENTRIES.each do |entry|
         source = File.join(@repo_root, entry)
         unless File.exist?(source)
@@ -104,8 +112,15 @@ module Vibe
       MD
       write_target_docs(claude_dir, manifest, %i[behavior safety task_routing test_standards])
 
-      # Auto-generate CLAUDE.md for project-level usage
       File.write(File.join(output_root, "CLAUDE.md"), render_target_entrypoint_md("Claude Code", manifest))
+    end
+
+    def render_claude_project(output_root, manifest)
+      claude_dir = File.join(output_root, ".vibe", "claude-code")
+      FileUtils.mkdir_p(claude_dir)
+      write_target_docs(claude_dir, manifest, %i[behavior safety task_routing test_standards])
+
+      File.write(File.join(output_root, "CLAUDE.md"), render_claude_project_md(manifest))
     end
 
     def render_codex(output_root, manifest)
@@ -380,6 +395,33 @@ module Vibe
     end
 
     private
+
+    def render_claude_project_md(manifest)
+      <<~MD
+        # Project Claude Code Configuration
+
+        Generated from the portable `core/` spec with profile `#{manifest["profile"]}`.
+        Applied overlay: #{overlay_sentence(manifest)}
+
+        Global workflow rules are loaded from `~/.claude/`. This file adds project-specific context only.
+
+        ## Project Context
+
+        <!-- Describe your project: tech stack, architecture, key constraints -->
+
+        ## Project-specific rules
+
+        <!-- Add rules that apply only to this project -->
+
+        ## Reference docs
+
+        Supporting notes are under `.vibe/claude-code/`:
+        - `behavior-policies.md` — portable behavior baseline
+        - `safety.md` — safety policy
+        - `task-routing.md` — task complexity routing
+        - `test-standards.md` — testing requirements
+      MD
+    end
 
     def target_entrypoint_intent(target_name)
       case target_name

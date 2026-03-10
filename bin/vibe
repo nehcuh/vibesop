@@ -127,7 +127,95 @@ class VibeCLI
   end
 
   def run_use_with_switch_true(argv)
-    run_use(argv, switch_mode: true)
+    run_switch(argv)
+  end
+
+  def run_switch(argv)
+    options = { force: false, platform: nil }
+
+    parser = OptionParser.new do |opts|
+      opts.banner = "Usage: vibe switch --platform PLATFORM [options]"
+
+      opts.on("--platform PLATFORM", "Target platform (claude-code, opencode, kimi-code, cursor, etc.)") do |value|
+        options[:platform] = value
+      end
+
+      opts.on("--profile PROFILE", "Explicit profile name from core/models/providers.yaml") do |value|
+        options[:profile] = value
+      end
+
+      opts.on("--output DIR", "Write generated files to DIR instead of generated/<target>") do |value|
+        options[:output] = value
+      end
+
+      opts.on("--overlay FILE", "Apply a project overlay file while rendering") do |value|
+        options[:overlay] = value
+      end
+
+      opts.on("--force", "Allow overwriting existing files") do
+        options[:force] = true
+      end
+
+      opts.on("-h", "--help", "Show help") do
+        puts opts
+        puts
+        puts "Examples:"
+        puts "  vibe switch --platform claude-code    # Apply Claude Code config to current project"
+        puts "  vibe switch --platform opencode       # Apply OpenCode config to current project"
+        puts "  vibe switch --platform kimi-code      # Apply Kimi Code config to current project"
+        puts
+        puts "Note: Global configuration must be installed first with 'vibe init --platform PLATFORM'"
+        exit 0
+      end
+    end
+
+    remaining = parser.parse(argv)
+
+    unless remaining.empty?
+      raise Vibe::ValidationError, "Unexpected arguments: #{remaining.join(' ')}\n\nRun 'vibe switch --help' for usage."
+    end
+
+    unless options[:platform]
+      raise Vibe::ValidationError, "Missing required --platform option\n\nRun 'vibe switch --help' for usage."
+    end
+
+    target = normalize_target(options[:platform])
+    destination_root = Dir.pwd
+
+    profile_name, profile = resolve_profile(target, options[:profile])
+    output_root = resolve_output_root_for_use(
+      target: target,
+      destination_root: destination_root,
+      explicit_output: options[:output]
+    )
+    ensure_no_path_overlap!(output_root, destination_root)
+    overlay = resolve_overlay(explicit_path: options[:overlay], search_roots: [destination_root, @repo_root])
+
+    claude_global_dir = File.expand_path("~/.claude")
+    project_level = (target == "claude-code" && destination_root != claude_global_dir)
+
+    manifest = build_target(
+      target: target,
+      profile_name: profile_name,
+      profile: profile,
+      output_root: output_root,
+      overlay: overlay,
+      project_level: project_level
+    )
+    enforce_safe_destination!(output_root, destination_root, options[:force])
+
+    FileUtils.mkdir_p(destination_root)
+    copy_tree_contents(output_root, destination_root)
+
+    write_marker(
+      File.join(destination_root, MARKER_FILENAME),
+      destination_root: destination_root,
+      manifest: manifest,
+      output_root: output_root,
+      mode: "switch"
+    )
+
+    puts "Applied #{target} (#{profile_name})#{overlay_label(manifest)} -> #{destination_root}"
   end
 
   def run_targets_command(_argv)
@@ -137,35 +225,39 @@ class VibeCLI
   def usage
     <<~TEXT
       Usage:
-        bin/vibe quickstart [--force]
-        bin/vibe build TARGET [--profile PROFILE] [--output DIR] [--overlay FILE]
-        bin/vibe use TARGET DESTINATION [--profile PROFILE] [--output DIR] [--overlay FILE] [--force]
-        bin/vibe switch TARGET [--profile PROFILE] [--output DIR] [--overlay FILE] [--force]
-        bin/vibe inspect [TARGET] [--overlay FILE] [--json]
-        bin/vibe init [--verify|--suggest|--install] [--platform PLATFORM] [-y]
-        bin/vibe targets
+        vibe init --platform PLATFORM [--force|--verify|--suggest]
+        vibe switch --platform PLATFORM [--profile PROFILE] [--overlay FILE] [--force]
+        vibe quickstart [--force]
+        vibe build TARGET [--profile PROFILE] [--output DIR] [--overlay FILE]
+        vibe use TARGET DESTINATION [--profile PROFILE] [--output DIR] [--overlay FILE] [--force]
+        vibe inspect [TARGET] [--overlay FILE] [--json]
+        vibe targets
 
       Commands:
-        quickstart  One-command setup for Claude Code in ~/.claude
+        init        Install global configuration for a platform (e.g., ~/.claude, ~/.opencode)
+        switch      Apply platform configuration to current project directory
+        quickstart  One-command setup for Claude Code in ~/.claude (legacy)
         build       Generate target-specific configuration files
-        use         Materialize a target into a specific destination
-        switch      Quick-apply a target into the current repository or ~/.claude
+        use         Materialize a target into a specific destination (advanced)
         inspect     Preview resolved profiles and generated state
-        init        Initialize external tool integrations (Superpowers, RTK)
         targets     List all supported targets
+
+      Typical workflow:
+        1. vibe init --platform claude-code       # Install global config to ~/.claude
+        2. cd ~/my-project
+        3. vibe switch --platform claude-code     # Apply to project
 
       Overlay discovery:
         - If --overlay FILE is provided, that file is used.
-        - Otherwise `use` / `switch` look for `.vibe/overlay.yaml` in the destination root.
+        - Otherwise `switch` looks for `.vibe/overlay.yaml` in the current directory.
         - Other commands fall back to the workflow repo root.
 
       Notes:
-        - TARGET may also be passed via --target TARGET.
-        - DESTINATION may also be passed via --destination DIR.
-        - switch defaults to the repository root for codex-cli/cursor/opencode/warp,
-          and ~/.claude for claude-code.
+        - Use 'vibe init --platform PLATFORM' for global setup
+        - Use 'vibe switch --platform PLATFORM' in project directories
+        - Legacy commands (build, use) still use TARGET positional argument
 
-      Supported targets:
+      Supported platforms:
         #{SUPPORTED_TARGETS.join(", ")}
     TEXT
   end
@@ -228,12 +320,16 @@ class VibeCLI
     ensure_no_path_overlap!(output_root, destination_root)
     overlay = resolve_overlay(explicit_path: options[:overlay], search_roots: [destination_root, @repo_root])
 
+    claude_global_dir = File.expand_path("~/.claude")
+    project_level = (target == "claude-code" && destination_root != claude_global_dir)
+
     manifest = build_target(
       target: target,
       profile_name: profile_name,
       profile: profile,
       output_root: output_root,
-      overlay: overlay
+      overlay: overlay,
+      project_level: project_level
     )
     enforce_safe_destination!(output_root, destination_root, options[:force])
 
@@ -303,8 +399,9 @@ class VibeCLI
   end
 
   def run_init_command(argv)
-    mode = :setup  # Default: interactive setup
-    auto_yes = false
+    force = false
+    verify_only = false
+    suggest_only = false
     platform = nil
 
     i = 0
@@ -312,70 +409,54 @@ class VibeCLI
       arg = argv[i]
       case arg
       when "--verify"
-        mode = :verify
+        verify_only = true
       when "--suggest"
-        mode = :suggest
-      when "--setup"
-        mode = :setup
-      when "--install"
-        mode = :install
-      when "-y", "--yes"
-        auto_yes = true
+        suggest_only = true
+      when "--force"
+        force = true
       when /^--platform=(.+)$/
         platform = $1
       when "--platform"
         i += 1
         if i >= argv.length
-          raise Vibe::ValidationError, "--platform requires a value\n\nRun 'bin/vibe init --help' for usage."
+          raise Vibe::ValidationError, "--platform requires a value\n\nRun 'vibe init --help' for usage."
         end
         platform = argv[i]
       when "--help", "-h"
         puts <<~HELP
-          Usage: bin/vibe init [options]
+          Usage: vibe init --platform PLATFORM [options]
 
-          Initialize and manage external integrations for Claude Code Workflow.
+          Install global configuration for a platform.
 
           Options:
-            (none)        Interactive setup to install integrations (default)
-            --verify      Verify existing integrations without installing
-            --suggest     Show recommendations for uninstalled integrations
-            --install     Automatically install recommended integrations
-            --setup       Same as default, explicitly run interactive setup
-            --platform P  Target platform (claude-code, cursor, opencode, codex-cli, warp)
-            -y, --yes     Skip confirmation prompts (use with --install)
+            --platform P  Target platform (claude-code, opencode, kimi-code, cursor, codex-cli, warp)
+            --force       Overwrite existing configuration without asking
+            --verify      Check if platform is already installed
+            --suggest     Show installation suggestions
             --help        Show this help message
 
           Examples:
-            bin/vibe init                           # Interactive setup (asks to install)
-            bin/vibe init --verify                  # Check what's installed
-            bin/vibe init --suggest                 # See what's recommended
-            bin/vibe init --install                 # Install recommended integrations
-            bin/vibe init --install -y              # Install without confirmation
-            bin/vibe init --platform=cursor         # Setup for Cursor
-            bin/vibe init --suggest --platform=opencode  # Show OpenCode recommendations
+            vibe init --platform claude-code    # Install Claude Code global config to ~/.claude
+            vibe init --platform opencode       # Install OpenCode global config to ~/.opencode
+            vibe init --platform claude-code --verify   # Check if installed
+            vibe init --platform claude-code --force    # Force reinstall
 
-          Supported platforms:
-            - claude-code (default): Claude Code CLI
-            - cursor: Cursor IDE
-            - opencode: OpenCode
-            - codex-cli: Codex CLI
-            - warp: Warp terminal
-            - kimi-code: Kimi Code
-            - vscode: VS Code
-            - antigravity: Antigravity
-
-          Integrations:
-            - Superpowers: Skill pack with advanced capabilities
-            - RTK: Token optimizer reducing LLM costs by 60-90%
+          After installation:
+            1. Review the configuration in the global directory
+            2. Run 'vibe switch --platform PLATFORM' in your project directory
         HELP
-        return
+        exit 0
       else
-        raise Vibe::ValidationError, "Unknown option: #{arg}\n\nRun 'bin/vibe init --help' for usage."
+        raise Vibe::ValidationError, "Unknown option: #{arg}\n\nRun 'vibe init --help' for usage."
       end
       i += 1
     end
 
-    run_init(mode: mode, auto_yes: auto_yes, platform: platform)
+    unless platform
+      raise Vibe::ValidationError, "Missing required --platform option\n\nRun 'vibe init --help' for usage."
+    end
+
+    run_init(platform: platform, force: force, verify_only: verify_only, suggest_only: suggest_only)
   end
 
   def parse_common_options(argv, banner:)
@@ -470,11 +551,7 @@ class VibeCLI
   end
 
   def default_destination_for_target(target)
-    if target == "claude-code"
-      File.join(Dir.home, ".claude")
-    else
-      @repo_root
-    end
+    @repo_root
   end
 
   def resolve_output_root_for_use(target:, destination_root:, explicit_output:)
@@ -536,7 +613,7 @@ class VibeCLI
   end
 
 
-  def build_target(target:, profile_name:, profile:, output_root:, overlay:)
+  def build_target(target:, profile_name:, profile:, output_root:, overlay:, project_level: false)
     ensure_safe_output_path!(output_root)
 
     manifest = build_manifest(
@@ -552,7 +629,7 @@ class VibeCLI
 
     case target
     when "claude-code"
-      render_claude(output_root, manifest)
+      render_claude(output_root, manifest, project_level: project_level)
     when "codex-cli"
       render_codex(output_root, manifest)
     when "cursor"
@@ -684,7 +761,7 @@ class VibeCLI
 end
 if __FILE__ == $PROGRAM_NAME
   begin
-    repo_root = File.expand_path("..", __dir__)
+    repo_root = ENV["VIBE_REPO_ROOT"] || File.expand_path("..", __dir__)
     VibeCLI.new(repo_root).run(ARGV)
   rescue Vibe::PathSafetyError, Vibe::SecurityError, Vibe::ValidationError, Vibe::ConfigurationError => e
     warn "Error: #{e.message}"

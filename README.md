@@ -234,84 +234,172 @@ Documentation is organized by purpose:
 
 ## Quick Start
 
-Choose your scenario:
-
-### Scenario A: Configure a Global Tool (Recommended)
-
-**Use case**: You want to use a specific AI tool (Claude Code, Kimi Code, OpenCode, Cursor, etc.) with the Vibe workflow.
+### Installation
 
 ```bash
 # 1. Clone the workflow repository
 git clone https://github.com/nehcuh/claude-code-workflow.git
 cd claude-code-workflow
 
-# 2. Generate configuration for your tool
-bin/vibe use kimi-code ~/.kimi        # For Kimi Code
-# OR
-bin/vibe use opencode ~/.opencode     # For OpenCode
-# OR
-bin/vibe quickstart                   # For Claude Code (shortcut)
+# 2. Install vibe command to system PATH
+bin/vibe-install
+# This creates /usr/local/bin/vibe (requires sudo)
 
-# 3. Install integrations (Superpowers, RTK)
-bin/vibe init --platform=kimi-code    # Replace with your tool name
-
-# 4. Start using your tool
-kimi   # or claude, opencode, cursor, etc.
+# 3. Verify installation
+vibe --help
 ```
 
-### Scenario B: Add to a New Project
-
-**Use case**: You have a project and want to apply the Vibe workflow to it.
+**Uninstallation:**
 
 ```bash
-# 1. In your project directory
-cd /path/to/your/project
+# Remove vibe command only
+bin/vibe-uninstall
 
-# 2. Apply workflow configuration (creates .vibe/ and tool-specific files)
-bin/vibe switch kimi-code   # For Kimi Code
-# OR
-bin/vibe switch opencode    # For OpenCode
-# OR
-bin/vibe switch claude-code # For Claude Code
+# Remove vibe + platform configurations
+bin/vibe-uninstall --remove-configs
 
-# 3. (Optional) Customize with project overlay
-# Edit .vibe/overlay.yaml to add project-specific rules
+# Remove everything (including ~/.vibe directory)
+bin/vibe-uninstall --remove-all
 
-# 4. Start your AI tool in the project
-kimi   # Will automatically load project configuration
+# Preview what would be removed
+bin/vibe-uninstall --dry-run
 ```
 
-### Scenario C: Use Multiple Tools
+### Workflow Overview
 
-**Use case**: You work with multiple AI tools and want them all to follow the Vibe workflow.
+```mermaid
+graph TB
+    A[Install vibe] --> B[vibe init --platform claude-code]
+    B --> C[Global Config: ~/.claude/]
+    C --> D[cd ~/my-project]
+    D --> E[vibe switch --platform claude-code]
+    E --> F[Project Config: CLAUDE.md + .vibe/]
+    F --> G[Launch AI Tool]
+    G --> H[Loads Global + Project Config]
+
+    style A fill:#e1f5ff
+    style B fill:#fff4e1
+    style E fill:#fff4e1
+    style G fill:#e8f5e9
+```
+
+### Typical Workflow
+
+**Step 1: Install Global Configuration**
+
+Choose your AI tool and install its global configuration:
 
 ```bash
-# 1. Set up global configs for each tool
-bin/vibe use kimi-code ~/.kimi
-bin/vibe use opencode ~/.opencode
-bin/vibe use cursor ~/.cursor
+# For Claude Code
+vibe init --platform claude-code
 
-# 2. Each tool will automatically load project-level config when in a project
+# For OpenCode
+vibe init --platform opencode
+
+# For Kimi Code
+vibe init --platform kimi-code
+
+# For Cursor
+vibe init --platform cursor
+```
+
+This installs the workflow configuration to the tool's global directory (e.g., `~/.claude`, `~/.opencode`, `~/.kimi`).
+
+**Step 2: Apply to Your Project**
+
+In your project directory, apply the platform configuration:
+
+```bash
 cd /path/to/your/project
-bin/vibe switch kimi-code   # Project-level config
 
-# Both tools will use the same project rules
-kimi      # Loads ~/.kimi/KIMI.md + project .vibe/overlay.yaml
-opencode  # Loads ~/.opencode/AGENTS.md + project .vibe/overlay.yaml
+# Apply configuration for your tool
+vibe switch --platform claude-code
+# OR
+vibe switch --platform opencode
+# OR
+vibe switch --platform kimi-code
+```
+
+This creates a lightweight project-level configuration that references the global setup.
+
+**Step 3: Start Coding**
+
+Launch your AI tool in the project directory. It will automatically load both global and project configurations.
+
+```bash
+claude   # For Claude Code
+# OR
+kimi     # For Kimi Code
+# OR
+opencode # For OpenCode
+```
+
+---
+
+### Advanced Usage
+
+**Verify Installation**
+
+```bash
+vibe init --platform claude-code --verify
+```
+
+**Get Installation Suggestions**
+
+```bash
+vibe init --platform opencode --suggest
+```
+
+**Force Reinstall**
+
+```bash
+vibe init --platform claude-code --force
+```
+
+**Use Multiple Tools**
+
+You can install configurations for multiple tools and switch between them:
+
+```bash
+# Install global configs
+vibe init --platform claude-code
+vibe init --platform opencode
+vibe init --platform kimi-code
+
+# In your project, choose which tool to use
+cd /path/to/your/project
+vibe switch --platform claude-code
+
+# Switch to a different tool
+vibe switch --platform opencode --force
+```
+
+---
+
+## Legacy Commands (Advanced Users)
+
+For advanced use cases, the following commands are still available:
+
+**Quickstart (Claude Code only)**
+```bash
+vibe quickstart  # Equivalent to: vibe init --platform claude-code
+```
+
+**Manual Installation**
+```bash
+vibe use claude-code ~/.claude           # Install to custom location
+vibe build claude-code --output ./dist   # Generate without installing
 ```
 
 ---
 
 ## Install Integrations (Optional)
 
-Enhance your workflow with external tools and skill packs:
+The `init` command focuses on platform configuration. For external tool integrations (Superpowers, RTK), these are detected automatically during installation.
 
-```bash
-# Check current status
-bin/vibe init --verify --platform=kimi-code
+To manually manage integrations, see [docs/integrations.md](docs/integrations.md).
 
-# See what's recommended
-bin/vibe init --suggest --platform=kimi-code
+---
 
 # Interactive installation
 bin/vibe init --platform=kimi-code

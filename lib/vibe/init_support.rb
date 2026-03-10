@@ -5,7 +5,7 @@ require "yaml"
 require_relative "errors"
 
 module Vibe
-  # Initialization and setup support for external integrations.
+  # Initialization and setup support for global platform configuration.
   #
   # Host requirements:
   #   @repo_root [String] — absolute path to the workflow repository root
@@ -14,28 +14,178 @@ module Vibe
   #   - Vibe::ValidationError (from errors.rb) — raised on validation failures
   #   - JSON, YAML (stdlib) — for parsing configuration files
   module InitSupport
-    # Main initialization flow
-    def run_init(mode: :setup, auto_yes: false, platform: nil)
-      @target_platform = platform || "claude-code"
-      platform_name = platform_label(@target_platform)
+    # Main initialization flow - installs global configuration
+    def run_init(platform:, force: false, verify_only: false, suggest_only: false)
+      @target_platform = platform
+      platform_name = platform_label(platform)
 
-      puts "\n🚀 #{platform_name} Workflow Initialization"
+      puts "\n🚀 #{platform_name} Global Configuration Setup"
       puts "=" * 50
       puts
 
-      check_environment
+      if verify_only
+        verify_platform_installation(platform)
+        return
+      end
 
-      case mode
-      when :verify
-        verify_integrations
-      when :suggest
-        suggest_integrations
-      when :install
-        install_recommended(auto_yes: auto_yes)
-      when :setup
-        setup_integrations
+      if suggest_only
+        suggest_platform_setup(platform)
+        return
+      end
+
+      # Install global configuration
+      install_global_config(platform: platform, force: force)
+    end
+
+    def install_global_config(platform:, force:)
+      target = normalize_target(platform)
+      destination_root = default_global_destination(target)
+
+      is_update = Dir.exist?(destination_root)
+
+      puts "Target platform: #{platform_label(platform)}"
+      puts "Install location: #{destination_root}"
+      puts
+
+      if is_update && !force
+        puts "⚠️  Configuration already exists at #{destination_root}"
+        print "Overwrite? [y/N] "
+        response = $stdin.gets
+        if response.nil? || !["y", "yes"].include?(response.chomp.downcase)
+          puts "\nInstallation cancelled."
+          return
+        end
+      end
+
+      puts "Installing global configuration..."
+      puts
+
+      profile_name, profile = resolve_profile(target, nil)
+      output_root = resolve_output_root_for_use(
+        target: target,
+        destination_root: destination_root,
+        explicit_output: nil
+      )
+      overlay = resolve_overlay(explicit_path: nil, search_roots: [destination_root, @repo_root])
+
+      manifest = build_target(
+        target: target,
+        profile_name: profile_name,
+        profile: profile,
+        output_root: output_root,
+        overlay: overlay,
+        project_level: false  # Global mode
+      )
+
+      FileUtils.mkdir_p(destination_root)
+      copy_tree_contents(output_root, destination_root)
+
+      write_marker(
+        File.join(destination_root, ".vibe-target.json"),
+        destination_root: destination_root,
+        manifest: manifest,
+        output_root: output_root,
+        mode: "init"
+      )
+
+      puts "✅ Success! #{platform_label(platform)} global configuration has been #{is_update ? 'updated' : 'installed'}."
+      puts
+      puts "Configuration location: #{destination_root}"
+      puts
+      puts "Next steps:"
+      puts "1. Review and customize #{File.join(destination_root, config_entrypoint(target))}"
+      puts "2. In your project directory, run: vibe switch --platform #{platform}"
+      puts
+    end
+
+    def default_global_destination(target)
+      case target
+      when "claude-code"
+        File.expand_path("~/.claude")
+      when "opencode"
+        File.expand_path("~/.opencode")
+      when "kimi-code"
+        File.expand_path("~/.kimi")
+      when "cursor"
+        File.expand_path("~/.cursor")
+      when "codex-cli"
+        File.expand_path("~/.codex")
       else
-        raise ValidationError, "Unknown init mode: #{mode}"
+        File.expand_path("~/.#{target}")
+      end
+    end
+
+    def config_entrypoint(target)
+      case target
+      when "claude-code"
+        "CLAUDE.md"
+      when "opencode"
+        "opencode.json"
+      when "kimi-code"
+        "KIMI.md"
+      else
+        "config.md"
+      end
+    end
+
+    def verify_platform_installation(platform)
+      target = normalize_target(platform)
+      destination = default_global_destination(target)
+
+      if Dir.exist?(destination)
+        puts "✅ #{platform_label(platform)} configuration found at #{destination}"
+
+        marker = File.join(destination, ".vibe-target.json")
+        if File.exist?(marker)
+          data = JSON.parse(File.read(marker))
+          puts "   Profile: #{data['profile']}"
+          puts "   Mode: #{data['mode']}"
+        end
+      else
+        puts "❌ #{platform_label(platform)} configuration not found"
+        puts "   Expected location: #{destination}"
+        puts "   Run: vibe init --platform #{platform}"
+      end
+    end
+
+    def suggest_platform_setup(platform)
+      target = normalize_target(platform)
+      destination = default_global_destination(target)
+
+      puts "Suggested setup for #{platform_label(platform)}:"
+      puts
+      puts "1. Install global configuration:"
+      puts "   vibe init --platform #{platform}"
+      puts
+      puts "2. Configuration will be installed to:"
+      puts "   #{destination}"
+      puts
+      puts "3. Then in your project directory:"
+      puts "   vibe switch --platform #{platform}"
+      puts
+    end
+
+    def normalize_target(platform)
+      # Map platform names to internal target names
+      case platform.to_s.downcase
+      when "claude-code", "claude"
+        "claude-code"
+      when "opencode"
+        "opencode"
+      when "kimi-code", "kimi"
+        "kimi-code"
+      when "cursor"
+        "cursor"
+      when "codex-cli", "codex"
+        "codex-cli"
+      when "vscode", "vs-code"
+        "vscode"
+      when "warp"
+        "warp"
+      when "antigravity"
+        "antigravity"
+      else
+        platform.to_s.downcase
       end
     end
 
