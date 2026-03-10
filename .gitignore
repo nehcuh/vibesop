@@ -27,3 +27,6 @@ settings.json
 
 # Git worktrees
 .worktrees/
+
+# Test coverage
+/coverage/
