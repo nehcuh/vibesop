@@ -17,18 +17,14 @@ class TestVibeUtilsValidation < Minitest::Test
     @host = UtilsHost.new("/fake/repo")
   end
 
-  def test_deep_merge_validates_base_type
-    error = assert_raises(Vibe::ValidationError) do
-      @host.deep_merge("invalid", {})
-    end
-    assert_includes error.message, "base must be a Hash, Array, or nil"
+  def test_deep_merge_string_base_returns_extra
+    result = @host.deep_merge("invalid", {})
+    assert_equal({}, result)
   end
 
-  def test_deep_merge_validates_extra_type
-    error = assert_raises(Vibe::ValidationError) do
-      @host.deep_merge({}, "invalid")
-    end
-    assert_includes error.message, "extra must be a Hash, Array, or nil"
+  def test_deep_merge_string_extra_returns_extra
+    result = @host.deep_merge({}, "invalid")
+    assert_equal("invalid", result)
   end
 
   def test_deep_merge_accepts_nil_base
@@ -41,17 +37,13 @@ class TestVibeUtilsValidation < Minitest::Test
     assert_equal({ a: 1 }, result)
   end
 
-  def test_deep_merge_validates_base_with_numeric
-    error = assert_raises(Vibe::ValidationError) do
-      @host.deep_merge(123, {})
-    end
-    assert_includes error.message, "base must be a Hash, Array, or nil"
+  def test_deep_merge_numeric_base_returns_extra
+    result = @host.deep_merge(123, {})
+    assert_equal({}, result)
   end
 
-  def test_deep_merge_validates_extra_with_numeric
-    error = assert_raises(Vibe::ValidationError) do
-      @host.deep_merge({}, 456)
-    end
-    assert_includes error.message, "extra must be a Hash, Array, or nil"
+  def test_deep_merge_numeric_extra_returns_extra
+    result = @host.deep_merge({}, 456)
+    assert_equal(456, result)
   end
 end

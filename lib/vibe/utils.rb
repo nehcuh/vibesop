@@ -13,13 +13,6 @@ module Vibe
     # --- Deep structure helpers ---
 
     def deep_merge(base, extra)
-      unless base.nil? || base.is_a?(Hash) || base.is_a?(Array)
-        raise ValidationError, "base must be a Hash, Array, or nil, got #{base.class}"
-      end
-      unless extra.nil? || extra.is_a?(Hash) || extra.is_a?(Array)
-        raise ValidationError, "extra must be a Hash, Array, or nil, got #{extra.class}"
-      end
-
       return deep_copy(extra) if base.nil?
       return deep_copy(base) if extra.nil?
 

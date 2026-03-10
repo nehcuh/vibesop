@@ -6,9 +6,7 @@ TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "${TMP_DIR}"' EXIT
 
 # --- Unit tests ---
-for test_file in "${REPO_ROOT}"/test/test_*.rb; do
-  ruby "${test_file}" || { echo "FAIL: unit test ${test_file}"; exit 1; }
-done
+bundle exec ruby -I"${REPO_ROOT}/lib:${REPO_ROOT}/test" -e "Dir.glob('${REPO_ROOT}/test/test_*.rb').each { |f| require File.expand_path(f) }" || { echo "FAIL: unit tests"; exit 1; }
 
 # --- Init command tests ---
 "${REPO_ROOT}/bin/vibe" init --help >/dev/null || { echo "FAIL: init --help"; exit 1; }
