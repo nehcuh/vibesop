@@ -10,6 +10,7 @@ require "yaml"
 require "thread"
 require_relative "../lib/vibe/errors"
 require_relative "../lib/vibe/utils"
+require_relative "../lib/vibe/container"
 require_relative "../lib/vibe/doc_rendering"
 require_relative "../lib/vibe/native_configs"
 require_relative "../lib/vibe/overlay_support"
@@ -47,10 +48,11 @@ class VibeCLI
   SUPPORTED_TARGETS = %w[antigravity claude-code codex-cli cursor kimi-code opencode vscode warp].freeze
   MARKER_FILENAME = ".vibe-target.json"
 
-  def initialize(repo_root)
+  def initialize(repo_root, container: nil)
     @repo_root = repo_root
     @skip_integrations = false
     @yaml_mutex = Mutex.new
+    @container = container || Vibe::Container.new(repo_root)
   end
 
   # Lazy-loaded YAML documents with caching (thread-safe)
