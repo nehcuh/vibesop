@@ -48,6 +48,16 @@ class VibeCLI
   SUPPORTED_TARGETS = %w[antigravity claude-code codex-cli cursor kimi-code opencode vscode warp].freeze
   MARKER_FILENAME = ".vibe-target.json"
 
+  COMMAND_REGISTRY = {
+    "build" => :run_build,
+    "use" => :run_use_with_switch_false,
+    "switch" => :run_use_with_switch_true,
+    "inspect" => :run_inspect,
+    "init" => :run_init_command,
+    "quickstart" => :run_quickstart_command,
+    "targets" => :run_targets_command
+  }.freeze
+
   def initialize(repo_root, container: nil)
     @repo_root = repo_root
     @skip_integrations = false
@@ -101,32 +111,28 @@ class VibeCLI
   def run(argv)
     command = argv.shift
 
-    case command
-    when "build"
-      run_build(argv)
-    when "use"
-      run_use(argv, switch_mode: false)
-    when "switch"
-      run_use(argv, switch_mode: true)
-    when "inspect"
-      run_inspect(argv)
-    when "init"
-      run_init_command(argv)
-    when "quickstart"
-      run_quickstart_command(argv)
-    when "targets"
-      puts SUPPORTED_TARGETS.join("
-")
-    when "help", "--help", "-h", nil
+    if COMMAND_REGISTRY.key?(command)
+      send(COMMAND_REGISTRY[command], argv)
+    elsif command.nil? || %w[help --help -h].include?(command)
       puts usage
     else
-      raise Vibe::ValidationError, "Unknown command: #{command}
-
-#{usage}"
+      raise Vibe::ValidationError, "Unknown command: #{command}\n\n#{usage}"
     end
   end
 
   private
+
+  def run_use_with_switch_false(argv)
+    run_use(argv, switch_mode: false)
+  end
+
+  def run_use_with_switch_true(argv)
+    run_use(argv, switch_mode: true)
+  end
+
+  def run_targets_command(_argv)
+    puts SUPPORTED_TARGETS.join("\n")
+  end
 
   def usage
     <<~TEXT
