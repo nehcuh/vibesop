@@ -10,7 +10,7 @@ require_relative "target_renderers"
 require_relative "external_tools"
 require_relative "init_support"
 
-module Vibe
+ module Vibe
   class Container
     attr_reader :repo_root
 
