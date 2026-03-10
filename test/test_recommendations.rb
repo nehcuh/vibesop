@@ -1,4 +1,4 @@
-require "minitest/autorun"
+require_relative "test_helper"
 require "yaml"
 
 class TestRecommendations < Minitest::Test
