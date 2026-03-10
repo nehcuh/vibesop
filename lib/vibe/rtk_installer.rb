@@ -59,7 +59,7 @@ module Vibe
     # Interactive Homebrew installation with user feedback
     def install_rtk_via_homebrew_interactive
       puts
-      if system(["which", "which"], "brew", out: File::NULL, err: File::NULL)
+      if system("which", "brew", out: File::NULL, err: File::NULL)
         if install_rtk_via_homebrew
           puts "   ✓ RTK installed successfully"
           configure_rtk_after_install
@@ -92,9 +92,9 @@ module Vibe
     # Interactive Cargo installation with user feedback
     def install_rtk_via_cargo_interactive
       puts
-      if system(["which", "which"], "cargo", out: File::NULL, err: File::NULL)
+      if system("which", "cargo", out: File::NULL, err: File::NULL)
         puts "   Installing RTK via Cargo..."
-        if system(["cargo", "cargo"], "install", "--git", "https://github.com/rtk-ai/rtk")
+        if system("cargo", "install", "--git", "https://github.com/runesleo/rtk")
           puts "   ✓ RTK installed successfully"
           configure_rtk_after_install
         else
