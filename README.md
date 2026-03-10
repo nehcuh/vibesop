@@ -13,8 +13,13 @@ This project is a fork of [runesleo/claude-code-workflow](https://github.com/run
 - **Original Author**: [@runes_leo](https://x.com/runes_leo)
 - **Fork Maintainer**: [@nehcuh](https://github.com/nehcuh)
 - **Major Changes**:
-  - Modularized CLI into 9 Ruby library modules (`lib/vibe/*.rb`)
-  - Added comprehensive unit test suite (`test/`)
+  - Modularized CLI into 10 Ruby library modules (`lib/vibe/*.rb`)
+  - Added comprehensive unit test suite with 12 test files + benchmarks
+  - Integrated SimpleCov for test coverage enforcement (62%+ coverage)
+  - Added dependency injection container for future testability
+  - Enhanced error handling with context support
+  - Thread-safe YAML loading with mutex protection
+  - Command registry pattern for better extensibility
   - Added Chinese documentation (`README.zh-CN.md`)
   - Enhanced overlay system with runtime preference examples (`examples/`)
   - Improved path safety and symlink handling for macOS compatibility
@@ -83,7 +88,7 @@ claude-code-workflow/
 │   ├── vibe-smoke                # Smoke test for generator target builds + overlays
 │   └── validate-schemas          # JSON schema validation for core/ specs
 │
-├── lib/vibe/                     # Modularized CLI implementation (9 modules)
+├── lib/vibe/                     # Modularized CLI implementation (10 modules)
 │   ├── utils.rb                  # Common utilities (deep merge, I/O, path handling)
 │   ├── doc_rendering.rb          # Markdown document rendering
 │   ├── overlay_support.rb        # Overlay parsing, discovery, policy merging
@@ -92,12 +97,19 @@ claude-code-workflow/
 │   ├── target_renderers.rb       # 8 target file renderers
 │   ├── init_support.rb           # Integration detection and setup
 │   ├── external_tools.rb         # External tool integration logic
-│   └── errors.rb                 # Custom error classes
+│   ├── container.rb              # Dependency injection container (optional)
+│   └── errors.rb                 # Custom error classes with context support
 │
-├── test/                         # Unit test suite (7 test files)
+├── test/                         # Unit test suite (12 test files + benchmarks)
 │   ├── test_vibe_cli.rb
 │   ├── test_vibe_overlay.rb
 │   ├── test_vibe_init.rb
+│   ├── test_vibe_container.rb
+│   ├── test_vibe_utils_validation.rb
+│   ├── benchmark/                # Performance benchmarks
+│   │   ├── check_coverage.rb     # SimpleCov coverage threshold checker
+│   │   ├── utils_benchmark.rb
+│   │   └── yaml_loading_benchmark.rb
 │   ├── test_vibe_external_tools.rb
 │   ├── test_path_overlap_calculation.rb
 │   ├── test_cli_path_safety_guards.rb
