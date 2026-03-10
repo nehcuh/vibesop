@@ -8,6 +8,7 @@ require_relative "user_interaction"
 require_relative "platform_verifier"
 require_relative "platform_installer"
 require_relative "rtk_installer"
+require_relative "integration_manager"
 
 module Vibe
   # Initialization and setup support for global platform configuration.
@@ -22,6 +23,7 @@ module Vibe
   #   - Vibe::PlatformVerifier — platform verification logic
   #   - Vibe::PlatformInstaller — platform installation logic
   #   - Vibe::RtkInstaller — RTK installation logic
+  #   - Vibe::IntegrationManager — integration detection and management
   #   - JSON, YAML (stdlib) — for parsing configuration files
   module InitSupport
     include PlatformUtils
@@ -29,6 +31,7 @@ module Vibe
     include PlatformVerifier
     include PlatformInstaller
     include RtkInstaller
+    include IntegrationManager
     # Main initialization flow - installs global configuration
     def run_init(platform:, force: false, verify_only: false, suggest_only: false)
       @target_platform = platform
@@ -55,79 +58,7 @@ module Vibe
     # Note: install_global_config, verify_platform_installation, suggest_platform_setup,
     # and verify_all_platforms are now defined in PlatformInstaller and PlatformVerifier modules
 
-    # Check and suggest optional integrations after installation
-    def check_and_suggest_integrations(platform)
-      @target_platform = platform
-      status = integration_status
-
-      missing = []
-      pending = []
-
-      status.each do |name, info|
-        if !info[:installed]
-          missing << name
-        elsif !info[:ready]
-          pending << name
-        end
-      end
-
-      return if missing.empty? && pending.empty?
-
-      puts
-      puts "📦 Optional Integrations"
-      puts "=" * 50
-
-      if missing.include?(:superpowers)
-        puts
-        puts "⚠️  Superpowers Skill Pack not detected"
-        puts "   Superpowers provides advanced workflows like TDD, debugging, and code review."
-        puts
-        puts "   To install:"
-        puts "   1. Visit: https://github.com/anthropics/superpowers"
-        puts "   2. Follow installation instructions for #{platform_label(platform)}"
-        puts
-
-        if ask_yes_no("Would you like to open the installation page now?")
-          open_url("https://github.com/anthropics/superpowers")
-        end
-      end
-
-      if missing.include?(:rtk)
-        puts
-        puts "⚠️  RTK Token Optimizer not detected"
-        puts "   RTK reduces token consumption by 60-90% on common commands."
-        puts
-        puts "   To install:"
-        puts "   brew install rtk  # or download from https://github.com/runesleo/rtk"
-        puts
-
-        if ask_yes_no("Would you like to install RTK now? (requires Homebrew)")
-          if install_rtk_interactive
-            # Refresh status after installation
-            status = integration_status
-            pending << :rtk if status[:rtk][:installed] && !status[:rtk][:ready]
-          end
-        end
-      end
-
-      if pending.include?(:rtk)
-        rtk_status = status[:rtk] || integration_status[:rtk]
-        if rtk_status[:installed] && !rtk_status[:hook_configured]
-          puts
-          puts "⚠️  RTK is installed but hook not configured"
-          puts "   To enable RTK optimization, run: rtk init --global"
-          puts
-
-          if ask_yes_no("Would you like to configure RTK hook now?")
-            configure_rtk_hook
-          end
-        end
-      end
-
-      puts
-    end
-
-    # Note: install_rtk and related methods are now defined in RtkInstaller module
+    # Note: check_and_suggest_integrations and check_environment are now defined in IntegrationManager module
 
     def run_quickstart(options = {})
       puts "\n⚡ Quickstart: Claude Code Setup"
@@ -203,31 +134,7 @@ module Vibe
 
     private
 
-    def check_environment
-      puts "Checking your environment..."
-      puts
-
-      # Show target platform
-      puts "✓ Target platform: #{platform_label(@target_platform)}"
-
-      # Check Claude Code
-      claude_dir = File.expand_path("~/.claude")
-      if Dir.exist?(claude_dir)
-        puts "✓ Claude Code detected at ~/.claude"
-      else
-        puts "⚠ Claude Code directory not found at ~/.claude"
-        puts "  This workflow is designed for Claude Code."
-        puts
-      end
-
-      # Detect current target (if in a repo with .vibe-target.json)
-      if File.exist?(".vibe-target.json")
-        target_info = JSON.parse(File.read(".vibe-target.json"))
-        puts "✓ Current target: #{target_info['target']}"
-      end
-
-      puts
-    end
+    # Note: check_environment is now defined in IntegrationManager module
 
     def setup_integrations
       puts "Checking external integrations..."
