@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Interactive integration suggestions during `init` and `quickstart` commands
+- `vibe doctor` command for comprehensive environment diagnostics
+- Automatic RTK installation via Homebrew with interactive prompts
+- Cross-platform URL opening for Superpowers installation guide
+- Integration status display with detailed information (version, location, skills count)
+- Installation wrapper scripts (`bin/vibe-install`, `bin/vibe-uninstall`, `bin/vibe-wrapper`)
 - Architecture improvements: dependency injection container, enhanced error handling, thread-safe YAML loading
 - SimpleCov test coverage enforcement (50% threshold, currently 62.76%)
 - Performance benchmarks for critical operations (`test/benchmark/`)
