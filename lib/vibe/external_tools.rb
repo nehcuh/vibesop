@@ -34,27 +34,31 @@ module Vibe
 
     # --- Superpowers Detection ---
 
-    # Platform-specific superpowers paths
+    # Platform-specific superpowers paths.
+    # skills_dir: directory where individual skill symlinks are created.
+    # skills_source: the superpowers skills source directory that symlinks point into.
     SUPERPOWERS_PLATFORM_PATHS = {
       "claude-code" => {
         plugin: "~/.claude/plugins/superpowers",
-        skills: "~/.claude/skills",
-        skills_glob: "superpowers-*"
+        skills_dir: "~/.claude/skills",
+        skills_source: "~/.config/skills/superpowers/skills"
       },
       "cursor" => {
         plugin: "~/.cursor/plugins/superpowers"
       },
       "opencode" => {
         plugin: "~/.config/opencode/plugins/superpowers.js",
-        skills: "~/.config/opencode/skills/superpowers"
+        skills_dir: "~/.config/opencode/skills",
+        skills_source: "~/.config/skills/superpowers/skills"
       },
       "kimi-code" => {
         plugin: "~/.config/agents/plugins/superpowers",
-        skills: "~/.config/agents/skills",
-        skills_glob: "superpowers-*"
+        skills_dir: "~/.config/agents/skills",
+        skills_source: "~/.config/skills/superpowers/skills"
       },
       "codex-cli" => {
-        skills: "~/.codex/skills/superpowers"
+        skills_dir: "~/.codex/skills",
+        skills_source: "~/.config/skills/superpowers/skills"
       }
     }.freeze
 
@@ -72,16 +76,11 @@ module Vibe
           return :platform_plugin if File.exist?(expanded) || Dir.exist?(expanded)
         end
 
-        if paths[:skills]
-          expanded = File.expand_path(paths[:skills])
-          if paths[:skills_glob]
-            # Glob pattern (e.g. claude-code's superpowers-* symlinks)
-            if Dir.exist?(expanded)
-              matches = Dir.glob(File.join(expanded, paths[:skills_glob]))
-              return :platform_skills if matches.any?
-            end
-          else
-            return :platform_skills if File.exist?(expanded) || Dir.exist?(expanded)
+        if paths[:skills_dir] && paths[:skills_source]
+          skills_dir = File.expand_path(paths[:skills_dir])
+          source_dir = File.expand_path(paths[:skills_source])
+          if Dir.exist?(skills_dir) && superpowers_symlinks_in(skills_dir, source_dir).any?
+            return :platform_skills
           end
         end
       end
@@ -89,12 +88,6 @@ module Vibe
       # Cross-platform fallback: check common locations
       claude_plugins = File.expand_path("~/.claude/plugins/superpowers")
       return :claude_plugin if Dir.exist?(claude_plugins)
-
-      claude_skills = File.expand_path("~/.claude/skills")
-      if Dir.exist?(claude_skills)
-        superpowers_skills = Dir.glob(File.join(claude_skills, "superpowers-*"))
-        return :skills_symlink if superpowers_skills.any?
-      end
 
       # Check XDG-compliant shared location
       shared_clone = File.expand_path("~/.config/skills/superpowers")
@@ -111,20 +104,16 @@ module Vibe
 
     def superpowers_location(target_platform = nil)
       platform = target_platform || @target_platform
-      
+
       case detect_superpowers(platform)
       when :platform_plugin
         paths = SUPERPOWERS_PLATFORM_PATHS[platform]
         File.expand_path(paths[:plugin]) if paths
       when :platform_skills
         paths = SUPERPOWERS_PLATFORM_PATHS[platform]
-        # Return the skills directory itself, not a glob match
-        File.expand_path(paths[:skills]) if paths
+        File.expand_path(paths[:skills_dir]) if paths
       when :claude_plugin
         File.expand_path("~/.claude/plugins/superpowers")
-      when :skills_symlink
-        skills = Dir.glob(File.expand_path("~/.claude/skills/superpowers-*"))
-        skills.first
       when :shared_clone
         File.expand_path("~/.config/skills/superpowers")
       when :local_clone
@@ -138,43 +127,32 @@ module Vibe
 
     def superpowers_skills_count(target_platform = nil)
       platform = target_platform || @target_platform
+
       if platform && SUPERPOWERS_PLATFORM_PATHS[platform]
         paths = SUPERPOWERS_PLATFORM_PATHS[platform]
-        if paths[:skills]
-          expanded = File.expand_path(paths[:skills])
-          if paths[:skills_glob]
-            # Glob-based (e.g. claude-code)
-            Dir.glob(File.join(expanded, paths[:skills_glob])).each do |skill_dir|
-              count = Dir.glob(File.join(skill_dir, "*/SKILL.md")).count
-              return count if count > 0
-            end
-          elsif Dir.exist?(expanded)
-            count = Dir.glob(File.join(expanded, "*/SKILL.md")).count
-            return count if count > 0
-          end
+        if paths[:skills_dir] && paths[:skills_source]
+          skills_dir = File.expand_path(paths[:skills_dir])
+          source_dir = File.expand_path(paths[:skills_source])
+          links = superpowers_symlinks_in(skills_dir, source_dir)
+          return links.size if links.any?
         end
       end
 
-      # Fallback to location-based detection
-      location = superpowers_location
-      return 0 unless location
+      # Fallback: count skills in the shared clone
+      shared_skills = File.expand_path("~/.config/skills/superpowers/skills")
+      return Dir.children(shared_skills).size if Dir.exist?(shared_skills)
 
-      # If location is a file (e.g. plugin .js), try to find skills nearby
-      if File.file?(location)
-        # Try sibling skills directory or parent's skills
-        base = File.dirname(File.dirname(location))
-        skills_dir = File.join(base, "skills")
-        if Dir.exist?(skills_dir)
-          return Dir.glob(File.join(skills_dir, "*/SKILL.md")).count
-        end
-        return 0
+      0
+    end
+
+    # Returns entries in skills_dir whose symlink targets are inside source_dir.
+    def superpowers_symlinks_in(skills_dir, source_dir)
+      return [] unless Dir.exist?(skills_dir)
+
+      Dir.children(skills_dir).select do |entry|
+        link = File.join(skills_dir, entry)
+        File.symlink?(link) && File.readlink(link).start_with?(source_dir)
       end
-
-      skills_dir = File.join(location, "skills")
-      return Dir.glob(File.join(skills_dir, "*/SKILL.md")).count if Dir.exist?(skills_dir)
-
-      # Location itself might be a skills directory
-      Dir.glob(File.join(location, "*/SKILL.md")).count
     end
 
     # --- RTK Detection ---
@@ -194,7 +172,7 @@ module Vibe
     def rtk_version
       return nil unless detect_rtk == :installed
 
-      version_output, status = Open3.capture2(["rtk", "rtk"], "--version", err: File::NULL)
+      version_output, status = Open3.capture2("rtk", "--version", err: File::NULL)
       status.success? && !version_output.strip.empty? ? version_output.strip : nil
     rescue StandardError => e
       warn "Warning: Failed to get RTK version: #{e.message}" if ENV["VIBE_DEBUG"]
@@ -204,7 +182,7 @@ module Vibe
     def rtk_binary_path
       return nil unless detect_rtk == :installed
 
-      path_output, status = Open3.capture2(["which", "which"], "rtk", err: File::NULL)
+      path_output, status = Open3.capture2("which", "rtk", err: File::NULL)
       status.success? ? path_output.strip : nil
     rescue StandardError => e
       warn "Warning: Failed to get RTK binary path: #{e.message}" if ENV["VIBE_DEBUG"]
@@ -278,19 +256,22 @@ module Vibe
         }
       end
 
-      # For fallback detection (local_clone etc.), check if platform integration is configured
-      platform_ready = platform.nil? || platform == "claude-code" || !SUPERPOWERS_PLATFORM_PATHS.key?(platform)
+      # For fallback detection (shared_clone, local_clone, etc.):
+      # platform is "ready" only if we can confirm platform-specific integration exists.
+      # Unknown platforms (no entry in SUPERPOWERS_PLATFORM_PATHS) are assumed ready.
+      platform_ready = platform.nil? || !SUPERPOWERS_PLATFORM_PATHS.key?(platform)
 
-      # If platform has specific paths, check if they're configured
-      if platform && SUPERPOWERS_PLATFORM_PATHS.key?(platform) && !platform_ready
+      # If platform has specific paths, check if they're actually configured
+      if platform && SUPERPOWERS_PLATFORM_PATHS.key?(platform)
         paths = SUPERPOWERS_PLATFORM_PATHS[platform]
         if paths[:plugin]
           expanded = File.expand_path(paths[:plugin])
           platform_ready = true if File.exist?(expanded) || Dir.exist?(expanded)
         end
-        if !platform_ready && paths[:skills]
-          expanded = File.expand_path(paths[:skills])
-          platform_ready = true if File.exist?(expanded) || Dir.exist?(expanded)
+        if !platform_ready && paths[:skills_dir] && paths[:skills_source]
+          skills_dir = File.expand_path(paths[:skills_dir])
+          source_dir = File.expand_path(paths[:skills_source])
+          platform_ready = true if superpowers_symlinks_in(skills_dir, source_dir).any?
         end
       end
 

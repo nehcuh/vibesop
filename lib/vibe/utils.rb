@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "tmpdir"
+require "date"
 require_relative "errors"
 
 module Vibe
@@ -57,9 +58,17 @@ module Vibe
       elsif base.is_a?(Array) && extra.is_a?(Array)
         (base + extra).uniq
       else
+        # Type mismatch: warn about potential data loss in debug mode
+        if ENV["VIBE_DEBUG"]
+          warn "deep_merge: type mismatch - base is #{base.class}, extra is #{extra.class}. " \
+               "Extra will replace base (potential data loss)."
+        end
         deep_copy(extra)
       end
     end
+
+    # Whitelist of safe classes for Marshal fallback
+    SAFE_MARSHAL_CLASSES = [Time, Date, DateTime, Rational, Complex, Regexp, Range].freeze
 
     def deep_copy(value)
       return value if value.nil? || value == true || value == false || value.is_a?(Numeric) || value.is_a?(Symbol)
@@ -72,8 +81,19 @@ module Vibe
       when Hash
         value.transform_keys { |k| deep_copy(k) }.transform_values { |v| deep_copy(v) }
       else
-        # Fallback to Marshal for other types (preserves type information)
-        Marshal.load(Marshal.dump(value))
+        # Security: Only use Marshal for known-safe types
+        # Marshal.load can execute arbitrary code if given malicious data
+        # We restrict to whitelisted simple types to prevent deserialization attacks
+        if SAFE_MARSHAL_CLASSES.any? { |klass| value.is_a?(klass) }
+          Marshal.load(Marshal.dump(value))
+        else
+          # For unknown types, return the original value (shallow copy)
+          # This is safer than potentially executing malicious code
+          if ENV["VIBE_DEBUG"]
+            warn "deep_copy: unhandled type #{value.class}, returning original reference"
+          end
+          value
+        end
       end
     end
 

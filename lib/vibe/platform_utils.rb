@@ -76,13 +76,20 @@ module Vibe
       when "claude-code"
         File.expand_path("~/.claude")
       when "opencode"
-        File.expand_path("~/.opencode")
+        # OpenCode uses XDG config directory per official docs
+        # https://github.com/opencode-ai/opencode
+        File.expand_path("~/.config/opencode")
       when "kimi-code"
         File.expand_path("~/.config/agents")
       when "cursor"
         File.expand_path("~/.cursor")
       when "codex-cli"
         File.expand_path("~/.codex")
+      when "warp"
+        # Warp terminal uses ~/.warp/ for workflows
+        File.expand_path("~/.warp")
+      when "vscode"
+        File.expand_path("~/.vscode")
       else
         File.expand_path("~/.#{target}")
       end

@@ -53,8 +53,14 @@ module Vibe
       puts "   #{destination}"
       puts
       puts "3. Then in your project directory:"
-      puts "   vibe switch --platform #{platform}"
+      puts "   vibe apply #{platform}"
       puts
+
+      # Show integration suggestions
+      if respond_to?(:suggest_integrations, true)
+        puts
+        suggest_integrations
+      end
     end
 
     # Verify all supported platforms

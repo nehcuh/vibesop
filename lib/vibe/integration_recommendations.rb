@@ -27,6 +27,7 @@ module Vibe
         return
       end
 
+      current_platform = @target_platform
       suggested_by_category = {}
       category_order = recommended["category_order"] || recommended["categories"].keys
 
@@ -36,6 +37,13 @@ module Vibe
 
         integrations.each do |integration|
           name = integration["name"]
+          
+          # Filter by platform if specified
+          platforms = integration["platforms"]
+          if platforms && current_platform && !platforms.include?(current_platform)
+            next  # Skip integrations not applicable to current platform
+          end
+          
           info = send("verify_#{name}")
           next if info[:ready]  # Skip already installed
 
@@ -72,7 +80,8 @@ module Vibe
       end
 
       puts
-      puts "To install these integrations interactively, run: bin/vibe init --setup"
+      puts "After installing global config, integrations will be checked automatically."
+      puts "To install them interactively: bin/vibe init --platform #{@target_platform || 'claude-code'}"
       puts
     end
 

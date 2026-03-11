@@ -81,7 +81,6 @@ jobs:
         bundle exec ruby test/test_cli_path_safety_guards.rb
         bundle exec ruby test/test_yaml_safety.rb
         bundle exec ruby test/test_recommendations.rb
-        bundle exec ruby test/test_vibe_container.rb
         bundle exec ruby test/test_vibe_utils_validation.rb
     
     - name: Run smoke test

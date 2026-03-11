@@ -15,6 +15,8 @@ module Vibe
     UNSAFE_OUTPUT_PATHS = ["/", "/tmp", "/var", "/etc", "/usr"].freeze
     # macOS temp directories under /var are safe
     SAFE_VAR_PREFIXES = ["/var/folders/"].freeze
+    # Maximum recursion depth for normalize_path to prevent stack overflow
+    MAX_NORMALIZE_DEPTH = 100
 
     def ensure_safe_output_path!(output_root)
       expanded = normalize_path(output_root)
@@ -127,7 +129,19 @@ module Vibe
     # For /tmp/foo/bar where /tmp exists but foo/bar don't:
     # - Resolve /tmp to /private/tmp (on macOS)
     # - Append /foo/bar to get /private/tmp/foo/bar
-    def normalize_path(path)
+    def normalize_path(path, depth = 0)
+      # Prevent stack overflow from extremely deep directory structures
+      if depth > PathSafety::MAX_NORMALIZE_DEPTH
+        raise PathSafetyError.new(
+          "Path normalization exceeded maximum depth (#{PathSafety::MAX_NORMALIZE_DEPTH})",
+          context: {
+            path: path.to_s,
+            depth: depth,
+            suggestion: "Check for circular symlinks or extremely deep directory structures."
+          }
+        )
+      end
+
       # Expand path first to handle relative paths
       expanded = File.expand_path(path)
 
@@ -142,7 +156,7 @@ module Vibe
 
         # Recursively normalize parent if it's not root
         if parent != expanded && parent != "/"
-          normalized_parent = normalize_path(parent)
+          normalized_parent = normalize_path(parent, depth + 1)
           return File.join(normalized_parent, basename)
         end
 

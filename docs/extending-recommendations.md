@@ -12,13 +12,16 @@ The recommendation system is driven by `core/integrations/recommended.yaml`, whi
 ## Available Commands
 
 ```bash
-bin/vibe init --suggest    # Show recommendations for uninstalled tools
-bin/vibe init --install    # Automatically install recommended tools
-bin/vibe init --install -y # Install without confirmation (for CI/automation)
-bin/vibe init --verify     # Verify what's already installed
-bin/vibe init --setup      # Interactive setup (default)
-bin/vibe init --platform=opencode --suggest  # Platform-specific recommendations
+bin/vibe init --platform PLATFORM --suggest    # Show recommendations for uninstalled tools
+bin/vibe init --platform PLATFORM --verify     # Verify what's already installed
+bin/vibe init --platform PLATFORM --force      # Force reinstall configuration
+bin/vibe doctor                                # Check environment and integration status
 ```
+
+After running `bin/vibe init --platform PLATFORM`, the system will automatically:
+1. Install global configuration
+2. Detect installed integrations
+3. Prompt to install missing tools (in interactive terminal)
 
 ## Adding a New Integration
 
@@ -100,16 +103,16 @@ categories:
 
 ```bash
 # Check if it appears in suggestions
-bin/vibe init --suggest
+bin/vibe init --platform claude-code --suggest
 
 # Test verification
-bin/vibe init --verify
-
-# Test interactive setup
-bin/vibe init --setup
+bin/vibe init --platform claude-code --verify
 
 # Test with a specific platform
-bin/vibe init --suggest --platform=opencode
+bin/vibe init --platform opencode --suggest
+
+# Check overall environment
+bin/vibe doctor
 ```
 
 ## Adding a New Category

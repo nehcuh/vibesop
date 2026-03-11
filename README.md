@@ -88,23 +88,34 @@ claude-code-workflow/
 │   ├── vibe-smoke                # Smoke test for generator target builds + overlays
 │   └── validate-schemas          # JSON schema validation for core/ specs
 │
-├── lib/vibe/                     # Modularized CLI implementation (10 modules)
+├── lib/vibe/                     # Modularized CLI implementation (22 modules)
 │   ├── utils.rb                  # Common utilities (deep merge, I/O, path handling)
 │   ├── doc_rendering.rb          # Markdown document rendering
 │   ├── overlay_support.rb        # Overlay parsing, discovery, policy merging
 │   ├── native_configs.rb         # Native config builders (settings.json, cli.json, etc.)
 │   ├── path_safety.rb            # Output path safety guards
 │   ├── target_renderers.rb       # 8 target file renderers
+│   ├── builder.rb                # Target build orchestration
 │   ├── init_support.rb           # Integration detection and setup
 │   ├── external_tools.rb         # External tool integration logic
-│   ├── container.rb              # Dependency injection container (optional)
+│   ├── integration_manager.rb    # Integration detection and management
+│   ├── integration_setup.rb      # Integration setup and configuration
+│   ├── integration_verifier.rb   # Integration verification
+│   ├── integration_recommendations.rb # Integration recommendations
+│   ├── platform_utils.rb         # Platform-related utilities
+│   ├── platform_installer.rb     # Platform installation logic
+│   ├── platform_verifier.rb      # Platform verification
+│   ├── rtk_installer.rb          # RTK installation logic
+│   ├── superpowers_installer.rb  # Superpowers installation logic
+│   ├── quickstart_runner.rb      # Quickstart setup logic
+│   ├── user_interaction.rb       # User prompts and interaction
+│   ├── version.rb                # Version information
 │   └── errors.rb                 # Custom error classes with context support
 │
-├── test/                         # Unit test suite (12 test files + benchmarks)
+├── test/                         # Unit test suite (11 test files + benchmarks)
 │   ├── test_vibe_cli.rb
 │   ├── test_vibe_overlay.rb
 │   ├── test_vibe_init.rb
-│   ├── test_vibe_container.rb
 │   ├── test_vibe_utils_validation.rb
 │   ├── benchmark/                # Performance benchmarks
 │   │   ├── check_coverage.rb     # SimpleCov coverage threshold checker
@@ -113,7 +124,9 @@ claude-code-workflow/
 │   ├── test_vibe_external_tools.rb
 │   ├── test_path_overlap_calculation.rb
 │   ├── test_cli_path_safety_guards.rb
-│   └── test_vibe_utils.rb
+│   ├── test_vibe_utils.rb
+│   ├── test_recommendations.rb
+│   └── test_yaml_safety.rb
 │
 ├── schemas/                      # JSON schemas for core/ validation
 │   ├── providers.schema.json
@@ -303,7 +316,7 @@ vibe init --platform kimi-code
 vibe init --platform cursor
 ```
 
-This installs the workflow configuration to the tool's global directory (e.g., `~/.claude`, `~/.opencode`, `~/.config/agents`).
+This installs the workflow configuration to the tool's global directory (e.g., `~/.claude`, `~/.config/opencode`, `~/.config/agents`).
 
 **Step 2: Apply to Your Project**
 
@@ -399,15 +412,6 @@ The `init` command focuses on platform configuration. For external tool integrat
 
 To manually manage integrations, see [docs/integrations.md](docs/integrations.md).
 
----
-
-# Interactive installation
-bin/vibe init --platform=kimi-code
-
-# Auto-install without prompts
-bin/vibe init --install --platform=kimi-code -y
-```
-
 **Available integrations:**
 - **Superpowers** (P1): Advanced skill pack - TDD, brainstorming, code review, debugging
 - **RTK** (P2): Token optimizer - Reduces LLM costs by 60-90%
@@ -425,8 +429,8 @@ Open your tool's config file and personalize:
 | Tool | Config File |
 |------|------------|
 | Claude Code | `~/.claude/CLAUDE.md` |
+| OpenCode | `~/.config/opencode/AGENTS.md` |
 | Kimi Code | `~/.config/agents/KIMI.md` |
-| OpenCode | `~/.opencode/AGENTS.md` |
 | Cursor | `~/.cursor/CURSOR.md` |
 
 Fill in user info, project paths, and preferences.
@@ -632,18 +636,19 @@ bin/vibe init --platform=<tool>
 **Adding workflow to a project:**
 ```bash
 cd /path/to/project
-bin/vibe switch <tool>
+bin/vibe apply <platform>
 ```
 
 **Checking integration status:**
 ```bash
-bin/vibe init --verify --platform=<tool>
+bin/vibe init --platform=<platform> --verify
+bin/vibe doctor
 ```
 
 **Updating workflow:**
 ```bash
 git pull
-bin/vibe use <tool> <config-dir> --force  # Regenerate configs
+bin/vibe init --platform <platform> --force  # Regenerate global config
 ```
 
 ### All Commands
@@ -652,22 +657,31 @@ bin/vibe use <tool> <config-dir> --force  # Regenerate configs
 <summary>Click to see full command list</summary>
 
 ```bash
-# Generate configs
-bin/vibe build <target>              # Build to generated/<target>/
-bin/vibe use <target> <dir>          # Generate to specific directory
-bin/vibe switch <target>             # Apply to current directory or ~/.claude
-bin/vibe quickstart                  # Claude Code one-command setup
+# Global setup (run once)
+bin/vibe init --platform claude-code    # Install to ~/.claude
+bin/vibe init --platform opencode       # Install to ~/.config/opencode
+bin/vibe init --platform kimi-code      # Install to ~/.config/agents
+bin/vibe init --platform cursor         # Install to ~/.cursor
 
-# Integrations
-bin/vibe init                        # Interactive setup
-bin/vibe init --verify               # Check what's installed
-bin/vibe init --suggest              # See recommendations
-bin/vibe init --install              # Auto-install recommended
-bin/vibe init --install -y           # No prompts
+# Project setup (run in project directory)
+bin/vibe apply claude-code              # Apply config to current project
+bin/vibe apply opencode                 # Alias: switch
+
+# Generate configs
+bin/vibe build claude-code              # Build to generated/claude-code/
+bin/vibe deploy claude-code ./output    # Generate to specific directory
+
+# Quick setup
+bin/vibe quickstart                     # Claude Code one-command setup
+
+# Verification
+bin/vibe init --platform claude-code --verify   # Check installation
+bin/vibe init --platform claude-code --suggest  # See recommendations
+bin/vibe doctor                         # Check all platforms and integrations
 
 # Inspection
-bin/vibe inspect [target]            # Preview resolved config
-bin/vibe targets                     # List supported tools
+bin/vibe inspect [target]               # Preview resolved config
+bin/vibe targets                        # List supported tools
 ```
 
 </details>

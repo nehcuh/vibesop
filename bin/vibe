@@ -254,7 +254,7 @@ class VibeCLI
           puts "     Install: brew install rtk"
           puts "     Or visit: https://github.com/runesleo/rtk"
         when :superpowers
-          puts "     Visit: https://github.com/anthropics/superpowers"
+          puts "     Visit: https://github.com/obra/superpowers"
         end
       end
     end
@@ -503,7 +503,7 @@ class VibeCLI
 
           After installation:
             1. Review the configuration in the global directory
-            2. Run 'vibe switch --platform PLATFORM' in your project directory
+            2. Run 'vibe apply PLATFORM' in your project directory
         HELP
         exit 0
       else

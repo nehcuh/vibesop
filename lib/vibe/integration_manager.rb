@@ -2,23 +2,13 @@
 
 require_relative "platform_utils"
 require_relative "user_interaction"
+require_relative "superpowers_installer"
 
 module Vibe
-  # Integration detection and management.
-  #
-  # Host requirements:
-  #   @repo_root [String] — absolute path to the workflow repository root
-  #
-  # Dependencies:
-  #   - Vibe::PlatformUtils — for platform-related utilities
-  #   - Vibe::UserInteraction — for user prompts
-  #   - Vibe::ExternalTools — for integration detection methods
   module IntegrationManager
     include PlatformUtils
     include UserInteraction
 
-    # Check and suggest optional integrations after installation
-    # @param platform [String] Platform name
     def check_and_suggest_integrations(platform)
       @target_platform = platform
       status = integration_status
@@ -40,18 +30,51 @@ module Vibe
       puts "📦 Optional Integrations"
       puts "=" * 50
 
+      interactive = $stdin.respond_to?(:tty?) && $stdin.tty?
+
       if missing.include?(:superpowers)
         puts
         puts "⚠️  Superpowers Skill Pack not detected"
         puts "   Superpowers provides advanced workflows like TDD, debugging, and code review."
         puts
-        puts "   To install:"
-        puts "   1. Visit: https://github.com/anthropics/superpowers"
-        puts "   2. Follow installation instructions for #{platform_label(platform)}"
+        puts "   Repository: https://github.com/obra/superpowers"
         puts
 
-        if ask_yes_no("Would you like to open the installation page now?")
-          open_url("https://github.com/anthropics/superpowers")
+        if interactive
+          if ask_yes_no("Would you like to install Superpowers now?")
+            success = install_superpowers_auto(platform)
+            if success
+              puts "   ✓ Superpowers installed successfully!"
+              puts
+              verify_superpowers_install(platform)
+            else
+              puts "   ❌ Installation failed"
+            end
+          end
+        else
+          puts "   (Run in an interactive terminal to install automatically)"
+        end
+      end
+
+      if pending.include?(:superpowers)
+        puts
+        puts "⚠️  Superpowers is cloned but not linked to this platform"
+        puts "   Skills are available at ~/.config/skills/superpowers but not linked for #{platform}."
+        puts
+
+        if interactive
+          if ask_yes_no("Would you like to link Superpowers skills now?")
+            success = install_superpowers_auto(platform)
+            if success
+              puts "   ✓ Superpowers skills linked successfully!"
+              puts
+              verify_superpowers_install(platform)
+            else
+              puts "   ❌ Linking failed"
+            end
+          end
+        else
+          puts "   (Run in an interactive terminal to link automatically)"
         end
       end
 
@@ -64,12 +87,15 @@ module Vibe
         puts "   brew install rtk  # or download from https://github.com/runesleo/rtk"
         puts
 
-        if ask_yes_no("Would you like to install RTK now? (requires Homebrew)")
-          if install_rtk_interactive
-            # Refresh status after installation
-            status = integration_status
-            pending << :rtk if status[:rtk][:installed] && !status[:rtk][:ready]
+        if interactive
+          if ask_yes_no("Would you like to install RTK now? (requires Homebrew)")
+            if install_rtk_interactive
+              status = integration_status
+              pending << :rtk if status[:rtk][:installed] && !status[:rtk][:ready]
+            end
           end
+        else
+          puts "   (Run in an interactive terminal to install automatically)"
         end
       end
 
@@ -81,8 +107,12 @@ module Vibe
           puts "   To enable RTK optimization, run: rtk init --global"
           puts
 
-          if ask_yes_no("Would you like to configure RTK hook now?")
-            configure_rtk_hook
+          if $stdin.respond_to?(:tty?) && $stdin.tty?
+            if ask_yes_no("Would you like to configure RTK hook now?")
+              configure_rtk_hook
+            end
+          else
+            puts "   (Run in an interactive terminal to configure automatically)"
           end
         end
       end
@@ -90,22 +120,18 @@ module Vibe
       puts
     end
 
-    # Check environment and display integration status
-    # @param target_platform [String, nil] Optional target platform for explicit context
     def check_environment(target_platform = nil)
       platform = target_platform || @target_platform
       
       puts "Checking your environment..."
       puts
 
-      # Show target platform
       if platform
         puts "✓ Target platform: #{platform_label(platform)}"
       else
         puts "⚠ No target platform specified"
       end
 
-      # Check global config directory
       claude_dir = File.expand_path("~/.claude")
       if Dir.exist?(claude_dir)
         puts "✓ Claude Code directory found at #{claude_dir}"
@@ -117,7 +143,6 @@ module Vibe
 
       puts
 
-      # Check current target
       marker_file = File.join(Dir.pwd, ".vibe-target.json")
       if File.exist?(marker_file)
         marker = JSON.parse(File.read(marker_file))
@@ -127,6 +152,37 @@ module Vibe
       end
 
       puts
+    end
+
+    private
+
+    def install_superpowers_auto(platform)
+      SuperpowersInstaller.install_superpowers(platform)
+    end
+
+    def verify_superpowers_install(platform)
+      result = SuperpowersInstaller.verify_installation(platform)
+      if result[:success]
+        puts "   ✓ Verification passed"
+        puts "   Location: #{result[:location]}"
+        puts "   Skills: #{result[:skills_count]} found"
+      else
+        puts "   ⚠ Verification issues:"
+        result[:issues].each { |issue| puts "     - #{issue}" }
+      end
+    end
+
+    def platform_label(platform)
+      case platform
+      when "claude-code" then "Claude Code"
+      when "opencode" then "OpenCode"
+      when "cursor" then "Cursor"
+      when "codex-cli" then "Codex CLI"
+      when "kimi-code" then "Kimi Code"
+      when "vscode" then "VS Code"
+      else
+        platform.to_s.split("-").map(&:capitalize).join(" ")
+      end
     end
   end
 end
