@@ -149,8 +149,8 @@ class VibeCLI
     ensure_no_path_overlap!(output_root, destination_root)
     overlay = resolve_overlay(explicit_path: options[:overlay], search_roots: [destination_root, @repo_root])
 
-    claude_global_dir = File.expand_path("~/.claude")
-    project_level = (target == "claude-code" && destination_root != claude_global_dir)
+    global_dir = default_global_destination(target)
+    project_level = (destination_root != global_dir)
 
     manifest = build_target(
       target: target,

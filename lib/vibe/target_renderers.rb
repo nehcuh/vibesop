@@ -123,7 +123,15 @@ module Vibe
       File.write(File.join(output_root, "CLAUDE.md"), render_claude_project_md(manifest))
     end
 
-    def render_codex(output_root, manifest)
+    def render_codex(output_root, manifest, project_level: false)
+      if project_level
+        render_codex_project(output_root, manifest)
+      else
+        render_codex_global(output_root, manifest)
+      end
+    end
+
+    def render_codex_global(output_root, manifest)
       codex_dir = File.join(output_root, ".vibe", "codex-cli")
       FileUtils.mkdir_p(codex_dir)
       write_target_docs(codex_dir, manifest, %i[behavior routing skills safety execution_policy task_routing test_standards])
@@ -140,7 +148,52 @@ module Vibe
       File.write(File.join(output_root, "AGENTS.md"), render_target_entrypoint_md("Codex CLI", manifest, extra_sections: extra))
     end
 
-    def render_cursor(output_root, manifest)
+    def render_codex_project(output_root, manifest)
+      codex_dir = File.join(output_root, ".vibe", "codex-cli")
+      FileUtils.mkdir_p(codex_dir)
+      write_target_docs(codex_dir, manifest, %i[behavior routing skills safety execution_policy task_routing test_standards])
+
+      File.write(File.join(output_root, "AGENTS.md"), render_codex_project_md(manifest))
+    end
+
+    def render_codex_project_md(manifest)
+      <<~MD
+        # Project Codex CLI Configuration
+
+        Generated from the portable `core/` spec with profile `#{manifest["profile"]}`.  
+        Applied overlay: #{overlay_sentence(manifest)}
+
+        Global workflow rules are loaded from `~/.codex/`. This file adds project-specific context only.
+
+        ## Project Context
+
+        <!-- Describe your project: tech stack, architecture, key constraints -->
+
+        ## Project-specific rules
+
+        <!-- Add rules that apply only to this project -->
+
+        ## Reference docs
+
+        Supporting notes are under `.vibe/codex-cli/`:
+        - `behavior-policies.md` — portable behavior baseline
+        - `safety.md` — safety policy
+        - `execution-policy.md` — execution and review protocol
+        - `routing.md` — capability tier routing
+        - `task-routing.md` — task complexity routing
+        - `test-standards.md` — testing requirements
+      MD
+    end
+
+    def render_cursor(output_root, manifest, project_level: false)
+      if project_level
+        render_cursor_project(output_root, manifest)
+      else
+        render_cursor_global(output_root, manifest)
+      end
+    end
+
+    def render_cursor_global(output_root, manifest)
       cursor_rules_dir = File.join(output_root, ".cursor", "rules")
       cursor_support_dir = File.join(output_root, ".vibe", "cursor")
       FileUtils.mkdir_p(cursor_rules_dir)
@@ -214,7 +267,85 @@ module Vibe
       MDC
     end
 
-    def render_opencode(output_root, manifest)
+    def render_cursor_project(output_root, manifest)
+      cursor_rules_dir = File.join(output_root, ".cursor", "rules")
+      cursor_support_dir = File.join(output_root, ".vibe", "cursor")
+      FileUtils.mkdir_p(cursor_rules_dir)
+      FileUtils.mkdir_p(cursor_support_dir)
+
+      write_target_docs(cursor_support_dir, manifest, %i[behavior routing safety skills task_routing test_standards])
+
+      # Project-level simplified rules
+      File.write(File.join(cursor_rules_dir, "00-vibe-project.mdc"), <<~MDC)
+        ---
+        description: Project-specific workflow context
+        alwaysApply: true
+        ---
+
+        # Project Cursor Configuration
+
+        Generated from the portable `core/` spec with profile `#{manifest["profile"]}`.  
+        Applied overlay: #{overlay_sentence(manifest)}
+
+        Global rules are loaded from `~/.cursor/`. This file adds project-specific context only.
+
+        ## Project Context
+
+        <!-- Describe your project: tech stack, architecture, key constraints -->
+
+        ## Project-specific rules
+
+        <!-- Add rules that apply only to this project -->
+
+        ## Reference
+
+        See `.vibe/cursor/` for supporting documentation:
+        - `behavior-policies.md` — portable behavior baseline
+        - `safety.md` — safety policy
+        - `routing.md` — capability tier routing
+        - `task-routing.md` — task complexity routing
+      MDC
+
+      File.write(File.join(output_root, "AGENTS.md"), render_cursor_project_md(manifest))
+    end
+
+    def render_cursor_project_md(manifest)
+      <<~MD
+        # Project Cursor Configuration
+
+        Generated from the portable `core/` spec with profile `#{manifest["profile"]}`.  
+        Applied overlay: #{overlay_sentence(manifest)}
+
+        Global workflow rules are loaded from `~/.cursor/`. This file adds project-specific context only.
+
+        ## Project Context
+
+        <!-- Describe your project: tech stack, architecture, key constraints -->
+
+        ## Project-specific rules
+
+        <!-- Add rules that apply only to this project -->
+
+        ## Reference docs
+
+        Supporting notes are under `.vibe/cursor/`:
+        - `behavior-policies.md` — portable behavior baseline
+        - `safety.md` — safety policy
+        - `routing.md` — capability tier routing
+        - `task-routing.md` — task complexity routing
+        - `test-standards.md` — testing requirements
+      MD
+    end
+
+    def render_opencode(output_root, manifest, project_level: false)
+      if project_level
+        render_opencode_project(output_root, manifest)
+      else
+        render_opencode_global(output_root, manifest)
+      end
+    end
+
+    def render_opencode_global(output_root, manifest)
       opencode_dir = File.join(output_root, ".vibe", "opencode")
       FileUtils.mkdir_p(opencode_dir)
       write_target_docs(opencode_dir, manifest, %i[behavior general routing skills safety execution])
@@ -224,7 +355,54 @@ module Vibe
       write_json(File.join(output_root, "opencode.json"), opencode_config(manifest))
     end
 
-    def render_warp(output_root, manifest)
+    def render_opencode_project(output_root, manifest)
+      opencode_dir = File.join(output_root, ".vibe", "opencode")
+      FileUtils.mkdir_p(opencode_dir)
+      write_target_docs(opencode_dir, manifest, %i[behavior general routing skills safety execution])
+
+      File.write(File.join(output_root, "AGENTS.md"), render_opencode_project_md(manifest))
+
+      # Generate a minimal opencode.json for project-level config
+      write_json(File.join(output_root, "opencode.json"), opencode_project_config(manifest))
+    end
+
+    def render_opencode_project_md(manifest)
+      <<~MD
+        # Project OpenCode Configuration
+
+        Generated from the portable `core/` spec with profile `#{manifest["profile"]}`.  
+        Applied overlay: #{overlay_sentence(manifest)}
+
+        Global workflow rules are loaded from `~/.opencode/`. This file adds project-specific context only.
+
+        ## Project Context
+
+        <!-- Describe your project: tech stack, architecture, key constraints -->
+
+        ## Project-specific rules
+
+        <!-- Add rules that apply only to this project -->
+
+        ## Reference docs
+
+        Supporting notes are under `.vibe/opencode/`:
+        - `behavior-policies.md` — portable behavior baseline
+        - `safety.md` — safety policy
+        - `routing.md` — capability tier routing
+        - `skills.md` — portable skill registry
+        - `execution.md` — execution and review protocol
+      MD
+    end
+
+    def render_warp(output_root, manifest, project_level: false)
+      if project_level
+        render_warp_project(output_root, manifest)
+      else
+        render_warp_global(output_root, manifest)
+      end
+    end
+
+    def render_warp_global(output_root, manifest)
       warp_dir = File.join(output_root, ".vibe", "warp")
       FileUtils.mkdir_p(warp_dir)
 
@@ -245,7 +423,53 @@ module Vibe
       write_target_docs(warp_dir, manifest, %i[behavior routing skills safety task_routing test_standards workflow_notes])
     end
 
-    def render_antigravity(output_root, manifest)
+    def render_warp_project(output_root, manifest)
+      warp_dir = File.join(output_root, ".vibe", "warp")
+      FileUtils.mkdir_p(warp_dir)
+
+      write_target_docs(warp_dir, manifest, %i[behavior routing skills safety task_routing test_standards workflow_notes])
+
+      File.write(File.join(output_root, "WARP.md"), render_warp_project_md(manifest))
+    end
+
+    def render_warp_project_md(manifest)
+      <<~MD
+        # Project Warp Configuration
+
+        Generated from the portable `core/` spec with profile `#{manifest["profile"]}`.  
+        Applied overlay: #{overlay_sentence(manifest)}
+
+        Global workflow rules are loaded from `~/.warp/` (or your Warp global config). This file adds project-specific context only.
+
+        ## Project Context
+
+        <!-- Describe your project: tech stack, architecture, key constraints -->
+
+        ## Project-specific rules
+
+        <!-- Add rules that apply only to this project -->
+
+        ## Reference docs
+
+        Supporting notes are under `.vibe/warp/`:
+        - `behavior-policies.md` — portable behavior baseline
+        - `safety.md` — safety policy
+        - `routing.md` — capability tier routing
+        - `workflow-notes.md` — conservative workflow guidance
+        - `task-routing.md` — task complexity routing
+        - `test-standards.md` — testing requirements
+      MD
+    end
+
+    def render_antigravity(output_root, manifest, project_level: false)
+      if project_level
+        render_antigravity_project(output_root, manifest)
+      else
+        render_antigravity_global(output_root, manifest)
+      end
+    end
+
+    def render_antigravity_global(output_root, manifest)
       ag_dir = File.join(output_root, ".vibe", "antigravity")
       FileUtils.mkdir_p(ag_dir)
 
@@ -262,7 +486,52 @@ module Vibe
       write_target_docs(ag_dir, manifest, %i[behavior routing safety skills task_routing test_standards])
     end
 
-    def render_vscode(output_root, manifest)
+    def render_antigravity_project(output_root, manifest)
+      ag_dir = File.join(output_root, ".vibe", "antigravity")
+      FileUtils.mkdir_p(ag_dir)
+
+      write_target_docs(ag_dir, manifest, %i[behavior routing safety skills task_routing test_standards])
+
+      File.write(File.join(output_root, "AGENTS.md"), render_antigravity_project_md(manifest))
+    end
+
+    def render_antigravity_project_md(manifest)
+      <<~MD
+        # Project Antigravity Configuration
+
+        Generated from the portable `core/` spec with profile `#{manifest["profile"]}`.  
+        Applied overlay: #{overlay_sentence(manifest)}
+
+        Global workflow rules are loaded from `~/.antigravity/`. This file adds project-specific context only.
+
+        ## Project Context
+
+        <!-- Describe your project: tech stack, architecture, key constraints -->
+
+        ## Project-specific rules
+
+        <!-- Add rules that apply only to this project -->
+
+        ## Reference docs
+
+        Supporting notes are under `.vibe/antigravity/`:
+        - `behavior-policies.md` — portable behavior baseline
+        - `safety.md` — safety policy
+        - `routing.md` — capability tier routing
+        - `task-routing.md` — task complexity routing
+        - `test-standards.md` — testing requirements
+      MD
+    end
+
+    def render_vscode(output_root, manifest, project_level: false)
+      if project_level
+        render_vscode_project(output_root, manifest)
+      else
+        render_vscode_global(output_root, manifest)
+      end
+    end
+
+    def render_vscode_global(output_root, manifest)
       vscode_dir = File.join(output_root, ".vscode")
       vibe_dir = File.join(output_root, ".vibe", "vscode")
       FileUtils.mkdir_p(vscode_dir)
@@ -275,7 +544,57 @@ module Vibe
       write_json(File.join(vscode_dir, "settings.json"), vscode_settings_config(manifest))
     end
 
-    def render_kimi_code(output_root, manifest)
+    def render_vscode_project(output_root, manifest)
+      vscode_dir = File.join(output_root, ".vscode")
+      vibe_dir = File.join(output_root, ".vibe", "vscode")
+      FileUtils.mkdir_p(vscode_dir)
+      FileUtils.mkdir_p(vibe_dir)
+
+      write_target_docs(vibe_dir, manifest, %i[behavior routing safety skills task_routing test_standards])
+
+      File.write(File.join(output_root, "AGENTS.md"), render_vscode_project_md(manifest))
+
+      # Minimal settings.json for project-level config
+      write_json(File.join(vscode_dir, "settings.json"), vscode_project_settings_config(manifest))
+    end
+
+    def render_vscode_project_md(manifest)
+      <<~MD
+        # Project VS Code Configuration
+
+        Generated from the portable `core/` spec with profile `#{manifest["profile"]}`.  
+        Applied overlay: #{overlay_sentence(manifest)}
+
+        Global workflow rules are loaded from your VS Code global settings. This file adds project-specific context only.
+
+        ## Project Context
+
+        <!-- Describe your project: tech stack, architecture, key constraints -->
+
+        ## Project-specific rules
+
+        <!-- Add rules that apply only to this project -->
+
+        ## Reference docs
+
+        Supporting notes are under `.vibe/vscode/`:
+        - `behavior-policies.md` — portable behavior baseline
+        - `safety.md` — safety policy
+        - `routing.md` — capability tier routing
+        - `task-routing.md` — task complexity routing
+        - `test-standards.md` — testing requirements
+      MD
+    end
+
+    def render_kimi_code(output_root, manifest, project_level: false)
+      if project_level
+        render_kimi_code_project(output_root, manifest)
+      else
+        render_kimi_code_global(output_root, manifest)
+      end
+    end
+
+    def render_kimi_code_global(output_root, manifest)
       kimi_skills_dir = File.join(output_root, ".kimi", "skills")
       kimi_support_dir = File.join(output_root, ".vibe", "kimi-code")
       FileUtils.mkdir_p(kimi_skills_dir)
@@ -356,6 +675,43 @@ module Vibe
         ## Available Skills
 
         #{manifest.fetch("skills", []).select { |s| s["trigger_mode"] == "mandatory" }.map { |s| "- `#{s['id']}` — #{s['intent']}" }.join("\n")}
+      MD
+    end
+
+    def render_kimi_code_project(output_root, manifest)
+      kimi_support_dir = File.join(output_root, ".vibe", "kimi-code")
+      FileUtils.mkdir_p(kimi_support_dir)
+
+      # Generate supporting documentation only
+      write_target_docs(kimi_support_dir, manifest, %i[behavior routing safety skills task_routing test_standards])
+
+      File.write(File.join(output_root, "KIMI.md"), render_kimi_code_project_md(manifest))
+    end
+
+    def render_kimi_code_project_md(manifest)
+      <<~MD
+        # Project Kimi Code Configuration
+
+        Generated from the portable `core/` spec with profile `#{manifest["profile"]}`.
+        Applied overlay: #{overlay_sentence(manifest)}
+
+        Global workflow rules are loaded from `~/.kimi/`. This file adds project-specific context only.
+
+        ## Project Context
+
+        <!-- Describe your project: tech stack, architecture, key constraints -->
+
+        ## Project-specific rules
+
+        <!-- Add rules that apply only to this project -->
+
+        ## Reference docs
+
+        Supporting notes are under `.vibe/kimi-code/`:
+        - `behavior-policies.md` — portable behavior baseline
+        - `safety.md` — safety policy
+        - `task-routing.md` — task complexity routing
+        - `test-standards.md` — testing requirements
       MD
     end
 

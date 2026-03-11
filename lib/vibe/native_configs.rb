@@ -142,6 +142,21 @@ module Vibe
       deep_merge(base_opencode_config, manifest["native_config_overlay"] || {})
     end
 
+    def opencode_project_config(manifest)
+      # Project-level minimal config - references global config
+      base = {
+        "$schema" => "https://opencode.ai/config.json",
+        "instructions" => [
+          "AGENTS.md",
+          ".vibe/opencode/behavior-policies.md",
+          ".vibe/opencode/routing.md",
+          ".vibe/opencode/safety.md"
+        ],
+        "extends" => "~/.opencode/opencode.json"
+      }
+      deep_merge(base, manifest["native_config_overlay"] || {})
+    end
+
     def base_vscode_settings_config
       {
         "github.copilot.chat.codeGeneration.instructions" => [
@@ -155,6 +170,18 @@ module Vibe
 
     def vscode_settings_config(manifest)
       deep_merge(base_vscode_settings_config, manifest["native_config_overlay"] || {})
+    end
+
+    def vscode_project_settings_config(manifest)
+      # Project-level minimal settings - references global config
+      base = {
+        "github.copilot.chat.codeGeneration.instructions" => [
+          { "file" => "AGENTS.md" },
+          { "file" => ".vibe/vscode/behavior-policies.md" },
+          { "file" => ".vibe/vscode/safety.md" }
+        ]
+      }
+      deep_merge(base, manifest["native_config_overlay"] || {})
     end
   end
 end
