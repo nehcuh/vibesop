@@ -82,6 +82,7 @@ jobs:
         bundle exec ruby test/test_yaml_safety.rb
         bundle exec ruby test/test_recommendations.rb
         bundle exec ruby test/test_vibe_utils_validation.rb
+        bundle exec ruby test/test_superpowers_installer.rb
     
     - name: Run smoke test
       run: |
