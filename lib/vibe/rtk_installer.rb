@@ -76,7 +76,10 @@ module Vibe
       puts
       if system("which", "cargo", out: File::NULL, err: File::NULL)
         puts "   Installing RTK via Cargo..."
-        if system("cargo", "install", "--git", "https://github.com/runesleo/rtk")
+        rtk_config = read_yaml_abs(File.join(@repo_root, "core/integrations/rtk.yaml"))
+        cargo_url = rtk_config.dig("installation_methods", "cargo", "command")&.split&.last || "https://github.com/rtk-ai/rtk"
+
+        if system("cargo", "install", "--git", cargo_url)
           reset_integration_status!
           puts "   ✓ RTK installed successfully"
           configure_rtk_after_install

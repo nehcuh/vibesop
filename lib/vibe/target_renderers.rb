@@ -711,21 +711,34 @@ module Vibe
       return "" if manifest_skills.empty?
 
       location = superpowers_location || "Unknown"
+      trigger_contexts = load_superpowers_trigger_contexts
 
-      # Load trigger_context from superpowers.yaml
-      # Build mapping: registry_id -> trigger_context
+      header = build_superpowers_header(location)
+      rows = build_superpowers_skill_rows(manifest_skills)
+      trigger_section = build_superpowers_trigger_section(manifest_skills, trigger_contexts)
+      footer = build_superpowers_footer
+
+      header + rows + trigger_section + footer
+    end
+
+    def load_superpowers_trigger_contexts
+      initialize_yaml_cache
       superpowers_yaml_path = File.join(@repo_root, "core", "integrations", "superpowers.yaml")
       trigger_contexts = {}
+
       if File.exist?(superpowers_yaml_path)
-        superpowers_config = YAML.safe_load(File.read(superpowers_yaml_path), aliases: true)
+        superpowers_config = load_yaml_cached(superpowers_yaml_path)
         Array(superpowers_config["skills"]).each do |skill|
-          # Map by registry_id if present, otherwise by id
           key = skill["registry_id"] || skill["id"]
           trigger_contexts[key] = skill["trigger_context"]
         end
       end
 
-      header = <<~MD
+      trigger_contexts
+    end
+
+    def build_superpowers_header(location)
+      <<~MD
 
         ## Superpowers Skill Pack Integration
 
@@ -736,31 +749,37 @@ module Vibe
         | Portable skill | Trigger mode | Description |
         |----------------|--------------|-------------|
       MD
-      rows = manifest_skills.map do |skill|
+    end
+
+    def build_superpowers_skill_rows(manifest_skills)
+      manifest_skills.map do |skill|
         "| `#{skill['id']}` | `#{skill['trigger_mode']}` | #{skill['intent']} |"
       end.join("\n")
+    end
 
-      # Add trigger scenarios section
+    def build_superpowers_trigger_section(manifest_skills, trigger_contexts)
       suggest_skills = manifest_skills.select { |s| s["trigger_mode"] == "suggest" }
-      trigger_section = ""
-      unless suggest_skills.empty?
-        trigger_section = <<~MD
+      return "" if suggest_skills.empty?
+
+      trigger_section = <<~MD
 
 
-          ### When to Use Superpowers Skills
+        ### When to Use Superpowers Skills
 
-          | Scenario | Skill | Notes |
-          |----------|-------|-------|
-        MD
-        trigger_rows = suggest_skills.map do |skill|
-          # Look up trigger context by skill ID (which should match registry_id in YAML)
-          context = trigger_contexts[skill["id"]] || "See documentation"
-          "| #{context} | `#{skill['id']}` | Auto-suggested when applicable |"
-        end
-        trigger_section += trigger_rows.join("\n")
+        | Scenario | Skill | Notes |
+        |----------|-------|-------|
+      MD
+
+      trigger_rows = suggest_skills.map do |skill|
+        context = trigger_contexts[skill["id"]] || "See documentation"
+        "| #{context} | `#{skill['id']}` | Auto-suggested when applicable |"
       end
 
-      footer = <<~MD
+      trigger_section + trigger_rows.join("\n")
+    end
+
+    def build_superpowers_footer
+      <<~MD
 
 
         **Usage**: `core/skills/registry.yaml` is the SSOT for portable skill IDs. The installed Superpowers pack may expose different native skill names.
@@ -768,8 +787,6 @@ module Vibe
         **Security**: All Superpowers skills have been reviewed and are considered safe for use.
         See `core/integrations/superpowers.yaml` for full skill definitions.
       MD
-
-      header + rows + trigger_section + footer
     end
   end
 end

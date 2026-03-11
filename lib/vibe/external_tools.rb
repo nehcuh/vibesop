@@ -196,7 +196,8 @@ module Vibe
 
       version_output, status = Open3.capture2(["rtk", "rtk"], "--version", err: File::NULL)
       status.success? && !version_output.strip.empty? ? version_output.strip : nil
-    rescue StandardError
+    rescue StandardError => e
+      warn "Warning: Failed to get RTK version: #{e.message}" if ENV["VIBE_DEBUG"]
       nil
     end
 
@@ -205,7 +206,8 @@ module Vibe
 
       path_output, status = Open3.capture2(["which", "which"], "rtk", err: File::NULL)
       status.success? ? path_output.strip : nil
-    rescue StandardError
+    rescue StandardError => e
+      warn "Warning: Failed to get RTK binary path: #{e.message}" if ENV["VIBE_DEBUG"]
       nil
     end
 

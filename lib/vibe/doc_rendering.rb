@@ -8,6 +8,15 @@ module Vibe
   #   Vibe::Utils          — format_backtick_list
   #   Vibe::OverlaySupport — overlay_sentence
   module DocRendering
+    def initialize_yaml_cache
+      @yaml_cache ||= {}
+    end
+
+    def load_yaml_cached(path)
+      initialize_yaml_cache
+      @yaml_cache[path] ||= read_yaml_abs(path)
+    end
+
     def render_inspect(payload)
       lines = []
       lines << "Vibe inspection"
@@ -210,10 +219,10 @@ module Vibe
       # Load trigger contexts from integration configs
       trigger_contexts = {}
 
-      # Load superpowers config if available
+      # Load superpowers config if available (cached)
       superpowers_path = File.join(@repo_root, "core", "integrations", "superpowers.yaml")
       if File.exist?(superpowers_path)
-        superpowers_config = YAML.safe_load(File.read(superpowers_path), aliases: true)
+        superpowers_config = load_yaml_cached(superpowers_path)
         Array(superpowers_config["skills"]).each do |skill|
           key = skill["registry_id"] || skill["id"]
           trigger_contexts[key] = skill["trigger_context"] if skill["trigger_context"]
