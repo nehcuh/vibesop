@@ -212,4 +212,39 @@ class TestConfigDrivenRenderers < Minitest::Test
       FileUtils.rm_rf(legacy_root)
     end
   end
+
+  def test_render_opencode_project_level_generates_project_template
+    manifest = @base_manifest.dup
+    manifest["target"] = "opencode"
+
+    @renderer.render_opencode_v2(@build_root, manifest, project_level: true)
+
+    # Check entrypoint
+    agents_md = File.read(File.join(@build_root, "AGENTS.md"))
+
+    # Should use project template, not global template
+    assert_includes agents_md, "Project OpenCode Configuration"
+    assert_includes agents_md, "Global workflow rules are loaded from"
+    assert_includes agents_md, "This file adds project-specific context only"
+
+    # Should NOT contain global-only content
+    refute_includes agents_md, "Vibe workflow for OpenCode"
+    refute_includes agents_md, "Non-negotiable rules"
+  end
+
+  def test_render_claude_project_level_generates_project_template
+    @renderer.render_claude_v2(@build_root, @base_manifest, project_level: true)
+
+    # Check entrypoint
+    claude_md = File.read(File.join(@build_root, "CLAUDE.md"))
+
+    # Should use project template
+    assert_includes claude_md, "Project Claude Code Configuration"
+    assert_includes claude_md, "Global workflow rules are loaded from"
+    assert_includes claude_md, "This file adds project-specific context only"
+
+    # Should NOT contain global-only content
+    refute_includes claude_md, "Vibe workflow for Claude Code"
+    refute_includes claude_md, "Non-negotiable rules"
+  end
 end

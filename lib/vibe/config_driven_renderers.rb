@@ -49,7 +49,7 @@ module Vibe
       end
 
       # Generate entrypoint
-      generate_entrypoint(output_root, manifest, path_config["entrypoint_name"])
+      generate_entrypoint(output_root, manifest, path_config["entrypoint_name"], mode, platform_id)
 
       # Platform-specific hooks
       send("after_render_#{platform_id}", output_root, manifest, mode) if respond_to?("after_render_#{platform_id}", true)
@@ -101,12 +101,24 @@ module Vibe
     end
 
     # Generate entrypoint file
-    def generate_entrypoint(output_root, manifest, filename)
+    def generate_entrypoint(output_root, manifest, filename, mode, platform_id)
       entrypoint_path = File.join(output_root, filename)
 
       content = case File.extname(filename)
                 when ".md"
-                  render_target_entrypoint_md(platform_label(manifest["target"]), manifest)
+                  if mode == "project"
+                    # Use platform-specific project renderer
+                    project_renderer_method = "render_#{platform_id.gsub('-', '_')}_project_md"
+                    if respond_to?(project_renderer_method)
+                      send(project_renderer_method, manifest)
+                    else
+                      # Fallback to generic project template
+                      render_generic_project_md(platform_id, manifest)
+                    end
+                  else
+                    # Global mode
+                    render_target_entrypoint_md(platform_label(platform_id), manifest)
+                  end
                 when ".json"
                   # JSON entrypoints are handled by native_config
                   return
@@ -115,6 +127,41 @@ module Vibe
                 end
 
       File.write(entrypoint_path, content)
+    end
+
+    # Generic project template for platforms without specific renderers
+    def render_generic_project_md(platform_id, manifest)
+      target_label = platform_label(platform_id)
+      config_dir = case platform_id
+                   when "claude-code" then "~/.claude"
+                   when "opencode" then "~/.config/opencode"
+                   else "~/.#{platform_id}"
+                   end
+
+      <<~MD
+        # Project #{target_label} Configuration
+
+        Generated from the portable `core/` spec with profile `#{manifest["profile"]}`.  
+        Applied overlay: #{overlay_sentence(manifest)}
+
+        Global workflow rules are loaded from `#{config_dir}/`. This file adds project-specific context only.
+
+        ## Project Context
+
+        <!-- Describe your project: tech stack, architecture, key constraints -->
+
+        ## Project-specific rules
+
+        <!-- Add rules that apply only to this project -->
+
+        ## Reference docs
+
+        Supporting notes are under `.vibe/#{platform_id}/`:
+        - `behavior-policies.md` — portable behavior baseline
+        - `safety.md` — safety policy
+        - `routing.md` — capability tier routing
+        - `task-routing.md` — task complexity routing
+      MD
     end
 
     # Claude Code specific hook

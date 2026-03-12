@@ -31,3 +31,12 @@ settings.json
 
 # Test coverage
 /coverage/
+
+# Refactor temporary files
+/.vibe/refactor/temp/
+/.vibe/refactor/*.tmp
+/config/platforms.yaml.backup
+/lib/vibe/*.rb.backup
+
+# Migration logs
+/.vibe/migration-*.log
