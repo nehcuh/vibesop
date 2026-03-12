@@ -3,6 +3,7 @@
 require 'yaml'
 require_relative 'errors'
 require_relative 'utils'
+require_relative 'skill_cache'
 
 module Vibe
   # Detects new skills from registry and installed skill packs
@@ -19,11 +20,12 @@ module Vibe
     USER_SKILLS_DIR = File.expand_path("~/.config/skills").freeze
     PROJECT_SKILLS_CONFIG = ".vibe/skills.yaml".freeze
 
-    attr_reader :repo_root, :project_root
+    attr_reader :repo_root, :project_root, :cache
 
     def initialize(repo_root, project_root = Dir.pwd)
       @repo_root = repo_root
       @project_root = project_root
+      @cache = SkillCache.instance
     end
 
     # Detect skills that are available but not yet adapted to the project
@@ -87,50 +89,48 @@ module Vibe
 
     private
 
-    # Load skills from core registry
+    # Load skills from core registry (with caching)
     def load_registry_skills(filter_pack = nil)
-      registry_path = File.join(repo_root, SKILL_REGISTRY_PATH)
-      return [] unless File.exist?(registry_path)
+      cache_key = "registry_skills:#{filter_pack || 'all'}"
 
-      doc = YAML.safe_load(File.read(registry_path), aliases: true)
-      return [] unless doc && doc['skills']
+      cache.fetch(cache_key, 300) do # 5 minute TTL
+        registry_path = File.join(repo_root, SKILL_REGISTRY_PATH)
+        return [] unless File.exist?(registry_path)
 
-      skills = doc['skills'].map do |skill|
-        next if filter_pack && !skill['id'].start_with?(filter_pack)
+        doc = YAML.safe_load(File.read(registry_path), aliases: true)
+        return [] unless doc && doc['skills']
 
-        {
-          id: skill['id'],
-          namespace: skill['namespace'],
-          name: skill['id'].split('/').last,
-          intent: skill['intent'],
-          description: skill['description'],
-          trigger_mode: skill['trigger_mode'],
-          priority: skill['priority'],
-          requires_tools: skill['requires_tools'] || [],
-          supported_targets: skill['supported_targets'] || {},
-          entrypoint: skill['entrypoint'],
-          safety_level: skill['safety_level']
-        }
+        skills = doc['skills'].map do |skill|
+          next if filter_pack && !skill['id'].start_with?(filter_pack)
+
+          {
+            id: skill['id'],
+            namespace: skill['namespace'],
+            name: skill['id'].split('/').last,
+            intent: skill['intent'],
+            description: skill['description'],
+            trigger_mode: skill['trigger_mode'],
+            priority: skill['priority'],
+            requires_tools: skill['requires_tools'] || [],
+            supported_targets: skill['supported_targets'] || {},
+            entrypoint: skill['entrypoint'],
+            safety_level: skill['safety_level']
+          }
+        end
+
+        skills.compact
       end
-
-      skills.compact
     end
 
-    # Load project skill configuration
+    # Load project skill configuration (with caching)
     def load_project_skills
-      config_path = File.join(project_root, PROJECT_SKILLS_CONFIG)
-      
-      unless File.exist?(config_path)
-        return { adapted: [], skipped: [], installed_packs: {} }
+      cache.get_project_config(project_root).tap do |config|
+        return {
+          adapted: config['adapted_skills']&.map { |id, info| { id: id, **info } } || [],
+          skipped: config['skipped_skills'] || [],
+          installed_packs: config['installed_packs'] || {}
+        }
       end
-
-      doc = YAML.safe_load(File.read(config_path), aliases: true) || {}
-
-      {
-        adapted: doc['adapted_skills']&.map { |id, info| { id: id, **info } } || [],
-        skipped: doc['skipped_skills'] || [],
-        installed_packs: doc['installed_packs'] || {}
-      }
     end
 
     # Scan user skills directory for installed packs

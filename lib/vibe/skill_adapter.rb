@@ -3,6 +3,7 @@
 require_relative 'errors'
 require_relative 'utils'
 require_relative 'skill_detector'
+require_relative 'progress_indicator'
 
 module Vibe
   # Adapts skills to project configuration
@@ -66,7 +67,16 @@ module Vibe
     # @return [Boolean] Success status
     def adapt_skill(skill_id, mode)
       skill = detector.get_skill_info(skill_id)
-      return false unless skill
+      unless skill
+        warn "⚠️  Skill not found in registry: #{skill_id}"
+        return false
+      end
+
+      # Validate mode
+      unless %i[suggest mandatory skip].include?(mode)
+        warn "⚠️  Invalid adaptation mode: #{mode}"
+        return false
+      end
 
       config = load_project_config
 
@@ -84,6 +94,8 @@ module Vibe
 
       when :skip
         config['skipped_skills'] ||= []
+        # Avoid duplicates
+        config['skipped_skills'].reject! { |s| s['id'] == skill_id }
         config['skipped_skills'] << {
           'id' => skill_id,
           'skipped_at' => Time.now.strftime('%Y-%m-%dT%H:%M:%S%z'),
@@ -96,6 +108,9 @@ module Vibe
 
       save_project_config(config)
       true
+    rescue StandardError => e
+      warn "❌ Error adapting skill '#{skill_id}': #{e.message}"
+      false
     end
 
     # Adapt all skills with the same mode
@@ -107,16 +122,37 @@ module Vibe
       puts "\n⚡ Adapting all #{skills.length} skills as #{mode}..."
 
       adapted = []
-      skills.each do |skill|
-        if adapt_skill(skill[:id], mode)
-          adapted << skill[:id]
-          puts "  ✅ #{skill[:id]}"
+      failed = []
+
+      # Use progress indicator if TTY and multiple skills
+      if skills.length > 1 && $stdout.tty?
+        indicator = ProgressIndicator.new("Adapting skills", skills.length)
+        indicator.with_progress(skills.length) do |progress|
+          skills.each do |skill|
+            if adapt_skill(skill[:id], mode)
+              adapted << skill[:id]
+            else
+              failed << skill[:id]
+            end
+            progress.increment
+          end
+        end
+      else
+        skills.each do |skill|
+          if adapt_skill(skill[:id], mode)
+            adapted << skill[:id]
+            puts "  ✅ #{skill[:id]}"
+          else
+            failed << skill[:id]
+            puts "  ❌ #{skill[:id]} (failed)"
+          end
         end
       end
 
       puts "\n✅ Adapted #{adapted.length} skills as #{mode}"
+      puts "❌ Failed: #{failed.length} skills" if failed.any?
 
-      { adapted: adapted, skipped: [] }
+      { adapted: adapted, skipped: [], failed: failed }
     end
 
     # Skip all skills
@@ -325,14 +361,17 @@ module Vibe
     # Save project skill configuration
     def save_project_config(config)
       config_path = File.join(project_root, PROJECT_SKILLS_CONFIG)
-      
+
       # Ensure .vibe directory exists
       FileUtils.mkdir_p(File.dirname(config_path))
-      
+
       # Update timestamp
       config['last_checked'] = Time.now.strftime('%Y-%m-%dT%H:%M:%S%z')
-      
+
       File.write(config_path, YAML.dump(config))
+
+      # Invalidate cache after save
+      SkillCache.instance.invalidate_project_config(project_root)
     end
 
     # Ask user for input with validation
