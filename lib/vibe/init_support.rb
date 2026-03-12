@@ -49,7 +49,7 @@ module Vibe
     include IntegrationVerifier
 
     # Main initialization flow - installs global configuration
-    def run_init(platform:, force: false, verify_only: false, suggest_only: false)
+    def run_init(platform:, force: false, verify_only: false, suggest_only: false, dry_run: false)
       @target_platform = platform
       platform_name = platform_label(platform)
 
@@ -67,8 +67,46 @@ module Vibe
         return
       end
 
+      if dry_run
+        preview_global_config(platform: platform)
+        return
+      end
+
       # Install global configuration
       install_global_config(platform: platform, force: force)
+    end
+
+    def preview_global_config(platform:)
+      target = normalize_target(platform)
+      destination_root = default_global_destination(target)
+
+      puts "🔍 DRY RUN - Preview of what would be installed:"
+      puts
+      puts "Target platform: #{platform_label(platform)}"
+      puts "Install location: #{destination_root}"
+      puts
+
+      if Dir.exist?(destination_root)
+        puts "⚠️  Configuration already exists at this location"
+        puts "   (Would be overwritten with --force)"
+        puts
+      end
+
+      puts "Files that would be created:"
+      puts "  📄 #{config_entrypoint(target)}"
+      puts "  📁 .vibe/#{target}/"
+      puts "  📁 rules/"
+      puts "  📁 docs/"
+      puts "  📁 skills/"
+      puts "  📁 agents/"
+      puts "  📁 commands/"
+      puts "  📁 memory/"
+      puts
+
+      puts "✅ This was a dry run. No changes were made."
+      puts "   To actually install, run:"
+      puts "   vibe init --platform #{platform}"
+      puts
     end
 
     private

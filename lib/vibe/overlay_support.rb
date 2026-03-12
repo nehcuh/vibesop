@@ -55,6 +55,13 @@ module Vibe
         warn "Warning: overlay #{path} contains unknown top-level keys: #{unknown_keys.join(', ')}. These will be ignored."
       end
 
+      # Check for common format mistakes
+      if doc["profile"] && doc["profile"]["mapping"] && !doc["profile"]["mapping_overrides"]
+        warn "⚠️  Warning: overlay #{path} uses 'profile.mapping' which is ignored."
+        warn "   Did you mean 'profile.mapping_overrides'?"
+        warn "   See examples/project-overlay.yaml for correct format."
+      end
+
       validate_overlay_semantics!(doc, path)
 
       {
