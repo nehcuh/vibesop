@@ -21,8 +21,35 @@
 - Each code commit → Update `session.md` and (if project-level shifts occurred) `project-knowledge.md`.
 - Architecture/strategy decision → Immediately record in `project-knowledge.md`.
 
-## Exit Signals (Execute full Flush immediately)
+## Exit Signals / 退出信号 (Execute full Flush immediately)
 
-"That's all for now" / "Done for today" / "I'm heading out" / "Going out" / "Talk later" / "Closing window" → Immediately run session-end flush.
+Trigger session-end flush when user indicates session completion using:
+
+### English Phrases / 英文短语
+- "That's all for now"
+- "Done for today"
+- "I'm heading out"
+- "Going out"
+- "Talk later"
+- "Closing window"
+- "Save session"
+- "Wrap up"
+
+### Chinese Phrases / 中文短语
+- "我要走了" / "我先走了"
+- "今天就到这里" / "今天先到这"
+- "结束了" / "搞定了" / "完成了"
+- "保存一下" / "保存进度"
+- "先这样吧" / "就这样吧"
+- "退下了" / "撤了"
+- "去吃饭了" / "先忙了"
+
+### Semantic Indicators / 语义指示
+- User mentions leaving, completing, or wrapping up
+- User asks to save progress or record current state
+- Natural end of conversation flow
+- User says they need to go / have to leave
+
+→ **Immediately run session-end flush when ANY of the above are detected**
 
 Banned: Writing to 7+ splintered files. Keep token usage lean and consistent.

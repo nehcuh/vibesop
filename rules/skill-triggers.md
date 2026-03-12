@@ -12,10 +12,21 @@ Target adapters decide whether a portable skill ID becomes a native skill, a rul
 
 | Scenario | Portable skill/action | ❌ NOT when |
 |----------|-----------------------|------------|
-| Error/Bug (test/build/lint failure) | `systematic-debugging` | Missing env var/path error (fix directly); user already gave fix |
-| Before claiming completion | `verification-before-completion` | Pure research/exploration/Q&A; only changed docs/comments |
-| Exit signal ("that's all"/"heading out"/etc.) | `session-end` + memory-flush | Brief pause ("hmm let me think"/"hold on"); mid-task looking at something else |
-| New skill/MCP/third-party pack added or installed | Skill security audit (see §Skill Security Audit) | Self-written from scratch with no external code; single-line config change |
+| Error/Bug (test/build/lint failure)<br>错误/故障（测试/构建/检查失败） | `systematic-debugging` | Missing env var/path error (fix directly); user already gave fix |
+| Before claiming completion<br>声称完成前 | `verification-before-completion` | Pure research/exploration/Q&A; only changed docs/comments |
+| Exit signal ("that's all"/"heading out"/etc.)<br>退出信号（"我要走了"/"结束了"/etc.） | `session-end` + memory-flush | Brief pause ("hmm let me think"/"hold on"); mid-task looking at something else |
+| New skill/MCP/third-party pack added or installed<br>新技能/MCP/第三方包添加或安装 | Skill security audit (see §Skill Security Audit) | Self-written from scratch with no external code; single-line config change |
+
+### Keyword Matching / 关键词匹配
+
+When matching scenarios, recognize these keywords in **both English and Chinese**:
+
+| English Keywords | Chinese Keywords |
+|------------------|------------------|
+| error, bug, failure, broken, not working | 错误, 故障, 失败, 坏了, 不行, 出错, 报错 |
+| done, complete, finished, wrap up | 完成, 搞定, 结束了, 做完了 |
+| heading out, leaving, save session | 要走了, 先走了, 保存一下, 退下了 |
+| install, add skill, new MCP | 安装, 添加技能, 新的MCP |
 
 ## Skill Security Audit (Based on SKILL-INJECT paper arxiv:2602.20156)
 
@@ -47,10 +58,19 @@ Target adapters decide whether a portable skill ID becomes a native skill, a rul
 
 | Scenario | Action | ❌ NOT when |
 |----------|--------|------------|
-| Stuck >15min | `experience-evolution` | Known issue in patterns.md; fix is obvious just time-consuming |
-| 3 consecutive failures | Pause, revert to debugging Phase 1 | Each failure is a different problem (not same root cause) |
-| Complex task >5 files | Suggest `planning-with-files` | User gave step-by-step instructions; many files but each <10 lines |
-| Change >100 lines non-sensitive | Suggest outsourcing to `independent_verifier` profile | Involves critical logic/secrets; tightly coupled needing deep context |
+| Stuck >15min<br>卡住超过15分钟 | `experience-evolution` | Known issue in patterns.md; fix is obvious just time-consuming |
+| 3 consecutive failures<br>连续3次失败 | Pause, revert to debugging Phase 1 | Each failure is a different problem (not same root cause) |
+| Complex task >5 files<br>复杂任务>5个文件 | Suggest `planning-with-files` | User gave step-by-step instructions; many files but each <10 lines |
+| Change >100 lines non-sensitive<br>修改>100行非敏感代码 | Suggest outsourcing to `independent_verifier` profile | Involves critical logic/secrets; tightly coupled needing deep context |
+
+### Additional Keywords / 额外关键词
+
+| Scenario | English | Chinese |
+|----------|---------|---------|
+| Stuck/Blocked | stuck, blocked, don't know, not sure | 卡住了, 不知道怎么, 不确定, 没思路 |
+| Repeated failures | failed again, still failing, another error | 又失败了, 还是不行, 又出错了 |
+| Complex task | complex, complicated, many files, large change | 复杂, 麻烦, 很多文件, 大改动 |
+| Code review needed | review, check my work, verify changes | 审查, 检查下, 确认下修改 |
 
 <!--
   Add your domain-specific skill triggers here. Examples:
