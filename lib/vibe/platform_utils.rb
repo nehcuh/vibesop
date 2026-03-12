@@ -6,21 +6,14 @@ module Vibe
   # Host requirements:
   #   None (self-contained utilities)
   module PlatformUtils
-    VALID_TARGETS = %w[antigravity claude-code codex-cli cursor kimi-code opencode vscode warp].freeze
+    # Focused on Claude Code and OpenCode for stability
+    # Other platforms temporarily disabled: antigravity, codex-cli, cursor, kimi-code, vscode, warp
+    VALID_TARGETS = %w[claude-code opencode].freeze
 
     TARGET_ALIAS_MAP = {
       "claude" => "claude-code",
       "claude-code" => "claude-code",
-      "codex" => "codex-cli",
-      "codex-cli" => "codex-cli",
-      "cursor" => "cursor",
-      "opencode" => "opencode",
-      "warp" => "warp",
-      "vscode" => "vscode",
-      "vs-code" => "vscode",
-      "antigravity" => "antigravity",
-      "kimi" => "kimi-code",
-      "kimi-code" => "kimi-code"
+      "opencode" => "opencode"
     }.freeze
 
     # Normalize platform name to internal target name.

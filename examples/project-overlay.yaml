@@ -30,12 +30,6 @@ targets:
         - "Bash(./scripts/deploy:*)"
       deny:
         - "Read(./customer-data/**)"
-  cursor:
-    permissions:
-      allow:
-        - "Shell(bundle exec rspec)"
-      deny:
-        - "Read(customer-data/**)"
   opencode:
     permission:
       read:

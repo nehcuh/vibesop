@@ -295,24 +295,17 @@ class TestVibeInit < Minitest::Test
 
   def test_normalize_platform_with_valid_platforms
     assert_equal "claude-code", normalize_platform("claude-code")
-    assert_equal "cursor", normalize_platform("cursor")
     assert_equal "opencode", normalize_platform("opencode")
-    assert_equal "codex-cli", normalize_platform("codex-cli")
-    assert_equal "warp", normalize_platform("warp")
-    assert_equal "kimi-code", normalize_platform("kimi-code")
-    assert_equal "vscode", normalize_platform("vscode")
-    assert_equal "antigravity", normalize_platform("antigravity")
   end
 
   def test_normalize_platform_with_underscores
     assert_equal "claude-code", normalize_platform("claude_code")
-    assert_equal "codex-cli", normalize_platform("codex_cli")
   end
 
   def test_normalize_platform_with_nil_detects_current
     # Should detect based on directory existence
     platform = normalize_platform(nil)
-    assert_includes %w[claude-code cursor opencode codex-cli], platform
+    assert_includes %w[claude-code opencode], platform
   end
 
   def test_normalize_platform_raises_on_invalid
@@ -325,11 +318,6 @@ class TestVibeInit < Minitest::Test
   def test_detect_current_platform_claude_code
     FileUtils.mkdir_p(File.join(@test_home, ".claude"))
     assert_equal "claude-code", detect_current_platform
-  end
-
-  def test_detect_current_platform_cursor
-    FileUtils.mkdir_p(File.join(@test_home, ".cursor"))
-    assert_equal "cursor", detect_current_platform
   end
 
   def test_detect_current_platform_opencode
@@ -370,13 +358,13 @@ class TestVibeInit < Minitest::Test
       File.join(@repo_root, "bin", "vibe"),
       "init",
       "--verify",
-      "--platform=cursor",
+      "--platform=opencode",
       stdin_data: "",
       chdir: @repo_root
     )
 
     assert status.success?
-    assert_includes output, "Target platform: Cursor"
+    assert_includes output, "Target platform: OpenCode"
   end
 
   def test_bin_vibe_init_with_platform_equals_syntax

@@ -57,14 +57,14 @@ class TestVibeCLI < Minitest::Test
     refute_includes section, "| `brainstorming` |"
   end
 
-  def test_switch_warp_uses_external_staging_when_repo_root_is_destination
+  def test_switch_opencode_uses_external_staging_when_repo_root_is_destination
     switch_repo_root = Dir.mktmpdir("vibe-switch-repo")
     FileUtils.cp_r(File.join(@repo_root, "core"), switch_repo_root)
-    
+
     # Change to the switch repo directory so Dir.pwd returns the correct path
     original_dir = Dir.pwd
     Dir.chdir(switch_repo_root)
-    
+
     # Create a fresh CLI instance with the switch repo as repo_root
     # and set HOME to avoid conflicts with the actual home directory
     original_home = ENV["HOME"]
@@ -72,15 +72,15 @@ class TestVibeCLI < Minitest::Test
     cli = VibeCLI.new(switch_repo_root)
     cli.skip_integrations = true
 
-    stdout, = capture_io { cli.run(["switch", "warp", "--force"]) }
+    stdout, = capture_io { cli.run(["switch", "opencode", "--force"]) }
 
-    assert_includes stdout, "Applied warp"
-    assert File.exist?(File.join(switch_repo_root, "WARP.md"))
-    assert File.exist?(File.join(switch_repo_root, ".vibe", "warp", "routing.md"))
+    assert_includes stdout, "Applied opencode"
+    assert File.exist?(File.join(switch_repo_root, "AGENTS.md"))
+    assert File.exist?(File.join(switch_repo_root, ".vibe", "opencode", "routing.md"))
 
     marker = JSON.parse(File.read(File.join(switch_repo_root, ".vibe-target.json")))
     assert_includes marker.fetch("generated_output"), ".vibe-generated"
-    refute_equal "generated/warp", marker.fetch("generated_output")
+    refute_equal "generated/opencode", marker.fetch("generated_output")
   ensure
     Dir.chdir(original_dir) if defined?(original_dir)
     ENV["HOME"] = original_home if defined?(original_home)
@@ -103,14 +103,14 @@ class TestVibeCLI < Minitest::Test
 
   def test_resolve_output_root_with_special_char_destination
     # Create a destination that will overlap with default output root
-    # Default output root is "generated/warp" relative to repo root
+    # Default output root is "generated/opencode" relative to repo root
     # Make destination a parent of the output root to trigger overlap
     dest_with_spaces = File.join(@repo_root, "generated")
     FileUtils.mkdir_p(dest_with_spaces)
 
     output = @cli.send(
       :resolve_output_root_for_use,
-      target: "warp",
+      target: "opencode",
       destination_root: dest_with_spaces,
       explicit_output: nil
     )
@@ -118,7 +118,7 @@ class TestVibeCLI < Minitest::Test
     # Should use external staging due to overlap
     assert_includes output, ".vibe-generated"
     # Should contain sanitized name
-    assert_match %r{generated-[a-f0-9]{12}/warp$}, output
+    assert_match %r{generated-[a-f0-9]{12}/opencode$}, output
   ensure
     # Don't remove generated dir as it's part of the repo
   end
@@ -153,18 +153,13 @@ class TestVibeCLI < Minitest::Test
     end
   end
 
-  # Structure-based tests for non-active targets
+  # Structure-based tests for all supported targets
   # Verifies key elements exist without requiring exact environment match
-  def test_checked_in_runtimes_structure_non_active_targets
-    targets = %w[antigravity codex-cli cursor kimi-code opencode vscode warp]
+  def test_checked_in_runtimes_structure_supported_targets
+    targets = %w[claude-code opencode]
     entrypoint_names = {
-      "antigravity" => "AGENTS.md",
-      "codex-cli" => "AGENTS.md",
-      "cursor" => "AGENTS.md",
-      "kimi-code" => "KIMI.md",
-      "opencode" => "AGENTS.md",
-      "vscode" => "AGENTS.md",
-      "warp" => "WARP.md"
+      "claude-code" => "CLAUDE.md",
+      "opencode" => "AGENTS.md"
     }
 
     targets.each do |target|
@@ -199,18 +194,18 @@ class TestVibeCLI < Minitest::Test
     end
   end
 
-  def test_warp_overlay_correctly_modifies_behavior_policies
-    build_root = Dir.mktmpdir("vibe-warp-overlay")
+  def test_opencode_overlay_correctly_modifies_behavior_policies
+    build_root = Dir.mktmpdir("vibe-opencode-overlay")
     overlay_path = File.join(@repo_root, "examples", "project-overlay.yaml")
 
     begin
       capture_io do
-        @cli.run(["build", "warp", "--output", build_root, "--overlay", overlay_path])
+        @cli.run(["build", "opencode", "--output", build_root, "--overlay", overlay_path])
       end
 
       # Verify overlay content is present in the generated output but NOT in the tracked baseline
-      generated_policies = File.read(File.join(build_root, ".vibe", "warp", "behavior-policies.md"))
-      tracked_policies = File.read(File.join(@repo_root, ".vibe", "warp", "behavior-policies.md"))
+      generated_policies = File.read(File.join(build_root, ".vibe", "opencode", "behavior-policies.md"))
+      tracked_policies = File.read(File.join(@repo_root, ".vibe", "opencode", "behavior-policies.md"))
 
       assert_includes generated_policies, "project-context-is-release-log"
       refute_includes tracked_policies, "project-context-is-release-log"

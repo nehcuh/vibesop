@@ -2,7 +2,7 @@
 
 **English** | [中文](README.zh-CN.md)
 
-A battle-tested workflow foundation for Claude Code today, evolving into a portable vibe coding config base for Antigravity, VS Code, Claude Code, Codex CLI, Kimi Code, OpenCode, Cursor, Warp, and similar agentic tools.
+A battle-tested workflow foundation for Claude Code and OpenCode — providing structured configuration, memory management, and consistent development practices.
 
 **Not a tutorial. Not a toy config. A production workflow that actually ships — now with a provider-neutral core spec in phase 1.**
 
@@ -29,14 +29,16 @@ While this fork maintains the original MIT license and credits the original auth
 
 ## Why This Exists
 
-Claude Code is powerful out of the box, but without structure it becomes a smart assistant that forgets everything between sessions. This template turns it into a **persistent, self-improving development partner** that:
+Claude Code is powerful out of the box, but without structure it becomes a smart assistant that starts fresh each session. This template provides a **structured workflow system** that:
 
-- Remembers past mistakes and applies lessons automatically
-- Manages context across long sessions without drifting
-- Routes tasks to the right capability tier and active provider profile
-- Forces verification before claiming completion (no more "should work now")
-- Auto-saves progress so closing the window doesn't lose work
-- **Automatically suggests external skills based on context** (e.g., suggests TDD workflow when implementing features, code review workflow before PRs)
+- **Prompts structured memory practices**: Records lessons to markdown files so past mistakes are searchable
+- **Organizes context in layers**: Rules (always), docs (reference), memory (working state)
+- **Suggests capability-based routing**: Guidelines for matching task complexity to appropriate models
+- **Enforces verification checkpoints**: Requires explicit test execution before claiming completion
+- **Supports session management**: Structured templates for saving progress when you signal completion
+- **Exposes portable skill guidelines**: Rule-based guidance for when to use specific skills (TDD, code review, etc.)
+
+**Important**: This is a configuration template with prompts and rules — not automation. You and your LLM must actively use the structure.
 
 ## Phase 1-7 Direction: Portable Core + Target Adapters + Generator + Project Overlays + Snapshot Testing
 
@@ -44,7 +46,7 @@ This repo now has two layers of concern:
 
 - `core/` — provider-neutral workflow semantics (model tiers, skill registry, safety policy)
 - current runtime files (`rules/`, `docs/`, `memory/`, `skills/`) — the first-class Claude Code target that remains fully usable today
-- `targets/` — mapping notes for Antigravity, Claude Code, Codex CLI, Cursor, Kimi Code, OpenCode, VS Code, and Warp
+- `targets/` — adapter mappings for Claude Code and OpenCode (production-ready); other platforms planned
 
 Phase 1 established the portable SSOT and adapter contract. Phase 2-3 added a minimal `bin/vibe` generator with build/use/inspect/switch ergonomics. Phase 4 added portable behavior policies plus deeper native config rendering. Phase 5 added project-level overlays so consuming repos can customize profile mapping, behavior deltas, and native target config without forking `core/`. Phase 6 adds Warp, Antigravity, and VS Code support, plus reusable runtime-preference overlay examples for `uv` and `nvm`. Phase 7 adds parameterized snapshot testing infrastructure, CI drift protection, and the `quickstart` command for one-step installation.
 
@@ -245,6 +247,41 @@ Documentation is organized by purpose:
 - **Understanding capability tiers** → See [core/models/tiers.yaml](core/models/tiers.yaml)
 - **Running tests** → `make validate` or `make generate`
 
+---
+
+## Known Limitations
+
+Before adopting this workflow, understand these constraints:
+
+### Platform Support
+- **Production-ready**: Claude Code, OpenCode
+- **Planned**: Cursor, Warp, VS Code, Kimi Code, Codex CLI, Antigravity (configs generated but limited testing)
+
+### What This Is (and Isn't)
+- **Not automatic**: This is a configuration template with prompts and rules — not automation
+- **Not magic**: You and your LLM must actively read and follow the rules
+- **Not a database**: "Memory" is markdown files; no search, no automatic retrieval
+- **Not hooks**: No programmatic triggers; everything depends on LLM recognizing prompts
+
+### Memory System
+- **No auto-save**: Records only when you explicitly say exit phrases ("I'm heading out", "保存一下")
+- **No crash recovery**: If Claude Code crashes, unsaved work is lost
+- **No automatic association**: Past lessons aren't automatically suggested; Claude must read and remember
+
+### Skill System
+- **Not automatic triggering**: Rules describe when skills *should* be used, but LLM must interpret
+- **No enforcement**: "Mandatory" skills are prompts, not programmatic gates
+
+### Model Routing
+- **Guidelines only**: Capability tiers are semantic hints, not executable configuration
+- **No dynamic switching**: Cannot automatically change models mid-session
+
+### External Integrations
+- **Manual setup required**: Superpowers and RTK detection finds tools but requires user confirmation
+- **RTK scope**: Only optimizes command outputs, not overall conversation token usage
+
+---
+
 ## Quick Start
 
 ### Installation
@@ -303,18 +340,14 @@ graph TB
 Choose your AI tool and install its global configuration:
 
 ```bash
-# For Claude Code
+# For Claude Code (fully supported)
 vibe init --platform claude-code
 
-# For OpenCode
+# For OpenCode (fully supported)
 vibe init --platform opencode
-
-# For Kimi Code
-vibe init --platform kimi-code
-
-# For Cursor
-vibe init --platform cursor
 ```
+
+Other platforms (Cursor, Warp, VS Code, Kimi Code, Codex CLI, Antigravity) are planned but not currently maintained.
 
 This installs the workflow configuration to the tool's global directory (e.g., `~/.claude`, `~/.config/opencode`, `~/.config/agents`).
 
@@ -325,12 +358,10 @@ In your project directory, apply the platform configuration:
 ```bash
 cd /path/to/your/project
 
-# Apply configuration for your tool
+# Apply configuration
 vibe switch --platform claude-code
 # OR
 vibe switch --platform opencode
-# OR
-vibe switch --platform kimi-code
 ```
 
 This creates a lightweight project-level configuration that references the global setup.
@@ -341,8 +372,6 @@ Launch your AI tool in the project directory. It will automatically load both gl
 
 ```bash
 claude   # For Claude Code
-# OR
-kimi     # For Kimi Code
 # OR
 opencode # For OpenCode
 ```
