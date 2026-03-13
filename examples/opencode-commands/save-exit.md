@@ -12,7 +12,7 @@ Please execute the following steps to save my session progress:
    - Trigger the session-end skill
    - Update memory/session.md with current progress
    - Record any lessons learned in memory/project-knowledge.md
-   - Update PROJECT_CONTEXT.md if it exists
+   - Update PROJECT_CONTEXT.md handoff block (if file exists - optional)
 
 3. **Commit Changes (if applicable)**
    - Stage relevant files

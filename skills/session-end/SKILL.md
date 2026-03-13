@@ -67,12 +67,20 @@ Also update `## In-Flight Tasks (Cross-Session)` if applicable:
 
 ### 4. PROJECT_CONTEXT.md Handoff
 
-Update `<!-- handoff:start/end -->` block.
+**Check if file exists**:
+- If `PROJECT_CONTEXT.md` exists → Update `<!-- handoff:start/end -->` block
+- If file does NOT exist → Skip this step (file is optional)
+
+**When updating (if file exists)**:
+
+Update the `<!-- handoff:start/end -->` block with current session summary.
 
 **Auto-trim (every execution)**:
 - Keep only **latest + 1 previous** handoff block within markers
 - Delete older handoffs (git history has full record)
 - Target: SESSION_HANDOFF section ≤80 lines
+
+**Note**: PROJECT_CONTEXT.md is an optional project-level file. If the project doesn't have one, this step is automatically skipped.
 
 ### 5. Git Commit (when there are changes)
 
@@ -102,7 +110,7 @@ Content material: Found N shareable discoveries today
 Experience: [Recorded N items / None needed]
 session.md updated
 overview.md: [goals updated / projects updated / no changes]
-Handoff updated
+Handoff: [updated / skipped (no PROJECT_CONTEXT.md)]
 Committed [N] files
 Content material: [N items / none (<3 sessions)]
 ```

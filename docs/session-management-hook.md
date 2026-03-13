@@ -19,7 +19,7 @@ When you choose to save, the hook triggers the `session-end` skill which:
 
 1. Updates `memory/session.md` with current progress
 2. Records lessons learned in `memory/project-knowledge.md` (if any)
-3. Updates `PROJECT_CONTEXT.md` (if file exists)
+3. Updates `PROJECT_CONTEXT.md` handoff block (if file exists - optional)
 4. Commits changes to git (if applicable)
 
 ## Installation
