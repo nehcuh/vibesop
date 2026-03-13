@@ -126,7 +126,7 @@ module Vibe
     def load_project_skills
       cache.get_project_config(project_root).tap do |config|
         return {
-          adapted: config['adapted_skills']&.map { |id, info| { id: id, **info } } || [],
+          adapted: config['adapted_skills']&.map { |id, info| { id: id, **info.transform_keys(&:to_sym) } } || [],
           skipped: config['skipped_skills'] || [],
           installed_packs: config['installed_packs'] || {}
         }
