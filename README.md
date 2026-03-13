@@ -47,7 +47,7 @@ Claude Code is powerful out of the box, but without structure it becomes a smart
 ### Recent Improvements (2026-03)
 
 - **🎯 Session Management Hook**: Automatically prompts to save progress before `/exit`
-  - ✅ Claude Code: Fully integrated via PreSessionEnd hook
+  - ✅ Claude Code: Fully integrated via Stop hook
   - ⚠️ OpenCode: Use custom commands or semantic triggers (see [docs](docs/session-management-opencode.md))
 - **✨ Improved `vibe targets`**: Now shows all supported platforms with clear status indicators
 - **🔍 Better overlay warnings**: Clear error messages when using incorrect overlay format

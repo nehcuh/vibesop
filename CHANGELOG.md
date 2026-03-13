@@ -7,12 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Hook Configuration Format**: Fixed `vibe init` generating invalid `PreSessionEnd` hook format
+  - Changed from `PreSessionEnd` to `Stop` event (correct Claude Code hook name)
+  - Fixed data structure to use nested `hooks` array format required by Claude Code
+  - Updated `lib/vibe/hook_installer.rb` to generate correct settings.json format
+  - Updated all documentation to reflect correct hook configuration
+  - All tests passing with new format
+
 ### Added
 - **Session Management Hook**: Pre-session-end hook for Claude Code that prompts users to save progress before `/exit`
   - Automatically installed during `vibe init --platform claude-code`
   - Detects uncommitted changes and warns users
   - Three options: Save and exit, Exit without saving, or Cancel
-  - Configures `~/.claude/settings.json` with PreSessionEnd hook
+  - Configures `~/.claude/settings.json` with Stop hook
   - New module: `lib/vibe/hook_installer.rb` with installation and verification logic
   - New test suite: `test/test_hook_installer.rb` with 6 test cases
   - Documentation: `docs/session-management-hook.md` and `hooks/README.md`

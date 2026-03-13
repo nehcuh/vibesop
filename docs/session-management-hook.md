@@ -51,10 +51,14 @@ Then add to `~/.claude/settings.json`:
 ```json
 {
   "hooks": {
-    "PreSessionEnd": [
+    "Stop": [
       {
-        "type": "command",
-        "command": "~/.claude/hooks/pre-session-end.sh"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/pre-session-end.sh"
+          }
+        ]
       }
     ]
   }
@@ -101,7 +105,7 @@ Check if the hook is installed:
 ls -l ~/.claude/hooks/pre-session-end.sh
 
 # Check if hook is configured
-cat ~/.claude/settings.json | grep -A 5 "PreSessionEnd"
+cat ~/.claude/settings.json | grep -A 5 "Stop"
 
 # Test the hook manually
 ~/.claude/hooks/pre-session-end.sh
@@ -138,7 +142,7 @@ The hook checks if you're in a git repository. If not, it skips the save prompt.
 
 ### Configuration
 
-The hook is configured in `~/.claude/settings.json` under the `hooks.PreSessionEnd` section.
+The hook is configured in `~/.claude/settings.json` under the `hooks.Stop` section.
 
 ## Related Documentation
 

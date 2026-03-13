@@ -93,19 +93,25 @@ module Vibe
       # Initialize hooks structure if needed
       settings["hooks"] ||= {}
 
-      # Check if PreSessionEnd already configured
-      if settings["hooks"]["PreSessionEnd"]
+      # Check if Stop hook already configured
+      if settings["hooks"]["Stop"]
         # Check if our hook is already in the list
-        existing = settings["hooks"]["PreSessionEnd"]
-        our_hook = existing.find { |h| h["command"]&.include?("pre-session-end.sh") }
+        existing = settings["hooks"]["Stop"]
+        our_hook = existing.any? do |matcher_group|
+          matcher_group["hooks"]&.any? { |h| h["command"]&.include?("pre-session-end.sh") }
+        end
         return if our_hook # Already configured
       end
 
-      # Add our hook
-      settings["hooks"]["PreSessionEnd"] ||= []
-      settings["hooks"]["PreSessionEnd"] << {
-        "type" => "command",
-        "command" => hook_path
+      # Add our hook with correct nested structure
+      settings["hooks"]["Stop"] ||= []
+      settings["hooks"]["Stop"] << {
+        "hooks" => [
+          {
+            "type" => "command",
+            "command" => hook_path
+          }
+        ]
       }
 
       # Write back to settings.json
@@ -117,10 +123,12 @@ module Vibe
       return false unless File.exist?(settings_file)
 
       settings = JSON.parse(File.read(settings_file))
-      hooks = settings.dig("hooks", "PreSessionEnd")
+      hooks = settings.dig("hooks", "Stop")
       return false unless hooks
 
-      hooks.any? { |h| h["command"]&.include?("pre-session-end.sh") }
+      hooks.any? do |matcher_group|
+        matcher_group["hooks"]&.any? { |h| h["command"]&.include?("pre-session-end.sh") }
+      end
     rescue JSON::ParserError
       false
     end

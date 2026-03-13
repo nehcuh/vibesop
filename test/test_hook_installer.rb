@@ -38,9 +38,12 @@ class TestHookInstaller < Minitest::Test
 
     settings = JSON.parse(File.read(settings_file))
     assert settings["hooks"], "hooks section should exist"
-    assert settings["hooks"]["PreSessionEnd"], "PreSessionEnd hook should be configured"
+    assert settings["hooks"]["Stop"], "Stop hook should be configured"
 
-    hook_config = settings["hooks"]["PreSessionEnd"].first
+    matcher_group = settings["hooks"]["Stop"].first
+    assert matcher_group["hooks"], "hooks array should exist in matcher group"
+
+    hook_config = matcher_group["hooks"].first
     assert_equal "command", hook_config["type"]
     assert_includes hook_config["command"], "pre-session-end.sh"
   end
@@ -73,7 +76,7 @@ class TestHookInstaller < Minitest::Test
     settings = JSON.parse(File.read(settings_file))
 
     # Should not duplicate hook entries
-    assert_equal 1, settings["hooks"]["PreSessionEnd"].length
+    assert_equal 1, settings["hooks"]["Stop"].length
   end
 
   def test_install_with_existing_settings
@@ -102,6 +105,6 @@ class TestHookInstaller < Minitest::Test
 
     # Should preserve existing hooks
     assert settings["hooks"]["PreToolUse"], "Existing hooks should be preserved"
-    assert settings["hooks"]["PreSessionEnd"], "New hook should be added"
+    assert settings["hooks"]["Stop"], "New hook should be added"
   end
 end

@@ -8,7 +8,7 @@ OpenCode's plugin system provides event listeners, but lacks a dedicated `sessio
 
 ## Why No Automatic Hook?
 
-1. **No Exit Event** - OpenCode doesn't have a `PreSessionEnd` equivalent
+1. **No Exit Event** - OpenCode doesn't have a `Stop` hook equivalent
 2. **Different Architecture** - Uses JavaScript plugins instead of shell hooks
 3. **Timing Issues** - `session.deleted` event may fire after the session is already closed
 

@@ -45,10 +45,14 @@ Add to `~/.claude/settings.json`:
 ```json
 {
   "hooks": {
-    "PreSessionEnd": [
+    "Stop": [
       {
-        "type": "command",
-        "command": "~/.claude/hooks/pre-session-end.sh"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/pre-session-end.sh"
+          }
+        ]
       }
     ]
   }
@@ -71,10 +75,14 @@ Add to `.claude/settings.json`:
 ```json
 {
   "hooks": {
-    "PreSessionEnd": [
+    "Stop": [
       {
-        "type": "command",
-        "command": "./hooks/pre-session-end.sh"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./hooks/pre-session-end.sh"
+          }
+        ]
       }
     ]
   }
@@ -109,7 +117,7 @@ echo "c" | ./hooks/pre-session-end.sh  # Should exit with code 1
 
 1. Check if hook is configured in settings.json:
    ```bash
-   cat ~/.claude/settings.json | grep -A 5 "PreSessionEnd"
+   cat ~/.claude/settings.json | grep -A 5 "Stop"
    ```
 
 2. Verify hook script is executable:

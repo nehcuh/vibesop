@@ -1,6 +1,6 @@
 # Project Claude Code Configuration
 
-Generated from the portable `core/` spec with profile `claude-code-default`.
+Generated from the portable `core/` spec with profile `claude-code-default`.  
 Applied overlay: `none`
 
 Global workflow rules are loaded from `~/.claude/`. This file adds project-specific context only.
@@ -18,5 +18,5 @@ Global workflow rules are loaded from `~/.claude/`. This file adds project-speci
 Supporting notes are under `.vibe/claude-code/`:
 - `behavior-policies.md` — portable behavior baseline
 - `safety.md` — safety policy
+- `routing.md` — capability tier routing
 - `task-routing.md` — task complexity routing
-- `test-standards.md` — testing requirements

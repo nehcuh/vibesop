@@ -1,0 +1,54 @@
+---
+schema_version: 1
+adapted_skills:
+  systematic-debugging:
+    mode: suggest
+    adapted_at: '2026-03-13T14:05:52+0800'
+    adapted_by: user_choice
+  verification-before-completion:
+    mode: suggest
+    adapted_at: '2026-03-13T14:05:52+0800'
+    adapted_by: user_choice
+  session-end:
+    mode: suggest
+    adapted_at: '2026-03-13T14:05:52+0800'
+    adapted_by: user_choice
+  planning-with-files:
+    mode: suggest
+    adapted_at: '2026-03-13T14:05:52+0800'
+    adapted_by: user_choice
+  experience-evolution:
+    mode: suggest
+    adapted_at: '2026-03-13T14:05:52+0800'
+    adapted_by: user_choice
+  superpowers/tdd:
+    mode: suggest
+    adapted_at: '2026-03-13T14:05:52+0800'
+    adapted_by: user_choice
+  superpowers/brainstorm:
+    mode: suggest
+    adapted_at: '2026-03-13T14:05:52+0800'
+    adapted_by: user_choice
+  superpowers/refactor:
+    mode: suggest
+    adapted_at: '2026-03-13T14:05:52+0800'
+    adapted_by: user_choice
+  superpowers/debug:
+    mode: suggest
+    adapted_at: '2026-03-13T14:05:52+0800'
+    adapted_by: user_choice
+  superpowers/architect:
+    mode: suggest
+    adapted_at: '2026-03-13T14:05:52+0800'
+    adapted_by: user_choice
+  superpowers/review:
+    mode: suggest
+    adapted_at: '2026-03-13T14:05:52+0800'
+    adapted_by: user_choice
+  superpowers/optimize:
+    mode: suggest
+    adapted_at: '2026-03-13T14:05:52+0800'
+    adapted_by: user_choice
+skipped_skills: []
+installed_packs: {}
+last_checked: '2026-03-13T14:05:52+0800'
