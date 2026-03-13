@@ -54,10 +54,10 @@ class TestUseCommandProjectSemantics < Minitest::Test
     assert File.exist?(File.join(project_dir, 'opencode.json')), "Should have opencode.json"
     assert File.exist?(File.join(project_dir, '.vibe/manifest.json')), "Should have manifest.json"
 
-    # Verify it's project-level config (has extends)
+    # Verify it's project-level config (minimal instructions, no extends)
+    # Note: OpenCode does NOT support 'extends' - it auto-merges configs by precedence
     config = JSON.parse(File.read(File.join(project_dir, 'opencode.json')))
-    assert_equal "~/.config/opencode/opencode.json", config['extends'],
-                 "Project opencode.json should extend global config"
+    refute config['extends'], "OpenCode project config should NOT have extends key"
 
     # Should have minimal instructions (project-level)
     assert config['instructions'].length < 5, "Project should have minimal instructions"

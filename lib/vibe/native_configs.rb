@@ -113,7 +113,10 @@ module Vibe
     end
 
     def opencode_project_config(manifest)
-      # Project-level minimal config - references global config
+      # Project-level minimal config
+      # Note: OpenCode does NOT support 'extends' - it auto-merges configs by precedence
+      # Project config (~/.config/opencode/opencode.json) is loaded after global config
+      # So we only include project-specific overrides here
       base = {
         "$schema" => "https://opencode.ai/config.json",
         "instructions" => [
@@ -121,8 +124,7 @@ module Vibe
           ".vibe/opencode/behavior-policies.md",
           ".vibe/opencode/routing.md",
           ".vibe/opencode/safety.md"
-        ],
-        "extends" => "~/.config/opencode/opencode.json"
+        ]
       }
       deep_merge(base, manifest["native_config_overlay"] || {})
     end

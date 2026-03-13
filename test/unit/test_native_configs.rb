@@ -220,7 +220,8 @@ class TestNativeConfigs < Minitest::Test
     assert_equal "https://opencode.ai/config.json", config["$schema"]
     assert config["instructions"].include?("AGENTS.md")
     assert config["instructions"].include?(".vibe/opencode/behavior-policies.md")
-    assert_equal "~/.config/opencode/opencode.json", config["extends"]
+    # OpenCode does NOT support 'extends' - it auto-merges configs by precedence
+    refute config["extends"], "OpenCode project config should NOT have extends"
   end
 
   def test_opencode_project_has_fewer_instructions
