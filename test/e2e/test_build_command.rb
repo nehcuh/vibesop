@@ -35,6 +35,9 @@ class TestBuildCommand < Minitest::Test
     assert File.exist?(File.join(output, 'opencode.json')), "Should have opencode.json"
     assert File.exist?(File.join(output, '.vibe/manifest.json')), "Should have manifest.json"
     assert File.exist?(File.join(output, '.vibe/opencode/behavior-policies.md')), "Should have behavior-policies.md"
+    # Verify alignment with Claude Code - should generate task-routing and test-standards
+    assert File.exist?(File.join(output, '.vibe/opencode/task-routing.md')), "Should have task-routing.md (aligned with Claude Code)"
+    assert File.exist?(File.join(output, '.vibe/opencode/test-standards.md')), "Should have test-standards.md (aligned with Claude Code)"
   end
 
   def test_build_with_overlay_applies_overlay

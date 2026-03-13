@@ -59,8 +59,8 @@ platforms:
         entrypoint_name: AGENTS.md
 
     doc_types:
-      global: [behavior, general, routing, skills, safety, execution]
-      project: [behavior, general, routing, skills, safety, execution]
+      global: [behavior, safety, task_routing, test_standards]
+      project: [behavior, safety]
 
     native_config:
       global:

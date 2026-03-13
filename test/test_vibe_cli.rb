@@ -60,7 +60,11 @@ class TestVibeCLI < Minitest::Test
 
     assert_includes stdout, "Applied opencode"
     assert File.exist?(File.join(switch_repo_root, "AGENTS.md"))
-    assert File.exist?(File.join(switch_repo_root, ".vibe", "opencode", "routing.md"))
+    # Aligned with Claude Code - project level should only have behavior-policies and safety
+    assert File.exist?(File.join(switch_repo_root, ".vibe", "opencode", "behavior-policies.md")), "Should have behavior-policies.md"
+    assert File.exist?(File.join(switch_repo_root, ".vibe", "opencode", "safety.md")), "Should have safety.md"
+    # Project level should NOT have task-routing or test-standards (only in global)
+    refute File.exist?(File.join(switch_repo_root, ".vibe", "opencode", "task-routing.md")), "Project should NOT have task-routing.md"
 
     marker = JSON.parse(File.read(File.join(switch_repo_root, ".vibe-target.json")))
     assert_includes marker.fetch("generated_output"), ".vibe-generated"
@@ -167,8 +171,9 @@ class TestVibeCLI < Minitest::Test
         vibe_dir = File.join(build_root, ".vibe", target)
         assert File.directory?(vibe_dir), "#{target}: .vibe/#{target}/ directory should exist"
 
-        # Check for key documentation files
-        %w[behavior-policies.md routing.md safety.md].each do |doc|
+        # Check for key documentation files (aligned with Claude Code)
+        expected_docs = %w[behavior-policies.md safety.md task-routing.md test-standards.md]
+        expected_docs.each do |doc|
           doc_path = File.join(vibe_dir, doc)
           assert File.exist?(doc_path), "#{target}: #{doc} should exist" if File.exist?(File.join(@repo_root, ".vibe", target, doc))
         end

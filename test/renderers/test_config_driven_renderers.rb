@@ -161,9 +161,11 @@ class TestConfigDrivenRenderers < Minitest::Test
     vibe_dir = File.join(@build_root, ".vibe", "opencode")
     assert File.directory?(vibe_dir), ".vibe/opencode/ should exist"
 
-    # Check docs
+    # Check docs (aligned with Claude Code)
     assert File.exist?(File.join(vibe_dir, "behavior-policies.md"))
-    assert File.exist?(File.join(vibe_dir, "routing.md"))
+    assert File.exist?(File.join(vibe_dir, "safety.md"))
+    assert File.exist?(File.join(vibe_dir, "task-routing.md")), "Should have task-routing.md (aligned with Claude Code)"
+    assert File.exist?(File.join(vibe_dir, "test-standards.md")), "Should have test-standards.md (aligned with Claude Code)"
   end
 
   def test_render_platform_raises_on_unknown_platform

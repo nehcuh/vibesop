@@ -116,12 +116,13 @@ class TestNativeConfigs < Minitest::Test
     config = @tester.base_opencode_config
     instructions = config["instructions"]
 
+    # Aligned with Claude Code structure
+    assert_includes instructions, "AGENTS.md"
     assert_includes instructions, ".vibe/opencode/behavior-policies.md"
-    assert_includes instructions, ".vibe/opencode/general.md"
-    assert_includes instructions, ".vibe/opencode/routing.md"
-    assert_includes instructions, ".vibe/opencode/skills.md"
     assert_includes instructions, ".vibe/opencode/safety.md"
-    assert_includes instructions, ".vibe/opencode/execution.md"
+    assert_includes instructions, ".vibe/opencode/task-routing.md"
+    assert_includes instructions, ".vibe/opencode/test-standards.md"
+    # Old OpenCode-specific docs removed (general, routing, skills, execution)
   end
 
   def test_base_opencode_permission_structure

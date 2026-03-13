@@ -47,12 +47,11 @@ module Vibe
       {
         "$schema" => "https://opencode.ai/config.json",
         "instructions" => [
+          "AGENTS.md",
           ".vibe/opencode/behavior-policies.md",
-          ".vibe/opencode/general.md",
-          ".vibe/opencode/routing.md",
-          ".vibe/opencode/skills.md",
           ".vibe/opencode/safety.md",
-          ".vibe/opencode/execution.md"
+          ".vibe/opencode/task-routing.md",
+          ".vibe/opencode/test-standards.md"
         ],
         "permission" => {
           "read" => {
@@ -113,7 +112,7 @@ module Vibe
     end
 
     def opencode_project_config(manifest)
-      # Project-level minimal config
+      # Project-level minimal config - aligned with Claude Code structure
       # Note: OpenCode does NOT support 'extends' - it auto-merges configs by precedence
       # Project config (~/.config/opencode/opencode.json) is loaded after global config
       # So we only include project-specific overrides here
@@ -122,7 +121,6 @@ module Vibe
         "instructions" => [
           "AGENTS.md",
           ".vibe/opencode/behavior-policies.md",
-          ".vibe/opencode/routing.md",
           ".vibe/opencode/safety.md"
         ]
       }
