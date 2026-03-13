@@ -44,7 +44,7 @@ class TestCliPathSafetyGuards < Minitest::Test
 
   def test_allows_generated_subdir
     # Should not abort for generated/ paths
-    @host.ensure_safe_output_path!("/fake/repo/generated/warp")
+    @host.ensure_safe_output_path!("/fake/repo/generated/opencode")
   end
 
   def test_refuses_unsafe_path_children

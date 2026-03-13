@@ -45,7 +45,7 @@ module Vibe
       # Generate native config if configured
       native_config = config.dig("native_config", mode)
       if native_config
-        generate_native_config(output_root, manifest, native_config)
+        generate_native_config(output_root, manifest, native_config, mode)
       end
 
       # Generate entrypoint
@@ -55,20 +55,14 @@ module Vibe
       send("after_render_#{platform_id}", output_root, manifest, mode) if respond_to?("after_render_#{platform_id}", true)
     end
 
-    # Render Claude Code (delegates to generic renderer)
-    def render_claude_v2(output_root, manifest, project_level: false)
-      render_platform(output_root, manifest, "claude-code", project_level: project_level)
-    end
-
-    # Render OpenCode (delegates to generic renderer)
-    def render_opencode_v2(output_root, manifest, project_level: false)
-      render_platform(output_root, manifest, "opencode", project_level: project_level)
-    end
-
     private
 
     # Copy runtime directories based on configuration
-    def copy_runtime_dirs(output_root, dirs, mode)
+    def copy_runtime_dirs(output_root, dirs_config, mode)
+      # Support both old format (array) and new format (hash with mode keys)
+      dirs = dirs_config.is_a?(Hash) ? dirs_config[mode] : dirs_config
+      return if dirs.nil? || dirs.empty?
+
       dirs.each do |entry|
         source = File.join(@repo_root, entry)
         next unless File.exist?(source)
@@ -86,17 +80,24 @@ module Vibe
     end
 
     # Generate native configuration file
-    def generate_native_config(output_root, manifest, config)
+    def generate_native_config(output_root, manifest, config, mode)
       config_path = File.join(output_root, config["filename"])
+      builder_method = config["builder"]
+
+      unless builder_method
+        raise ArgumentError, "Native config builder not specified for #{config['filename']}"
+      end
+
+      unless respond_to?(builder_method)
+        raise ArgumentError, "Native config builder method not found: #{builder_method}"
+      end
 
       case config["type"]
       when "json"
-        # Use existing native config methods
-        method_name = config["filename"].gsub(".", "_").gsub("-", "_")
-        if respond_to?(method_name)
-          content = send(method_name, manifest)
-          write_json(config_path, content)
-        end
+        content = send(builder_method, manifest)
+        write_json(config_path, content)
+      else
+        raise ArgumentError, "Unsupported native config type: #{config['type']}"
       end
     end
 
@@ -164,24 +165,6 @@ module Vibe
       MD
     end
 
-    # Claude Code specific hook
-    def after_render_claude_code(output_root, manifest, mode)
-      # Add Superpowers integration if installed
-      superpowers_status = detect_superpowers
-      return if superpowers_status == :not_installed
-
-      skill_triggers_source = File.join(@repo_root, "rules", "skill-triggers.md")
-      skill_triggers_dest = File.join(output_root, "rules", "skill-triggers.md")
-
-      return unless File.exist?(skill_triggers_source)
-
-      content = File.read(skill_triggers_source)
-      superpowers_section = generate_superpowers_section(manifest)
-      enhanced_content = superpowers_section.empty? ? content : content + "\n" + superpowers_section
-
-      File.write(skill_triggers_dest, enhanced_content)
-    end
-
     # Generate README for .vibe/<target>/ directory
     def generate_vibe_readme(manifest, platform_id)
       target_label = platform_label(platform_id)
@@ -208,7 +191,6 @@ module Vibe
         "- `agents/`",
         "- `commands/`",
         "- `memory/`",
-        "- `patterns.md`",
         "- `settings.json`",
         "",
         "Active profile: `#{profile}`",

@@ -35,7 +35,7 @@ targets:
     permissions:
       ask:
         - "Bash(./scripts/deploy:*)"
-  cursor:
+  opencode:
     permissions:
       deny:
         - "Read(customer-data/**)"

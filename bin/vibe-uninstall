@@ -15,13 +15,7 @@ class VibeUninstaller
 
   PLATFORM_DIRS = {
     "claude-code" => "~/.claude",
-    "opencode" => "~/.opencode",
-    "kimi-code" => "~/.config/agents",
-    "cursor" => "~/.cursor",
-    "codex-cli" => "~/.codex",
-    "vscode" => "~/.vscode",
-    "warp" => "~/.warp",
-    "antigravity" => "~/.antigravity"
+    "opencode" => "~/.config/opencode"
   }.freeze
 
   def initialize(options = {})
@@ -227,7 +221,7 @@ def show_help
     Uninstall vibe from your system.
 
     Options:
-      --remove-configs    Also remove platform configurations (e.g., ~/.claude, ~/.opencode)
+      --remove-configs    Also remove platform configurations (e.g., ~/.claude, ~/.config/opencode)
       --remove-all        Remove everything including config directory
       --dry-run           Show what would be removed without actually removing
       --force             Skip confirmation prompts
@@ -247,7 +241,7 @@ def show_help
 
       With --remove-configs:
         - All of the above
-        - Platform configurations (e.g., ~/.claude, ~/.opencode, ~/.config/agents)
+        - Platform configurations (e.g., ~/.claude, ~/.config/opencode)
 
       With --remove-all:
         - All of the above

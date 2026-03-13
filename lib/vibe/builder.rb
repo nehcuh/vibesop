@@ -64,6 +64,12 @@ module Vibe
       end
     end
 
+    def superpowers_doc
+      @yaml_mutex.synchronize do
+        @superpowers_doc ||= read_yaml("core/integrations/superpowers.yaml")
+      end
+    end
+
     # --- Output path helpers ---
 
     def default_output_root(target)
@@ -148,20 +154,8 @@ module Vibe
       case target
       when "claude-code"
         render_claude(output_root, manifest, project_level: project_level)
-      when "codex-cli"
-        render_codex(output_root, manifest, project_level: project_level)
-      when "cursor"
-        render_cursor(output_root, manifest, project_level: project_level)
-      when "kimi-code"
-        render_kimi_code(output_root, manifest, project_level: project_level)
       when "opencode"
         render_opencode(output_root, manifest, project_level: project_level)
-      when "warp"
-        render_warp(output_root, manifest, project_level: project_level)
-      when "antigravity"
-        render_antigravity(output_root, manifest, project_level: project_level)
-      when "vscode"
-        render_vscode(output_root, manifest, project_level: project_level)
       else
         raise Vibe::ConfigurationError, "Target renderer not implemented: #{target}"
       end

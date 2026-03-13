@@ -1,8 +1,9 @@
-# Add Rubocop configuration
+# RuboCop configuration
 
-ALLCops:
-  Target_ruby_version: 2.6.0
-Style:
-  layout_space: 
-  max_line_length: 90
-  exclude_line_markers: true
+AllCops:
+  TargetRubyVersion: 2.6
+  NewCops: disable
+  SuggestExtensions: false
+
+Layout/LineLength:
+  Max: 90

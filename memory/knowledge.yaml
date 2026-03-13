@@ -1,8 +1,12 @@
-# Structured Project Knowledge
-# Replaces project-knowledge.md with searchable, typed data
+# Structured Project Knowledge (EXPERIMENTAL)
+# Status: Not yet integrated into main workflow
+# This is a prototype for structured knowledge storage.
+# The KnowledgeBase class exists but is not actively used by the CLI.
+# For now, continue using project-knowledge.md for project lessons.
 
 schema_version: 1
 last_updated: 2026-03-12
+status: experimental
 
 # Technical Pitfalls - things to watch out for
 pitfalls:

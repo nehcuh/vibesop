@@ -93,7 +93,7 @@ class VibeCLI
     parser = OptionParser.new do |opts|
       opts.banner = "Usage: vibe apply PLATFORM [options]  (alias: switch)"
 
-      opts.on("--platform PLATFORM", "Target platform (claude-code, opencode, kimi-code, cursor, etc.)") do |value|
+      opts.on("--platform PLATFORM", "Target platform (claude-code, opencode)") do |value|
         options[:platform] = value
       end
 
@@ -119,7 +119,6 @@ class VibeCLI
         puts "Examples:"
         puts "  vibe apply claude-code    # Apply Claude Code config to current project"
         puts "  vibe apply opencode       # Apply OpenCode config to current project"
-        puts "  vibe apply kimi-code      # Apply Kimi Code config to current project"
         puts
         puts "Note: Global configuration must be installed first with 'vibe init --platform PLATFORM'"
         exit 0
@@ -212,23 +211,12 @@ class VibeCLI
     puts
     
     # Platforms migrated to config-driven
-    config_driven_targets = %w[claude-code opencode codex-cli]
+    config_driven_targets = %w[claude-code opencode]
     
-    # All supported platforms (including future ones)
+    # All supported platforms
     all_targets = %w[
       claude-code
       opencode
-      codex-cli
-      cursor
-      windsurf
-      github-copilot
-      aider
-      alma
-      claude-desktop
-      kimi-code
-      warp
-      antigravity
-      vscode
     ]
     
     puts "✅ Config-driven (ready to use):"
@@ -404,7 +392,7 @@ class VibeCLI
         vibe doctor
 
       Commands:
-        init        Install global configuration for a platform (e.g., ~/.claude, ~/.opencode)
+        init        Install global configuration for a platform (e.g., ~/.claude, ~/.config/opencode)
         apply       Apply platform configuration to current project directory (alias: switch)
         quickstart  One-command setup for Claude Code in ~/.claude
         build       Generate target-specific configuration files
@@ -491,8 +479,8 @@ class VibeCLI
     ensure_no_path_overlap!(output_root, destination_root)
     overlay = resolve_overlay(explicit_path: options[:overlay], search_roots: [destination_root, @repo_root])
 
-    claude_global_dir = File.expand_path("~/.claude")
-    project_level = (target == "claude-code" && destination_root != claude_global_dir)
+    global_dir = default_global_destination(target)
+    project_level = (destination_root != global_dir)
 
     manifest = build_target(
       target: target,
@@ -603,7 +591,7 @@ class VibeCLI
           Install global configuration for a platform.
 
           Options:
-            --platform P  Target platform (claude-code, opencode, kimi-code, cursor, codex-cli, warp)
+            --platform P  Target platform (claude-code, opencode)
             --force       Overwrite existing configuration without asking
             --verify      Check if platform is already installed
             --suggest     Show installation suggestions
@@ -612,7 +600,7 @@ class VibeCLI
 
           Examples:
             vibe init --platform claude-code    # Install Claude Code global config to ~/.claude
-            vibe init --platform opencode       # Install OpenCode global config to ~/.opencode
+            vibe init --platform opencode       # Install OpenCode global config to ~/.config/opencode
             vibe init --platform claude-code --verify   # Check if installed
             vibe init --platform claude-code --force    # Force reinstall
             vibe init --platform claude-code --dry-run  # Preview installation

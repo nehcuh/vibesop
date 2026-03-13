@@ -25,29 +25,11 @@
 
 ## Other Target Profiles (Phase 1 Contract)
 
-### Codex CLI
-
-- Use the `codex-cli-default` profile from `core/models/providers.yaml`
-- Treat `AGENTS.md` as the minimum common instruction surface
-- Keep `independent_verifier` cross-family when possible
-
-### Cursor
-
-- Use the `cursor-default` profile from `core/models/providers.yaml`
-- Render routing as rules and review conventions rather than assuming native skills
-- Keep repo files as SSOT; tool-managed memory is only cache
-
 ### OpenCode
 
 - Use the `opencode-default` profile from `core/models/providers.yaml`
 - Prefer native permission controls and reusable agent or skill constructs
 - Use this as an early proving ground for cross-target portability
-
-### Warp
-
-- Use the `warp-default` profile from `core/models/providers.yaml`
-- Render routing into `WARP.md` and `.vibe/warp/*` support docs rather than assuming a separate native skill system
-- Keep stack-specific preferences such as `uv` and `nvm` in overlays so they stay project-scoped
 
 ### Generic Open-Weight / GLM-family
 

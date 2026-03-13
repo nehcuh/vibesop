@@ -28,11 +28,11 @@ But recording and applying lessons requires manual action or explicit LLM tool u
 
 ## Q: Can I use this with Cursor/Warp/VS Code/etc.?
 
-**A: Partially.** We have target adapter documentation for multiple platforms, but:
+**A:** Platform support status:
 
-- **Claude Code**: ✅ Fully supported and tested
-- **OpenCode**: ✅ Fully supported and tested
-- **All others**: ⏸️ Planned; configs are generated but integration is incomplete
+- **Claude Code**: ✅ Active - fully supported, production-ready
+- **OpenCode**: 🧪 Exploratory - basic support, actively developed
+- **All others**: 📋 Planned - documentation only, no working implementation
 
 Check [targets/README.md](targets/README.md) for current status.
 
@@ -116,10 +116,14 @@ Think of it as a well-organized playbook, not a robotic assistant.
 
 | Platform | Status | Notes |
 |----------|--------|-------|
-| **Claude Code** | ✅ Production | Fully tested, actively maintained |
-| **OpenCode** | ✅ Production | Fully tested, actively maintained |
-
-Other platforms (Cursor, Warp, VS Code, Kimi Code, Codex CLI, Antigravity) have generated configs but limited testing.
+| **Claude Code** | ✅ Active | Fully supported, production-ready |
+| **OpenCode** | 🧪 Exploratory | Basic support, actively developed |
+| **Codex CLI** | 📋 Planned | On roadmap |
+| **Cursor** | 📋 Planned | On roadmap |
+| **Kimi Code** | 📋 Planned | On roadmap |
+| **VS Code** | 📋 Planned | On roadmap |
+| **Warp** | 📋 Planned | On roadmap |
+| **Antigravity** | 📋 Planned | On roadmap |
 
 ---
 

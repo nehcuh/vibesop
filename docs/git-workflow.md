@@ -15,7 +15,7 @@ Commit the files that define or document the workflow:
 
 - Portable spec and adapter docs: `core/`, `targets/`, `rules/`, `docs/`
 - Repo entrypoints: `CLAUDE.md`, `WARP.md`
-- Checked-in Warp support files: `.vibe/manifest.json`, `.vibe/target-summary.md`, `.vibe/warp/*`
+- Checked-in support files: `.vibe/manifest.json`, `.vibe/target-summary.md`, `.vibe/<target>/*`
 - Example overlays under `examples/`
 - Any other file that is intentionally serving as the repository's live interface for a supported target
 
@@ -44,7 +44,7 @@ When you use this workflow inside another project, distinguish between staging o
 
 - Do not commit `generated/<target>/` just because `build` created it.
 - Commit files applied into the project root when they are meant to be the team's shared tool interface.
-- Typical examples of shared, commit-worthy target files include `WARP.md`, `AGENTS.md`, `.cursor/rules/*`, and `.vibe/<target>/*` after `use` or `switch` places them in the repository root.
+- Typical examples of shared, commit-worthy target files include `AGENTS.md` and `.vibe/<target>/*` after `use` or `switch` places them in the repository root.
 - If a target setup is only for one developer's local experiment, keep it outside the repo or isolate it in a personal branch instead of merging it into shared history.
 
 The rule of thumb is simple: commit live repo entrypoints, not staging directories.

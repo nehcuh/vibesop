@@ -38,13 +38,13 @@
           "type": "string",
           "description": "Unique platform identifier",
           "pattern": "^[a-z0-9-]+$",
-          "examples": ["claude-code", "opencode", "cursor"]
+          "examples": ["claude-code", "opencode"]
         },
         "display_name": {
           "type": "string",
           "description": "Human-readable platform name",
           "minLength": 1,
-          "examples": ["Claude Code", "OpenCode", "Cursor IDE"]
+          "examples": ["Claude Code", "OpenCode"]
         },
         "description": {
           "type": "string",
@@ -125,19 +125,9 @@
           "type": "object",
           "description": "Special handling flags for complex platforms",
           "properties": {
-            "cursor_rules": {
-              "type": "boolean",
-              "description": "Generate .cursor/rules/ directory",
-              "default": false
-            },
             "skill_generation": {
               "type": "boolean",
               "description": "Generate .agents/skills/ directory with SKILL.md files",
-              "default": false
-            },
-            "vscode_settings": {
-              "type": "boolean",
-              "description": "Generate VS Code settings.json",
               "default": false
             },
             "workflow_notes": {
@@ -169,7 +159,7 @@
         "entrypoint_name": {
           "type": "string",
           "description": "Name of the entrypoint file",
-          "enum": ["CLAUDE.md", "AGENTS.md", "KIMI.md", "WARP.md"],
+          "enum": ["CLAUDE.md", "AGENTS.md"],
           "examples": ["CLAUDE.md", "AGENTS.md"]
         }
       },
@@ -205,7 +195,7 @@
           "type": "string",
           "description": "Configuration filename",
           "pattern": "^[a-zA-Z0-9_./-]+$",
-          "examples": ["settings.json", "opencode.json", ".cursor/cli.json"]
+          "examples": ["settings.json", "opencode.json"]
         },
         "template": {
           "type": "string",

@@ -393,7 +393,7 @@ def test_sanitize_with_only_special   # Edge case
 - Documentation updates
 - Dependency updates
 
-### When to Update `memory/patterns.md`
+### When to Update `memory/project-knowledge.md`
 
 **Always record**:
 - Reusable pattern discovered
@@ -403,7 +403,7 @@ def test_sanitize_with_only_special   # Edge case
 
 **Example**:
 ```markdown
-# memory/patterns.md
+# memory/project-knowledge.md
 
 ## Path Safety Pattern
 When working with file paths:

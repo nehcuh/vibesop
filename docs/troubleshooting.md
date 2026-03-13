@@ -52,14 +52,14 @@ alias vibe='/path/to/claude-code-workflow/bin/vibe'
 
 **症状**:
 ```
-Error: Unsupported platform: xxx. Valid options: claude-code, opencode, codex-cli
+Error: Unsupported platform: xxx. Valid options: claude-code, opencode
 ```
 
 **原因**: 该平台尚未迁移到配置驱动
 
 **解决方案**:
 1. 查看支持的平台: `vibe targets`
-2. 使用已支持的平台（claude-code, opencode, codex-cli）
+2. 使用已支持的平台（claude-code, opencode）
 3. 等待其他平台完成迁移
 
 ---

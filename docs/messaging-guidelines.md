@@ -58,7 +58,7 @@ When [trigger condition], [what happens - usually prompts/records].
 |---------|-------------------|
 | **Memory system** | "Three-tier markdown file organization for session notes, project knowledge, and overview. Requires manual updates; no automatic capture." |
 | **Skill triggers** | "Rule-based guidelines describing when to invoke skills. LLM interprets rules; no automatic invocation." |
-| **Platform support** | "Claude Code: fully supported. OpenCode: fully supported. Other targets: adapter documentation exists, implementation varies." |
+| **Platform support** | "Claude Code: active, fully supported. OpenCode: exploratory, basic support. Other targets: planned, documentation only." |
 | **RTK integration** | "Optional CLI tool that filters command outputs. 60-90% reduction on supported commands only; does not reduce conversation token usage." |
 | **Verification** | "Rule requiring test execution before completion claims. User must actually run tests; rule is a prompt, not enforcement." |
 | **Model routing** | "Semantic hints for matching task complexity to model tiers. Actual model selection depends on tool capabilities and user choice." |

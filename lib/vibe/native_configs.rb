@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 module Vibe
-  # Target-specific native configuration builders for Claude Code settings.json,
-  # Cursor cli.json, and OpenCode opencode.json.
+  # Target-specific native configuration builders for Claude Code settings.json
+  # and OpenCode opencode.json.
   #
   # Depends on methods from:
   #   Vibe::Utils — deep_merge
@@ -41,36 +41,6 @@ module Vibe
 
     def claude_settings_config(manifest)
       deep_merge(base_claude_settings_config, manifest["native_config_overlay"] || {})
-    end
-
-    def base_cursor_cli_permissions_config
-      {
-        "permissions" => {
-          "allow" => [
-            "Read(**)",
-            "Write(**)",
-            "Shell(ls)",
-            "Shell(cat)",
-            "Shell(grep)",
-            "Shell(rg)",
-            "Shell(find)",
-            "Shell(pwd)"
-          ],
-          "deny" => [
-            "Shell(rm)",
-            "Shell(shred)",
-            "Read(.env*)",
-            "Read(secrets/**)",
-            "Read(**/*.key)",
-            "Write(**/.env*)",
-            "Write(**/*.key)"
-          ]
-        }
-      }
-    end
-
-    def cursor_cli_permissions_config(manifest)
-      deep_merge(base_cursor_cli_permissions_config, manifest["native_config_overlay"] || {})
     end
 
     def base_opencode_config
@@ -152,36 +122,10 @@ module Vibe
           ".vibe/opencode/routing.md",
           ".vibe/opencode/safety.md"
         ],
-        "extends" => "~/.opencode/opencode.json"
+        "extends" => "~/.config/opencode/opencode.json"
       }
       deep_merge(base, manifest["native_config_overlay"] || {})
     end
 
-    def base_vscode_settings_config
-      {
-        "github.copilot.chat.codeGeneration.instructions" => [
-          { "file" => "AGENTS.md" },
-          { "file" => ".vibe/vscode/behavior-policies.md" },
-          { "file" => ".vibe/vscode/routing.md" },
-          { "file" => ".vibe/vscode/safety.md" }
-        ]
-      }
-    end
-
-    def vscode_settings_config(manifest)
-      deep_merge(base_vscode_settings_config, manifest["native_config_overlay"] || {})
-    end
-
-    def vscode_project_settings_config(manifest)
-      # Project-level minimal settings - references global config
-      base = {
-        "github.copilot.chat.codeGeneration.instructions" => [
-          { "file" => "AGENTS.md" },
-          { "file" => ".vibe/vscode/behavior-policies.md" },
-          { "file" => ".vibe/vscode/safety.md" }
-        ]
-      }
-      deep_merge(base, manifest["native_config_overlay"] || {})
-    end
   end
 end

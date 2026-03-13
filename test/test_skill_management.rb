@@ -182,9 +182,9 @@ class TestSkillAdapter < Minitest::Test
 
   def test_adapt_all_as_batch
     skills = [
-      { id: 'skill-1' },
-      { id: 'skill-2' },
-      { id: 'skill-3' }
+      { id: 'systematic-debugging' },
+      { id: 'verification-before-completion' },
+      { id: 'session-end' }
     ]
 
     results = @adapter.adapt_all_as(skills, :suggest)

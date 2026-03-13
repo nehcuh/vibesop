@@ -18,7 +18,7 @@ categories:
     - name: superpowers
       priority: P1
       reason: Advanced workflow skills (TDD, brainstorming, code review, etc.)
-      platforms: [claude-code, cursor, codex-cli, opencode]
+      platforms: [claude-code, opencode]
       benefits_summary: 7 additional skills for design, testing, and review workflows
 
   # System-level tools that optimize the development experience

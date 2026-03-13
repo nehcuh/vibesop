@@ -219,13 +219,15 @@ module Vibe
       # Load trigger contexts from integration configs
       trigger_contexts = {}
 
-      # Load superpowers config if available (cached)
-      superpowers_path = File.join(@repo_root, "core", "integrations", "superpowers.yaml")
-      if File.exist?(superpowers_path)
-        superpowers_config = load_yaml_cached(superpowers_path)
-        Array(superpowers_config["skills"]).each do |skill|
-          key = skill["registry_id"] || skill["id"]
-          trigger_contexts[key] = skill["trigger_context"] if skill["trigger_context"]
+      if respond_to?(:superpowers_doc)
+        begin
+          superpowers_config = superpowers_doc
+          Array(superpowers_config["skills"]).each do |skill|
+            key = skill["registry_id"] || skill["id"]
+            trigger_contexts[key] = skill["trigger_context"] if skill["trigger_context"]
+          end
+        rescue Vibe::ConfigurationError, Errno::ENOENT
+          # superpowers.yaml not available
         end
       end
 
@@ -335,23 +337,6 @@ module Vibe
         ## Safety actions
 
         #{bullet_target_actions(manifest)}
-      MD
-    end
-
-    def render_warp_workflow_notes_doc(manifest)
-      <<~MD
-        # Warp workflow notes
-
-        Generated target: `#{manifest["target"]}`
-        Applied overlay: #{overlay_sentence(manifest)}
-
-        ## Conservative mapping
-
-        - Use `WARP.md` as the project-level Warp rule entrypoint.
-        - Keep repository files as the single source of truth; Warp rules should point back to those files instead of replacing them.
-        - If you later add Warp workflows, prefer repo-local commands that wrap `bin/vibe` or existing project scripts.
-        - Keep runtime preferences such as `uv` and `nvm` in project overlays so they stay scoped to the right repositories.
-        - This generator intentionally stays file-backed and does not try to manage Warp Drive state directly.
       MD
     end
 

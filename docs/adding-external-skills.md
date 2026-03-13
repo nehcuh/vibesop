@@ -64,7 +64,7 @@ skills:
     priority: P2
     supported_targets:
       claude-code: native-skill
-      cursor: rule-or-manual-invocation
+      opencode: native-skill
       # ... other targets
 ```
 
@@ -102,7 +102,7 @@ skills:
 
 4. **Update snapshots** (if tests fail due to new skills):
    ```bash
-   for target in claude-code codex-cli cursor kimi-code opencode vscode warp antigravity; do
+   for target in claude-code opencode; do
      bin/vibe build $target --output generated/$target --skip-integrations
      cp generated/$target/AGENTS.md .vibe/$target/ 2>/dev/null || true
    done
@@ -195,7 +195,7 @@ The generated output will now include:
 
 Run snapshot update:
 ```bash
-for target in claude-code codex-cli cursor kimi-code opencode vscode warp antigravity; do
+for target in claude-code opencode; do
   bin/vibe build $target --output generated/$target --skip-integrations
   cp generated/$target/*.md .vibe/$target/ 2>/dev/null || true
 done

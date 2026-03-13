@@ -177,10 +177,6 @@ module Vibe
       case platform
       when "claude-code" then "Claude Code"
       when "opencode" then "OpenCode"
-      when "cursor" then "Cursor"
-      when "codex-cli" then "Codex CLI"
-      when "kimi-code" then "Kimi Code"
-      when "vscode" then "VS Code"
       else
         platform.to_s.split("-").map(&:capitalize).join(" ")
       end

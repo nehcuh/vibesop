@@ -19,27 +19,31 @@ platforms:
 
     doc_types:
       global: [behavior, safety, task_routing, test_standards]
-      project: [behavior, safety, task_routing, test_standards]
+      project: [behavior, safety]
 
     native_config:
       global:
         type: json
         filename: settings.json
-        template: claude-code/settings.json.erb
+        builder: claude_settings_config
       project:
         type: json
         filename: settings.json
-        template: claude-code/settings.json.erb
+        builder: claude_settings_config
 
     runtime_dirs:
-      - rules
-      - docs
-      - skills
-      - agents
-      - commands
-      - memory
+      global:
+        - rules
+        - docs
+        - skills
+        - agents
+        - commands
+        - memory
+      project: []
 
-    copy_mode: full
+    copy_mode:
+      global: full
+      project: minimal
 
   opencode:
     target_id: opencode
@@ -62,34 +66,11 @@ platforms:
       global:
         type: json
         filename: opencode.json
-        template: opencode/opencode.json.erb
+        builder: opencode_config
       project:
         type: json
         filename: opencode.json
-        template: opencode/opencode.json.erb
-
-    runtime_dirs: []
-
-    copy_mode: minimal
-
-  codex-cli:
-    target_id: codex-cli
-    display_name: Codex CLI
-    description: OpenAI Codex CLI workflow configuration
-
-    output_paths:
-      global:
-        vibe_subdir: .vibe/codex-cli
-        entrypoint_name: AGENTS.md
-      project:
-        vibe_subdir: .vibe/codex-cli
-        entrypoint_name: AGENTS.md
-
-    doc_types:
-      global: [behavior, routing, skills, safety, execution_policy, task_routing, test_standards]
-      project: [behavior, routing, skills, safety, execution_policy, task_routing, test_standards]
-
-    native_config: {}
+        builder: opencode_project_config
 
     runtime_dirs: []
 
@@ -99,4 +80,3 @@ platforms:
 aliases:
   claude: claude-code
   cc: claude-code
-  codex: codex-cli

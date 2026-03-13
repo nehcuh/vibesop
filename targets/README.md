@@ -2,7 +2,7 @@
 
 This directory describes how the portable `core/` spec should map to specific agentic coding tools.
 
-Phase 1 made the adapter contract explicit. Phase 2-3 added a minimal `bin/vibe` generator with `inspect` and `switch`. Phase 4 added portable behavior-policy rendering plus deeper native permission or config outputs where the host supports them. Phase 5 added project overlays so per-repo deltas can be merged without editing the shared core. Phase 6 adds a first-class Warp target and runtime-preference overlay examples.
+Phase 1 made the adapter contract explicit. Phase 2-3 added a minimal `bin/vibe` generator with `inspect` and `switch`. Phase 4 added portable behavior-policy rendering plus deeper native permission or config outputs where the host supports them. Phase 5 added project overlays so per-repo deltas can be merged without editing the shared core.
 
 ## Adapter Contract
 
@@ -11,14 +11,18 @@ Phase 1 made the adapter contract explicit. Phase 2-3 added a minimal `bin/vibe`
 - Current host-facing runtime files remain in their native locations.
 - Unsupported host features should degrade gracefully into rules, templates, or wrapper steps.
 
-## Status
+## Platform Status
 
-- `claude-code.md` — active first-class target, buildable, and permission-aware
-- `codex-cli.md` — buildable with richer behavior / safety docs
-- `cursor.md` — buildable with generated rules plus `.cursor/cli.json` permissions
-- `kimi-code.md` — buildable with generated `.agents/skills/` SKILL.md files
-- `opencode.md` — buildable with generated instruction and permission config
-- `warp.md` — buildable with `WARP.md` plus generated `.vibe/warp/*` support docs
+| Platform | Status | Build | Notes |
+|----------|--------|-------|-------|
+| `claude-code.md` | ✅ Active | ✓ | First-class target, fully supported |
+| `opencode.md` | 🧪 Exploratory | ✓ | Basic support, actively developed |
+| `codex-cli.md` | 📋 Planned | - | On roadmap |
+| `cursor.md` | 📋 Planned | - | On roadmap |
+| `kimi-code.md` | 📋 Planned | - | On roadmap |
+| `vscode.md` | 📋 Planned | - | On roadmap |
+| `warp.md` | 📋 Planned | - | On roadmap |
+| `antigravity.md` | 📋 Planned | - | On roadmap |
 
 ## Common Rules
 

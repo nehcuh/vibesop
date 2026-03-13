@@ -8,12 +8,7 @@ _templates:
     priority: P2
     supported_targets:
       claude-code: external-skill
-      codex-cli: manual
-      cursor: manual
       opencode: external-skill
-      warp: manual
-      antigravity: manual
-      vscode: manual
     safety_level: external_reviewed
     conditional: superpowers_installed
 
@@ -61,12 +56,7 @@ skills:
     priority: P0
     supported_targets:
       claude-code: native-skill
-      codex-cli: agents-md-or-wrapper
-      cursor: rule-or-manual-invocation
       opencode: native-skill
-      warp: rule-or-manual-invocation
-      antigravity: native-skill
-      vscode: rule-or-manual-invocation
     requires_tools:
       - Read
       - Grep
@@ -81,12 +71,7 @@ skills:
     priority: P0
     supported_targets:
       claude-code: native-skill
-      codex-cli: agents-md-or-wrapper
-      cursor: rule
       opencode: native-skill
-      warp: rule-or-checklist
-      antigravity: native-skill
-      vscode: rule-or-checklist
     requires_tools:
       - Read
       - Bash
@@ -100,12 +85,7 @@ skills:
     priority: P0
     supported_targets:
       claude-code: native-skill
-      codex-cli: wrapper-or-checklist
-      cursor: manual-or-rule
       opencode: native-skill
-      warp: checklist-or-rule
-      antigravity: native-skill
-      vscode: manual-or-rule
     requires_tools:
       - Read
       - Edit
@@ -120,12 +100,7 @@ skills:
     priority: P1
     supported_targets:
       claude-code: native-skill
-      codex-cli: project-plan-template
-      cursor: manual-or-rule
       opencode: native-skill
-      warp: manual-or-template
-      antigravity: native-skill
-      vscode: manual-or-rule
     requires_tools:
       - Read
       - Write
@@ -142,12 +117,7 @@ skills:
     priority: P1
     supported_targets:
       claude-code: native-skill
-      codex-cli: review-template
-      cursor: manual
       opencode: native-skill
-      warp: manual
-      antigravity: manual
-      vscode: manual
     requires_tools:
       - Read
       - Bash

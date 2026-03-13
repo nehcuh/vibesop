@@ -45,7 +45,6 @@ class TestSuperpowersInstaller < Minitest::Test
     # Check key platforms
     assert_includes paths.keys, "claude-code"
     assert_includes paths.keys, "opencode"
-    assert_includes paths.keys, "kimi-code"
   end
 
   def test_platform_symlink_paths_structure
@@ -278,7 +277,7 @@ class TestSuperpowersInstaller < Minitest::Test
 
   def test_supports_major_platforms
     paths = Vibe::SuperpowersInstaller::SUPERPOWERS_PLATFORM_SYMLINK_PATHS
-    major_platforms = ["claude-code", "opencode", "kimi-code", "cursor"]
+    major_platforms = ["claude-code", "opencode"]
 
     major_platforms.each do |platform|
       assert_includes paths.keys, platform,

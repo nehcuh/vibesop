@@ -119,9 +119,7 @@ module Vibe
 
     def detect_current_platform
       return "claude-code" if Dir.exist?(File.expand_path("~/.claude"))
-      return "cursor" if Dir.exist?(File.expand_path("~/.cursor"))
-      return "opencode" if Dir.exist?(File.expand_path("~/.opencode"))
-      return "codex-cli" if Dir.exist?(File.expand_path("~/.codex"))
+      return "opencode" if Dir.exist?(File.expand_path("~/.config/opencode"))
       "claude-code"
     end
   end

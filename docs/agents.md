@@ -196,7 +196,7 @@ codex exec "
 
 1. `git diff --name-only` — Check for modifications outside whitelist
 2. Check PROJECT_CONTEXT.md changes are within `<!-- handoff:start/end -->` markers
-3. Violation → `git checkout -- [file]` rollback + record in patterns.md
+3. Violation → `git checkout -- [file]` rollback + record in memory/project-knowledge.md
 
 ---
 

@@ -12,7 +12,7 @@ require_relative "../lib/vibe/overlay_support"
 
 # Lightweight host satisfying OverlaySupport + Utils dependencies.
 class OverlayHost
-  SUPPORTED_TARGETS = %w[antigravity claude-code codex-cli cursor kimi-code opencode vscode warp].freeze
+  SUPPORTED_TARGETS = %w[claude-code opencode].freeze
   include Vibe::Utils
   include Vibe::OverlaySupport
 
@@ -175,7 +175,7 @@ class TestVibeOverlay < Minitest::Test
       "name" => "t",
       "targets" => {
         "claude-code" => { "permissions" => { "ask" => ["Bash(docker:*)"] } },
-        "warp" => {}
+        "opencode" => {}
       }
     }))
 
@@ -189,7 +189,7 @@ class TestVibeOverlay < Minitest::Test
     File.write(overlay_path, YAML.dump({ "name" => "t" }))
 
     overlay = @host.resolve_overlay(explicit_path: overlay_path, search_roots: [])
-    assert_equal({}, @host.overlay_target_patch(overlay, "warp"))
+    assert_equal({}, @host.overlay_target_patch(overlay, "opencode"))
   end
 
   def test_resolve_overlay_rejects_unknown_mapping_override_tier

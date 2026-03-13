@@ -29,21 +29,9 @@ module Vibe
         source_subdir: "skills",
         target_dir: "~/.claude/skills"
       },
-      "cursor" => {
-        source_subdir: "skills",
-        target_dir: "~/.cursor/skills"
-      },
       "opencode" => {
         source_subdir: "skills",
         target_dir: "~/.config/opencode/skills"
-      },
-      "codex-cli" => {
-        source_subdir: "skills",
-        target_dir: "~/.codex/skills"
-      },
-      "kimi-code" => {
-        source_subdir: "skills",
-        target_dir: "~/.config/agents/skills"
       }
     }.freeze
 

@@ -84,7 +84,7 @@ end
 **触发规则**: `NO INVESTIGATION WITHOUT MEMORY RECALL FIRST`
 
 **执行步骤**:
-- 查询 `patterns.md` 是否有类似的文件清理模式
+- 查询 `memory/project-knowledge.md` 是否有类似的文件清理模式
 - 查询项目 MEMORY 是否有路径安全相关经验
 - **发现**: 项目已有 `lib/vibe/path_safety.rb` 模块
 

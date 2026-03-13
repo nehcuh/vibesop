@@ -220,7 +220,7 @@ class TestNativeConfigs < Minitest::Test
     assert_equal "https://opencode.ai/config.json", config["$schema"]
     assert config["instructions"].include?("AGENTS.md")
     assert config["instructions"].include?(".vibe/opencode/behavior-policies.md")
-    assert_equal "~/.opencode/opencode.json", config["extends"]
+    assert_equal "~/.config/opencode/opencode.json", config["extends"]
   end
 
   def test_opencode_project_has_fewer_instructions
@@ -229,67 +229,6 @@ class TestNativeConfigs < Minitest::Test
 
     # Project config should have fewer instructions than full config
     assert project_config["instructions"].length < full_config["instructions"].length
-  end
-
-  # === Cursor config tests (for completeness) ===
-
-  def test_base_cursor_cli_permissions_structure
-    config = @tester.base_cursor_cli_permissions_config
-
-    assert config.is_a?(Hash)
-    assert config.key?("permissions")
-    assert config["permissions"].key?("allow")
-    assert config["permissions"].key?("deny")
-  end
-
-  def test_cursor_permissions_allow_list
-    config = @tester.base_cursor_cli_permissions_config
-    allow = config["permissions"]["allow"]
-
-    assert_includes allow, "Read(**)"
-    assert_includes allow, "Write(**)"
-    assert_includes allow, "Shell(ls)"
-    assert_includes allow, "Shell(cat)"
-    assert_includes allow, "Shell(grep)"
-  end
-
-  def test_cursor_permissions_deny_list
-    config = @tester.base_cursor_cli_permissions_config
-    deny = config["permissions"]["deny"]
-
-    assert_includes deny, "Shell(rm)"
-    assert_includes deny, "Shell(shred)"
-    assert_includes deny, "Read(.env*)"
-    assert_includes deny, "Read(secrets/**)"
-    assert_includes deny, "Read(**/*.key)"
-  end
-
-  # === VSCode config tests (for completeness) ===
-
-  def test_base_vscode_settings_config_structure
-    config = @tester.base_vscode_settings_config
-
-    assert config.is_a?(Hash)
-    assert config.key?("github.copilot.chat.codeGeneration.instructions")
-  end
-
-  def test_vscode_settings_has_instructions
-    config = @tester.base_vscode_settings_config
-    instructions = config["github.copilot.chat.codeGeneration.instructions"]
-
-    assert instructions.is_a?(Array)
-    assert instructions.any? { |i| i["file"] == "AGENTS.md" }
-    assert instructions.any? { |i| i["file"] == ".vibe/vscode/behavior-policies.md" }
-  end
-
-  def test_vscode_project_settings_has_fewer_instructions
-    project_config = @tester.vscode_project_settings_config(@base_manifest)
-    full_config = @tester.base_vscode_settings_config
-
-    project_instructions = project_config["github.copilot.chat.codeGeneration.instructions"]
-    full_instructions = full_config["github.copilot.chat.codeGeneration.instructions"]
-
-    assert project_instructions.length < full_instructions.length
   end
 
   # === deep_merge integration tests ===

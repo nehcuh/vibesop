@@ -202,8 +202,7 @@ installed_packs:
   requires_tools: ["Read", "Grep", "Bash"],
   supported_targets: {
     "claude-code" => "native-skill",
-    "opencode" => "native-skill",
-    "codex-cli" => "agents-md-or-wrapper"
+    "opencode" => "native-skill"
   },
   entrypoint: "skills/tdd/SKILL.md",
   safety_level: "trusted_external"

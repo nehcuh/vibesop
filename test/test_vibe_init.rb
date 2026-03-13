@@ -321,7 +321,7 @@ class TestVibeInit < Minitest::Test
   end
 
   def test_detect_current_platform_opencode
-    FileUtils.mkdir_p(File.join(@test_home, ".opencode"))
+    FileUtils.mkdir_p(File.join(@test_home, ".config", "opencode"))
     assert_equal "opencode", detect_current_platform
   end
 
@@ -332,24 +332,12 @@ class TestVibeInit < Minitest::Test
 
   def test_platform_label
     assert_equal "Claude Code", platform_label("claude-code")
-    assert_equal "Cursor", platform_label("cursor")
     assert_equal "OpenCode", platform_label("opencode")
-    assert_equal "Codex CLI", platform_label("codex-cli")
-    assert_equal "Warp", platform_label("warp")
-    assert_equal "Kimi Code", platform_label("kimi-code")
-    assert_equal "VS Code", platform_label("vscode")
-    assert_equal "Antigravity", platform_label("antigravity")
   end
 
   def test_platform_command
     assert_equal "claude", platform_command("claude-code")
-    assert_equal "cursor", platform_command("cursor")
     assert_equal "opencode", platform_command("opencode")
-    assert_equal "codex", platform_command("codex-cli")
-    assert_equal "warp", platform_command("warp")
-    assert_equal "kimi", platform_command("kimi-code")
-    assert_equal "code", platform_command("vscode")
-    assert_equal "antigravity", platform_command("antigravity")
   end
 
   def test_bin_vibe_init_with_platform_flag

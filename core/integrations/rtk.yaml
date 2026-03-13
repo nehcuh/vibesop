@@ -56,57 +56,9 @@ integration:
       config_file: ~/.claude/settings.json
       auto_init: true
 
-    codex-cli:
-      method: manual_wrapper
-      notes: Manually prefix commands with rtk
-
-    cursor:
-      method: not_supported
-      notes: Cursor does not support command hooks
-
     opencode:
       method: manual_wrapper
       notes: Manually prefix commands with rtk
-
-    warp:
-      method: manual_wrapper
-      notes: Manually prefix commands with rtk
-
-features:
-  - name: Smart filtering
-    description: Removes noise from command outputs
-
-  - name: Grouping
-    description: Groups similar output lines
-
-  - name: Truncation
-    description: Intelligently truncates verbose outputs
-
-  - name: Deduplication
-    description: Removes duplicate information
-
-benefits:
-  - 60-90% token reduction on command outputs
-  - Less than 10ms overhead per command
-  - Transparent integration via hooks (Claude Code)
-  - Zero dependencies, single binary
-  - Works with git, npm, cargo, pytest, and more
-
-examples:
-  - command: git push
-    before_tokens: ~200
-    after_tokens: ~10
-    output: "ok main"
-
-  - command: npm test
-    before_tokens: ~500
-    after_tokens: ~50
-    output: Shows only failures and summary
-
-  - command: git status
-    before_tokens: ~150
-    after_tokens: ~30
-    output: Compact status with essential info
 
 compatibility:
   min_rtk_version: "0.1.0"

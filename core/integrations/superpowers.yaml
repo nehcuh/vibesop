@@ -13,17 +13,6 @@ installation_methods:
       - /plugin install superpowers@superpowers-marketplace
     notes: Recommended method for Claude Code users
 
-  cursor:
-    preferred: plugin
-    commands:
-      - /plugin-add superpowers
-    notes: Native plugin support in Cursor
-
-  codex-cli:
-    preferred: manual
-    url: https://github.com/obra/superpowers/.codex/README.md
-    notes: Follow Codex-specific installation instructions
-
   opencode:
     preferred: manual
     url: https://github.com/obra/superpowers/.opencode/README.md
@@ -40,7 +29,6 @@ detection:
   paths:
     - ~/.claude/plugins/superpowers
     - ~/.claude/skills/superpowers-*
-    - ~/.cursor/plugins/superpowers
     - ~/.config/skills/superpowers
     - ~/superpowers
 

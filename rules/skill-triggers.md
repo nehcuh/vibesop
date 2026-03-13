@@ -58,7 +58,7 @@ When matching scenarios, recognize these keywords in **both English and Chinese*
 
 | Scenario | Action | ❌ NOT when |
 |----------|--------|------------|
-| Stuck >15min<br>卡住超过15分钟 | `experience-evolution` | Known issue in patterns.md; fix is obvious just time-consuming |
+| Stuck >15min<br>卡住超过15分钟 | `experience-evolution` | Known issue in memory/project-knowledge.md; fix is obvious just time-consuming |
 | 3 consecutive failures<br>连续3次失败 | Pause, revert to debugging Phase 1 | Each failure is a different problem (not same root cause) |
 | Complex task >5 files<br>复杂任务>5个文件 | Suggest `planning-with-files` | User gave step-by-step instructions; many files but each <10 lines |
 | Change >100 lines non-sensitive<br>修改>100行非敏感代码 | Suggest outsourcing to `independent_verifier` profile | Involves critical logic/secrets; tightly coupled needing deep context |

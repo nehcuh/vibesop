@@ -52,6 +52,10 @@ class ConfigDrivenRenderersTester
     @skills_doc ||= load_doc("core/skills/registry.yaml")
   end
 
+  def superpowers_doc
+    @superpowers_doc ||= load_doc("core/integrations/superpowers.yaml")
+  end
+
   private
 
   def load_doc(relative_path)
@@ -128,8 +132,8 @@ class TestConfigDrivenRenderers < Minitest::Test
     assert configs.key?("opencode"), "Should have opencode config"
   end
 
-  def test_render_claude_v2_creates_expected_structure
-    @renderer.render_claude_v2(@build_root, @base_manifest, project_level: false)
+  def test_render_claude_creates_expected_structure
+    @renderer.render_claude(@build_root, @base_manifest, project_level: false)
 
     # Check entrypoint
     assert File.exist?(File.join(@build_root, "CLAUDE.md")), "CLAUDE.md should exist"
@@ -144,11 +148,11 @@ class TestConfigDrivenRenderers < Minitest::Test
     assert File.exist?(File.join(vibe_dir, "task-routing.md"))
   end
 
-  def test_render_opencode_v2_creates_expected_structure
+  def test_render_opencode_creates_expected_structure
     manifest = @base_manifest.dup
     manifest["target"] = "opencode"
 
-    @renderer.render_opencode_v2(@build_root, manifest, project_level: false)
+    @renderer.render_opencode(@build_root, manifest, project_level: false)
 
     # Check entrypoint
     assert File.exist?(File.join(@build_root, "AGENTS.md")), "AGENTS.md should exist"
@@ -168,56 +172,11 @@ class TestConfigDrivenRenderers < Minitest::Test
     end
   end
 
-  def test_claude_v2_matches_legacy_render_claude
-    # Build with new renderer
-    @renderer.render_claude_v2(@build_root, @base_manifest, project_level: false)
-
-    legacy_root = Dir.mktmpdir("vibe-legacy")
-    begin
-      # Build with legacy renderer
-      @renderer.render_claude(legacy_root, @base_manifest, project_level: false)
-
-      # Compare key files
-      new_claude_md = File.read(File.join(@build_root, "CLAUDE.md"))
-      legacy_claude_md = File.read(File.join(legacy_root, "CLAUDE.md"))
-
-      # Both should contain key sections
-      assert_includes new_claude_md, "Vibe workflow"
-      assert_includes legacy_claude_md, "Vibe workflow"
-
-      # Both should have vibe directory
-      assert File.directory?(File.join(@build_root, ".vibe", "claude-code"))
-      assert File.directory?(File.join(legacy_root, ".vibe", "claude-code"))
-    ensure
-      FileUtils.rm_rf(legacy_root)
-    end
-  end
-
-  def test_opencode_v2_matches_legacy_render_opencode
-    manifest = @base_manifest.dup
-    manifest["target"] = "opencode"
-
-    @renderer.render_opencode_v2(@build_root, manifest, project_level: false)
-
-    legacy_root = Dir.mktmpdir("vibe-legacy")
-    begin
-      @renderer.render_opencode(legacy_root, manifest, project_level: false)
-
-      new_agents_md = File.read(File.join(@build_root, "AGENTS.md"))
-      legacy_agents_md = File.read(File.join(legacy_root, "AGENTS.md"))
-
-      assert_includes new_agents_md, "Vibe workflow"
-      assert_includes legacy_agents_md, "Vibe workflow"
-    ensure
-      FileUtils.rm_rf(legacy_root)
-    end
-  end
-
   def test_render_opencode_project_level_generates_project_template
     manifest = @base_manifest.dup
     manifest["target"] = "opencode"
 
-    @renderer.render_opencode_v2(@build_root, manifest, project_level: true)
+    @renderer.render_opencode(@build_root, manifest, project_level: true)
 
     # Check entrypoint
     agents_md = File.read(File.join(@build_root, "AGENTS.md"))
@@ -233,7 +192,7 @@ class TestConfigDrivenRenderers < Minitest::Test
   end
 
   def test_render_claude_project_level_generates_project_template
-    @renderer.render_claude_v2(@build_root, @base_manifest, project_level: true)
+    @renderer.render_claude(@build_root, @base_manifest, project_level: true)
 
     # Check entrypoint
     claude_md = File.read(File.join(@build_root, "CLAUDE.md"))

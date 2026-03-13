@@ -49,7 +49,8 @@ jobs:
 
     - name: Check generated files exist
       run: |
-        for target in claude-code codex-cli cursor kimi-code opencode vscode warp antigravity; do
+        # Only check active platforms (dual-platform strategy)
+        for target in claude-code opencode; do
           if [ ! -d "generated/$target" ]; then
             echo "Missing generated/$target"
             exit 1
@@ -70,25 +71,15 @@ jobs:
         ruby-version: '3.2'
         bundler-cache: true
     
-    - name: Run tests with coverage
+    - name: Run all tests including E2E
       run: |
-        bundle exec ruby test/test_vibe_cli.rb
-        bundle exec ruby test/test_vibe_utils.rb
-        bundle exec ruby test/test_vibe_overlay.rb
-        bundle exec ruby test/test_vibe_init.rb
-        bundle exec ruby test/test_vibe_external_tools.rb
-        bundle exec ruby test/test_path_overlap_calculation.rb
-        bundle exec ruby test/test_cli_path_safety_guards.rb
-        bundle exec ruby test/test_yaml_safety.rb
-        bundle exec ruby test/test_recommendations.rb
-        bundle exec ruby test/test_vibe_utils_validation.rb
-        bundle exec ruby test/test_superpowers_installer.rb
-    
+        # Run full test suite via rake (includes unit and E2E tests)
+        COVERAGE=false bundle exec rake test
+
     - name: Run smoke test
       run: |
         chmod +x bin/vibe
-        bin/vibe --version || true
-        bin/vibe inspect --json > /dev/null
+        ./bin/vibe-smoke
     
     - name: Check coverage threshold
       run: |
@@ -153,10 +144,20 @@ jobs:
     
     - name: Check target adapters
       run: |
-        for target in claude-code codex-cli cursor kimi-code opencode vscode warp antigravity; do
+        # Check active platforms
+        echo "Checking active platform documentation..."
+        for target in claude-code opencode; do
           if [ ! -f "targets/${target}.md" ]; then
             echo "Missing targets/${target}.md"
             exit 1
           fi
-          echo "✓ targets/${target}.md exists"
+          echo "✓ targets/${target}.md exists (active)"
+        done
+        
+        # Check planned platforms (documentation only)
+        echo "Checking planned platform documentation..."
+        for target in codex-cli cursor kimi-code vscode warp antigravity; do
+          if [ -f "targets/${target}.md" ]; then
+            echo "✓ targets/${target}.md exists (planned)"
+          fi
         done

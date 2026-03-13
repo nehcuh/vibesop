@@ -4,15 +4,11 @@
 .alma-snapshots
 /AGENTS.md
 /WARP.md
+/.claude/settings.local.json
 
 # Review files (temporary)
 /review-*.md
 /review/
-
-# Applied Kimi Code config (temporary for review)
-/KIMI.md
-/.kimi/
-/.vibe/kimi-code/
 
 # Applied OpenCode config (temporary for review)
 /opencode.json

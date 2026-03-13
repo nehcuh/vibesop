@@ -56,7 +56,7 @@ def parse_options
     opts.separator "Generate platform configuration for config/platforms.yaml"
     opts.separator ""
     opts.separator "Required:"
-    opts.separator "  PLATFORM_ID              Platform identifier (e.g., cursor, vscode)"
+    opts.separator "  PLATFORM_ID              Platform identifier (e.g., claude-code, opencode)"
     opts.separator ""
     opts.separator "Options:"
     

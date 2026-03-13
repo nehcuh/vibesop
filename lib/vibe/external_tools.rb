@@ -44,21 +44,9 @@ module Vibe
         skills_dir: "~/.claude/skills",
         skills_source: "~/.config/skills/superpowers/skills"
       },
-      "cursor" => {
-        plugin: "~/.cursor/plugins/superpowers"
-      },
       "opencode" => {
         plugin: "~/.config/opencode/plugins/superpowers.js",
         skills_dir: "~/.config/opencode/skills",
-        skills_source: "~/.config/skills/superpowers/skills"
-      },
-      "kimi-code" => {
-        plugin: "~/.config/agents/plugins/superpowers",
-        skills_dir: "~/.config/agents/skills",
-        skills_source: "~/.config/skills/superpowers/skills"
-      },
-      "codex-cli" => {
-        skills_dir: "~/.codex/skills",
         skills_source: "~/.config/skills/superpowers/skills"
       }
     }.freeze
@@ -99,9 +87,6 @@ module Vibe
       local_clone = File.expand_path("~/superpowers")
       return :local_clone if Dir.exist?(local_clone)
 
-      cursor_plugins = File.expand_path("~/.cursor/plugins/superpowers")
-      return :cursor_plugin if Dir.exist?(cursor_plugins)
-
       :not_installed
     end
 
@@ -122,8 +107,6 @@ module Vibe
         File.expand_path("~/.config/skills/superpowers")
       when :local_clone
         File.expand_path("~/superpowers")
-      when :cursor_plugin
-        File.expand_path("~/.cursor/plugins/superpowers")
       else
         nil
       end

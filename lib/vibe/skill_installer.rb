@@ -198,7 +198,6 @@ module Vibe
       # Check for installed platforms
       return 'claude-code' if Dir.exist?(File.expand_path('~/.claude'))
       return 'opencode' if Dir.exist?(File.expand_path('~/.config/opencode'))
-      return 'codex-cli' if Dir.exist?(File.expand_path('~/.codex'))
 
       # Default
       'claude-code'

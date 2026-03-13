@@ -1,6 +1,17 @@
 schema_version: 1
 status: phase-6-buildable
 
+_templates:
+  superpowers_base: &superpowers_base
+    namespace: superpowers
+    entrypoint: external
+    priority: P2
+    supported_targets:
+      claude-code: external-skill
+      opencode: external-skill
+    safety_level: external_reviewed
+    conditional: superpowers_installed
+
 namespaces:
   builtin:
     owner: repository
@@ -45,12 +56,7 @@ skills:
     priority: P0
     supported_targets:
       claude-code: native-skill
-      codex-cli: agents-md-or-wrapper
-      cursor: rule-or-manual-invocation
       opencode: native-skill
-      warp: rule-or-manual-invocation
-      antigravity: native-skill
-      vscode: rule-or-manual-invocation
     requires_tools:
       - Read
       - Grep
@@ -65,12 +71,7 @@ skills:
     priority: P0
     supported_targets:
       claude-code: native-skill
-      codex-cli: agents-md-or-wrapper
-      cursor: rule
       opencode: native-skill
-      warp: rule-or-checklist
-      antigravity: native-skill
-      vscode: rule-or-checklist
     requires_tools:
       - Read
       - Bash
@@ -84,12 +85,7 @@ skills:
     priority: P0
     supported_targets:
       claude-code: native-skill
-      codex-cli: wrapper-or-checklist
-      cursor: manual-or-rule
       opencode: native-skill
-      warp: checklist-or-rule
-      antigravity: native-skill
-      vscode: manual-or-rule
     requires_tools:
       - Read
       - Edit
@@ -104,12 +100,7 @@ skills:
     priority: P1
     supported_targets:
       claude-code: native-skill
-      codex-cli: project-plan-template
-      cursor: manual-or-rule
       opencode: native-skill
-      warp: manual-or-template
-      antigravity: native-skill
-      vscode: manual-or-rule
     requires_tools:
       - Read
       - Write
@@ -126,12 +117,7 @@ skills:
     priority: P1
     supported_targets:
       claude-code: native-skill
-      codex-cli: review-template
-      cursor: manual
       opencode: native-skill
-      warp: manual
-      antigravity: manual
-      vscode: manual
     requires_tools:
       - Read
       - Bash
@@ -139,121 +125,36 @@ skills:
 
   # External Superpowers skill pack (conditional on installation)
   - id: superpowers/tdd
-    namespace: superpowers
-    entrypoint: external
+    <<: *superpowers_base
     intent: Test-driven development workflow with red-green-refactor cycle.
     trigger_mode: suggest
-    priority: P2
-    supported_targets:
-      claude-code: external-skill
-      codex-cli: manual
-      cursor: manual
-      opencode: external-skill
-      warp: manual
-      antigravity: manual
-      vscode: manual
-    safety_level: external_reviewed
-    conditional: superpowers_installed
 
   - id: superpowers/brainstorm
-    namespace: superpowers
-    entrypoint: external
+    <<: *superpowers_base
     intent: Structured brainstorming and ideation sessions.
     trigger_mode: manual
-    priority: P2
-    supported_targets:
-      claude-code: external-skill
-      codex-cli: manual
-      cursor: manual
-      opencode: external-skill
-      warp: manual
-      antigravity: manual
-      vscode: manual
-    safety_level: external_reviewed
-    conditional: superpowers_installed
 
   - id: superpowers/refactor
-    namespace: superpowers
-    entrypoint: external
+    <<: *superpowers_base
     intent: Systematic code refactoring with safety checks.
     trigger_mode: suggest
-    priority: P2
-    supported_targets:
-      claude-code: external-skill
-      codex-cli: manual
-      cursor: manual
-      opencode: external-skill
-      warp: manual
-      antigravity: manual
-      vscode: manual
-    safety_level: external_reviewed
-    conditional: superpowers_installed
 
   - id: superpowers/debug
-    namespace: superpowers
-    entrypoint: external
+    <<: *superpowers_base
     intent: Advanced debugging workflows beyond systematic-debugging.
     trigger_mode: suggest
-    priority: P2
-    supported_targets:
-      claude-code: external-skill
-      codex-cli: manual
-      cursor: manual
-      opencode: external-skill
-      warp: manual
-      antigravity: manual
-      vscode: manual
-    safety_level: external_reviewed
-    conditional: superpowers_installed
 
   - id: superpowers/architect
-    namespace: superpowers
-    entrypoint: external
+    <<: *superpowers_base
     intent: System architecture design and documentation.
     trigger_mode: manual
-    priority: P2
-    supported_targets:
-      claude-code: external-skill
-      codex-cli: manual
-      cursor: manual
-      opencode: external-skill
-      warp: manual
-      antigravity: manual
-      vscode: manual
-    safety_level: external_reviewed
-    conditional: superpowers_installed
 
   - id: superpowers/review
-    namespace: superpowers
-    entrypoint: external
+    <<: *superpowers_base
     intent: Code review with comprehensive quality checks.
     trigger_mode: suggest
-    priority: P2
-    supported_targets:
-      claude-code: external-skill
-      codex-cli: manual
-      cursor: manual
-      opencode: external-skill
-      warp: manual
-      antigravity: manual
-      vscode: manual
-    safety_level: external_reviewed
-    conditional: superpowers_installed
 
   - id: superpowers/optimize
-    namespace: superpowers
-    entrypoint: external
+    <<: *superpowers_base
     intent: Performance optimization and profiling guidance.
     trigger_mode: manual
-    priority: P2
-    supported_targets:
-      claude-code: external-skill
-      codex-cli: manual
-      cursor: manual
-      opencode: external-skill
-      warp: manual
-      antigravity: manual
-      vscode: manual
-    safety_level: external_reviewed
-    conditional: superpowers_installed
-

@@ -4,6 +4,7 @@
 
 ## 快速开始
 
+- [⚠️ 核心原则 (必读)](../PRINCIPLES.md) - **开发前必须阅读** - 项目核心理念和开发准则
 - [项目总览](../README.md) - 项目介绍、架构和快速开始指南
 - [中文文档](../README.zh-CN.md) - 中文版项目文档
 
@@ -22,12 +23,6 @@
 ### 目标适配器
 - [目标适配器概览](../targets/README.md) - 目标适配器契约和状态
 - [Claude Code](../targets/claude-code.md) - Claude Code 目标（active）
-- [Kimi Code](../targets/kimi-code.md) - Kimi Code 目标
-- [Cursor](../targets/cursor.md) - Cursor 目标
-- [Warp](../targets/warp.md) - Warp 目标
-- [Antigravity](../targets/antigravity.md) - Antigravity 目标
-- [VS Code](../targets/vscode.md) - VS Code 目标
-- [Codex CLI](../targets/codex-cli.md) - Codex CLI 目标
 - [OpenCode](../targets/opencode.md) - OpenCode 目标
 
 ## 参考文档

@@ -6,6 +6,8 @@ A battle-tested workflow foundation for Claude Code and OpenCode — providing s
 
 **Not a tutorial. Not a toy config. A production workflow that actually ships — now with a provider-neutral core spec in phase 1.**
 
+> **📖 New to this project?** Start with [PRINCIPLES.md](PRINCIPLES.md) — mandatory reading for all contributors covering our core philosophy: Production-First, Structure > Prompting, Memory > Intelligence, Verification > Confidence, and Portable > Specific.
+
 ## Origin & Fork Status
 
 This project is a fork of [runesleo/claude-code-workflow](https://github.com/runesleo/claude-code-workflow) with substantial architectural refactoring:
@@ -56,11 +58,11 @@ This repo now has two layers of concern:
 
 - `core/` — provider-neutral workflow semantics (model tiers, skill registry, safety policy)
 - current runtime files (`rules/`, `docs/`, `memory/`, `skills/`) — the first-class Claude Code target that remains fully usable today
-- `targets/` — adapter mappings for Claude Code, OpenCode, and Codex CLI (production-ready); other platforms planned
+- `targets/` — adapter mappings for Claude Code (active) and OpenCode (exploratory); other platforms planned
 
 **Current Status**:
 - ✅ **Phase 1-5 Complete**: Portable core, generator, overlays
-- ✅ **Config-Driven Migration**: 3 of 13 platforms migrated (claude-code, opencode, codex-cli)
+- ✅ **Config-Driven Migration**: 2 of 2 active platforms migrated (claude-code, opencode)
 - 🚧 **Phase 6-7 Paused**: Focusing on stability before continuing platform expansion
 
 **Architecture Highlights**:
@@ -103,6 +105,7 @@ Generator
 claude-code-workflow/
 ├── CLAUDE.md                     # Entry point — Claude reads this first
 ├── README.md                     # You are here
+├── PRINCIPLES.md                 # ⚠️ MANDATORY: Core philosophy & development principles
 │
 ├── bin/
 │   ├── vibe                      # Generator CLI (build/use/inspect/overlay-aware targets)
@@ -175,14 +178,14 @@ claude-code-workflow/
 │
 ├── targets/                      # Target adapter contracts
 │   ├── README.md                 # Shared adapter rules
-│   ├── antigravity.md            # Target mapping for Antigravity
-│   ├── claude-code.md            # Current first-class target mapping
-│   ├── codex-cli.md              # Codex CLI mapping
-│   ├── cursor.md                 # Cursor mapping
-│   ├── kimi-code.md              # Kimi Code mapping
-│   ├── opencode.md               # OpenCode mapping
-│   ├── vscode.md                 # VS Code / Copilot mapping
-│   └── warp.md                   # Warp mapping
+│   ├── claude-code.md            # Active target (production-ready)
+│   ├── opencode.md               # Active target (exploratory)
+│   ├── antigravity.md            # Planned target (documentation)
+│   ├── codex-cli.md              # Planned target (documentation)
+│   ├── cursor.md                 # Planned target (documentation)
+│   ├── kimi-code.md              # Planned target (documentation)
+│   ├── vscode.md                 # Planned target (documentation)
+│   └── warp.md                   # Planned target (documentation)
 │
 ├── .vibe/                        # Generated target support files (tracked)
 │   ├── manifest.json             # Target build manifest
@@ -250,6 +253,7 @@ Documentation is organized by purpose:
 | Need | Entry Point |
 |------|-------------|
 | **Project overview & quick start** | This README |
+| **⚠️ Core principles (MUST READ)** | [PRINCIPLES.md](PRINCIPLES.md) |
 | **Complete documentation index** | [docs/README.md](docs/README.md) |
 | **Portable core architecture** | [core/README.md](core/README.md) |
 | **Target adapter contracts** | [targets/README.md](targets/README.md) |
@@ -274,8 +278,9 @@ Documentation is organized by purpose:
 Before adopting this workflow, understand these constraints:
 
 ### Platform Support
-- **Production-ready**: Claude Code, OpenCode
-- **Planned**: Cursor, Warp, VS Code, Kimi Code, Codex CLI, Antigravity (configs generated but limited testing)
+- **Active**: Claude Code (fully supported, production-ready)
+- **Exploratory**: OpenCode (basic support, actively developed)
+- **Planned**: Cursor, Warp, VS Code, Kimi Code, Codex CLI, Antigravity (documentation only)
 
 ### What This Is (and Isn't)
 - **Not automatic**: This is a configuration template with prompts and rules — not automation
@@ -303,6 +308,17 @@ Before adopting this workflow, understand these constraints:
 ---
 
 ## Quick Start
+
+### Prerequisites
+
+**⚠️ IMPORTANT**: Before using this workflow, you **must** read [PRINCIPLES.md](PRINCIPLES.md). It covers the core philosophy that makes this workflow effective:
+- Production-First mindset
+- Structure > Prompting
+- Memory > Intelligence  
+- Verification > Confidence
+- Portable > Specific
+
+Understanding these principles is essential for getting the most out of this workflow.
 
 ### Installation
 
@@ -366,11 +382,11 @@ vibe init --platform claude-code --dry-run
 # Actually install
 vibe init --platform claude-code
 
-# For OpenCode (fully supported)
+# For OpenCode (exploratory support)
 vibe init --platform opencode
 
-# For Codex CLI (fully supported)
-vibe init --platform codex-cli
+# For other platforms (planned)
+# vibe init --platform codex-cli  # Coming soon
 ```
 
 **View all supported platforms:**
@@ -432,10 +448,9 @@ vibe init --platform claude-code --force
 You can install configurations for multiple tools and switch between them:
 
 ```bash
-# Install global configs
+# Install global configs for active platforms
 vibe init --platform claude-code
 vibe init --platform opencode
-vibe init --platform kimi-code
 
 # In your project, choose which tool to use
 cd /path/to/your/project
@@ -534,10 +549,10 @@ vibe apply claude-code --overlay ./my-overlay.yaml
 ### 3. Try the Workflow
 
 Start your AI tool and observe:
-- **Task routing**: Watch complexity-based routing
-- **Systematic debugging**: Root cause investigation
-- **Session management**: Auto-save on wrap-up
-- **Context preservation**: Session state recovery
+- **Task routing**: Watch complexity-based routing suggestions
+- **Systematic debugging**: Root cause investigation prompts
+- **Session management**: Structured templates for saving progress (manual trigger required)
+- **Context preservation**: Guidelines for session handoff (manual execution required)
 
 ---
 
@@ -571,7 +586,7 @@ claude-code-default:
 
 ### Configuring Models by Target
 
-#### Claude Code (Fully Supported)
+#### Claude Code (Active - Production Ready)
 
 Claude Code supports dynamic model selection through multiple methods:
 
@@ -634,9 +649,9 @@ Warp's model configuration depends on its AI provider integration:
 2. The generated `WARP.md` will reference `warp.primary-frontier-model`, `warp.default-agent-model`, etc.
 3. Warp will use its configured default model for all tiers (model switching within Warp may be limited)
 
-#### OpenCode (Planned)
+#### OpenCode (Exploratory - Basic Support)
 
-OpenCode allows flexible model configuration in `opencode.json`:
+OpenCode is actively supported with basic functionality. Model configuration in `opencode.json`:
 
 ```json
 {
@@ -648,7 +663,7 @@ OpenCode allows flexible model configuration in `opencode.json`:
 }
 ```
 
-The generated config will map these to the capability tiers defined in the workflow.
+The generated config maps these to the capability tiers defined in the workflow. Note: OpenCode support is functional but less mature than Claude Code.
 
 #### Antigravity (Planned)
 
@@ -701,9 +716,9 @@ See `docs/task-routing.md` for detailed routing guidelines.
 
 | Command | Purpose | Example |
 |---------|---------|---------|
-| `bin/vibe use <target> <dir>` | Generate global config for a tool | `bin/vibe use kimi-code ~/.config/agents` |
-| `bin/vibe switch <target>` | Apply workflow to current project | `bin/vibe switch kimi-code` |
-| `bin/vibe init --platform=<tool>` | Install integrations (Superpowers, RTK) | `bin/vibe init --platform=kimi-code` |
+| `bin/vibe use <target> <dir>` | Generate global config for a tool | `bin/vibe use claude-code ~/.claude` |
+| `bin/vibe switch <target>` | Apply workflow to current project | `bin/vibe switch opencode` |
+| `bin/vibe init --platform=<tool>` | Install integrations (Superpowers, RTK) | `bin/vibe init --platform=claude-code` |
 | `bin/vibe quickstart` | One-command setup for Claude Code | `bin/vibe quickstart` |
 
 ### When to Use What?
@@ -738,49 +753,23 @@ bin/vibe init --platform <platform> --force  # Regenerate global config
 <summary>Click to see full command list</summary>
 
 ```bash
-# Global setup (run once)
+# Global setup (run once) - Active platforms only
 bin/vibe init --platform claude-code    # Install to ~/.claude
 bin/vibe init --platform opencode       # Install to ~/.config/opencode
-bin/vibe init --platform kimi-code      # Install to ~/.config/agents
-bin/vibe init --platform cursor         # Install to ~/.cursor
-
-# Project setup (run in project directory)
-bin/vibe apply claude-code              # Apply config to current project
-bin/vibe apply opencode                 # Alias: switch
-
-# Generate configs
-bin/vibe build claude-code              # Build to generated/claude-code/
-bin/vibe deploy claude-code ./output    # Generate to specific directory
-
-# Quick setup
-bin/vibe quickstart                     # Claude Code one-command setup
-
-# Verification
-bin/vibe init --platform claude-code --verify   # Check installation
-bin/vibe init --platform claude-code --suggest  # See recommendations
-bin/vibe doctor                         # Check all platforms and integrations
-
-# Inspection
-bin/vibe inspect [target]               # Preview resolved config
-bin/vibe targets                        # List supported tools
 ```
 
 </details>
 
 ---
 
-## Phase 2-6: Build / Use / Inspect Generator
+## Build / Use / Inspect Generator
 
-The repository now ships a minimal generator CLI:
+The repository ships a generator CLI for active platforms:
 
 ```bash
-bin/vibe build --target antigravity
-bin/vibe build --target claude-code
-bin/vibe build --target codex-cli
-bin/vibe build --target cursor
-bin/vibe build --target opencode
-bin/vibe build --target vscode
-bin/vibe build --target warp
+# Active platforms (fully functional)
+bin/vibe build claude-code
+bin/vibe build opencode
 bin/vibe inspect
 bin/vibe-smoke
 ```
@@ -791,26 +780,16 @@ Examples:
 
 ```bash
 # Build a Claude Code config tree
-bin/vibe build --target claude-code
-# Positional shorthand also works
-bin/vibe build cursor
+bin/vibe build claude-code
 
 # Build an OpenCode project config into a custom directory
-bin/vibe build --target opencode --output /tmp/vibe-opencode
+bin/vibe build opencode --output /tmp/vibe-opencode
 
 # Apply a generated Claude target into ~/.claude
-bin/vibe use --target claude-code --destination ~/.claude
+bin/vibe use claude-code ~/.claude
 
-# Apply a generated Cursor target into a project root
-bin/vibe use --target cursor --destination /path/to/project
-
-# Quick-switch repo-local targets into the current repo
-bin/vibe switch antigravity
-bin/vibe switch cursor
-bin/vibe switch codex-cli
-bin/vibe switch opencode
-bin/vibe switch vscode
-bin/vibe switch warp
+# Apply a generated OpenCode target into a project root
+bin/vibe use opencode /path/to/project
 
 # Quick-switch Claude Code into ~/.claude
 bin/vibe switch claude-code
@@ -823,24 +802,21 @@ bin/vibe inspect --json
 bin/vibe inspect --overlay examples/project-overlay.yaml
 
 # Build or apply with a project overlay
-bin/vibe build cursor --overlay examples/project-overlay.yaml
-bin/vibe use --target opencode --destination /path/to/project --overlay /path/to/project/.vibe/overlay.yaml
+bin/vibe build opencode --overlay examples/project-overlay.yaml
+bin/vibe use opencode /path/to/project --overlay /path/to/project/.vibe/overlay.yaml
 
 # Run smoke checks (all targets + overlay builds)
 bin/vibe-smoke
 ```
 
-Current phase-6 behavior:
+Current generator behavior (active platforms):
 
-- `antigravity` → materializes `AGENTS.md` and generates behavior / routing / safety / task-routing / test-standards docs under `.vibe/antigravity/`
 - `claude-code` → materializes `CLAUDE.md`, `rules/`, `docs/`, `skills/`, `agents/`, `commands/`, and a generated `settings.json` permission baseline, plus task routing and test standards under `.vibe/claude-code/`
-- `codex-cli` → materializes `AGENTS.md` plus generated behavior / routing / safety / execution / task-routing / test-standards docs under `.vibe/codex-cli/`
-- `cursor` → materializes `AGENTS.md`, `.cursor/rules/*.mdc`, `.cursor/cli.json`, and supporting `.vibe/cursor/*` notes including task routing and test standards
 - `opencode` → materializes `AGENTS.md`, `opencode.json`, and modular behavior / routing / safety / execution instruction files with generated permissions
-- `vscode` → materializes `AGENTS.md` and generated behavior / routing / safety / task-routing / test-standards docs under `.vibe/vscode/`
-- `warp` → materializes `WARP.md` plus generated behavior / routing / safety / task-routing / test-standards / workflow support docs under `.vibe/warp/`
 - `inspect` → can preview overlay-aware profile resolution and generated target state
 - `use` / `switch` → auto-discover `.vibe/overlay.yaml` in the destination project when present
+
+Planned platforms (documentation only): antigravity, codex-cli, cursor, vscode, warp
 
 **Path Safety**: When using `use` or `switch`, if the default output directory (`generated/<target>/`) would overlap with the destination directory, the tool automatically uses an external staging directory at `~/.vibe-generated/<destination-name>-<hash>/<target>/` to prevent conflicts. This ensures safe operation even when applying configurations to the repository root.
 - overlays → let a consuming repo remap capability tiers, add behavior deltas, patch native target config, and encode stack preferences like `uv` or `nvm` without editing `core/`
@@ -862,9 +838,9 @@ See `docs/git-workflow.md` for the full commit policy, including consuming-repo 
 
 Every piece of information has ONE canonical location. The SSOT table in CLAUDE.md maps info types to files. Claude is trained to check SSOT before writing, preventing the "same info in 5 places, all outdated" problem.
 
-### Memory Flush
+### Memory System
 
-Claude auto-saves progress on every task completion, every commit, and every exit signal. You can close the window mid-sentence and nothing is lost. No more "I forgot to save my context."
+Structured templates for recording session progress and project knowledge. Memory is **manual**: you must explicitly trigger saves using exit phrases ("I'm heading out", "保存一下") or directly edit markdown files. No automatic capture or crash recovery.
 
 ### Verification Before Completion
 

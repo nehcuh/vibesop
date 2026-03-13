@@ -23,7 +23,7 @@ class TestVibeCLI < Minitest::Test
   end
 
   def test_build_manifest_excludes_conditional_superpowers_without_installation
-    manifest = build_manifest("warp")
+    manifest = build_manifest("opencode")
 
     refute_includes manifest.fetch("skills").map { |skill| skill["id"] }, "superpowers/tdd"
     refute_includes manifest.fetch("skills").map { |skill| skill["id"] }, "superpowers/brainstorm"
@@ -34,27 +34,11 @@ class TestVibeCLI < Minitest::Test
     FileUtils.mkdir_p(plugin_dir)
 
     @cli.skip_integrations = false
-    manifest = build_manifest("warp")
+    manifest = build_manifest("opencode")
     @cli.skip_integrations = true
 
     assert_includes manifest.fetch("skills").map { |skill| skill["id"] }, "superpowers/tdd"
     assert_includes manifest.fetch("skills").map { |skill| skill["id"] }, "superpowers/brainstorm"
-  end
-
-  def test_generate_superpowers_section_uses_portable_skill_ids
-    plugin_dir = File.join(@test_home, ".claude", "plugins", "superpowers")
-    FileUtils.mkdir_p(plugin_dir)
-
-    @cli.skip_integrations = false
-    manifest = build_manifest("claude-code")
-    section = @cli.send(:generate_superpowers_section, manifest)
-    @cli.skip_integrations = true
-
-    assert_includes section, "| `superpowers/tdd` | `suggest` |"
-    assert_includes section, "| `superpowers/brainstorm` | `manual` |"
-    assert_includes section, "Test-driven development workflow with red-green-refactor cycle."
-    assert_includes section, "portable skill IDs"
-    refute_includes section, "| `brainstorming` |"
   end
 
   def test_switch_opencode_uses_external_staging_when_repo_root_is_destination

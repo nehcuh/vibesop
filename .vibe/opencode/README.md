@@ -10,7 +10,6 @@ Included runtime assets:
 - `agents/`
 - `commands/`
 - `memory/`
-- `patterns.md`
 - `settings.json`
 
 Active profile: `opencode-default`
