@@ -973,14 +973,40 @@ This workflow is designed for Unix-like environments (macOS, Linux). For Windows
 
 4. Access your Windows files from WSL at `/mnt/c/Users/YourName/`
 
-**Native Windows (Not Recommended)**
+**Native Windows (Limited Support)**
 
-While technically possible, native Windows support requires:
-- Ruby for Windows (RubyInstaller)
-- Git Bash or PowerShell with Unix-like utilities
-- Manual path adjustments in scripts
+If you cannot use WSL2 but have Git for Windows (which includes Git Bash):
 
-The workflow's shell scripts, symlink handling, and path conventions are optimized for Unix. WSL provides the best experience.
+**Option 1: Use Bash Fallback Script (Recommended for locked-down environments)**
+
+For environments without Ruby, PowerShell, or WSL2 (e.g., corporate laptops with only Git Bash):
+
+```bash
+# In Git Bash, use the pure Bash fallback script
+./bin/vibe-bash.sh targets           # List available targets
+./bin/vibe-bash.sh build opencode    # Build OpenCode configuration
+./bin/vibe-bash.sh switch opencode   # Apply to current project
+```
+
+The fallback script supports:
+- `build` - Copy pre-generated configurations
+- `switch`/`apply` - Apply configuration to current directory
+- `targets` - List available targets
+- `doctor` - Check environment
+
+**Limitations of Bash fallback:**
+- Cannot generate new configurations from YAML (requires Ruby)
+- Cannot apply overlays or complex merges
+- Works best with pre-generated configs in `generated/`
+
+**Option 2: Install Ruby for Windows**
+
+If you have admin rights or can use portable Ruby:
+- Install [RubyInstaller](https://rubyinstaller.org/) with DevKit
+- Use Git Bash as your terminal
+- Run `bin/vibe` normally
+
+**Note:** The workflow's shell scripts, symlink handling, and path conventions are optimized for Unix. WSL provides the best experience if available.
 
 ## Prior Art & Credits
 
