@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Verification Loop Enhancement**: Continuous code quality evaluation system
+  - `CheckpointManager` class for code snapshots and rollback
+    - Create checkpoints with automatic file snapshots
+    - Rollback to any checkpoint with dry-run preview
+    - Compare two checkpoints for differences
+    - Automatic cleanup of old checkpoints
+    - Persistent storage with snapshot directories
+  - `Grader` class for multi-type code evaluation
+    - Four grader types: unit_test, integration_test, linter, security
+    - Grade levels: pass, fail, warning, skip
+    - pass@k metric for evaluating multiple candidate solutions
+    - Statistics tracking and summary reports
+  - Design document: `docs/verification-loop-design.md`
+  - 34 unit tests for CheckpointManager and Grader
 - **Token Optimization System**: Reduce token consumption and improve response speed
   - `TokenOptimizer` class for prompt analysis and optimization
     - Token estimation for English/Chinese mixed text

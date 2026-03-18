@@ -57,6 +57,15 @@ Claude Code is powerful out of the box, but without structure it becomes a smart
 
 ### Recent Improvements (2026-03)
 
+- **✅ Verification Loop Enhancement**: Continuous code quality evaluation
+  - `CheckpointManager` — Code snapshots and rollback system
+    - Create/restore checkpoints with file snapshots
+    - Compare checkpoints for quality assessment
+    - Automatic cleanup of old checkpoints
+  - `Grader` — Multi-type code evaluation
+    - Four grader types: unit_test, integration_test, linter, security
+    - pass@k metric for candidate solution evaluation
+    - Statistics tracking and summary reports
 - **⚡ Token Optimization System**: Reduce token consumption by 30-50%
   - `TokenOptimizer` — Analyze and optimize prompt content
     - Token estimation for English/Chinese mixed text
