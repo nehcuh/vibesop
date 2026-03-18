@@ -57,6 +57,19 @@ Claude Code is powerful out of the box, but without structure it becomes a smart
 
 ### Recent Improvements (2026-03)
 
+- **⚡ Token Optimization System**: Reduce token consumption by 30-50%
+  - `TokenOptimizer` — Analyze and optimize prompt content
+    - Token estimation for English/Chinese mixed text
+    - Redundancy detection and removal
+    - Whitespace compression and selective section loading
+  - `ModelSelector` — Intelligent model selection based on task complexity
+    - Automatic complexity evaluation (simple → Haiku, medium → Sonnet, complex → Opus)
+    - Keyword-based scoring with fallback chain
+    - Usage statistics tracking
+  - `BackgroundTaskManager` — Long-running task management
+    - Priority-based queue (low/normal/high/critical)
+    - Task cancellation and automatic cleanup
+    - Thread-safe persistent storage
 - **🧠 Instinct Learning System**: Automatic pattern extraction from sessions
   - `vibe instinct learn` — Extract or manually create reusable patterns
   - `vibe instinct status` — View instincts grouped by confidence level

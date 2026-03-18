@@ -8,6 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Token Optimization System**: Reduce token consumption and improve response speed
+  - `TokenOptimizer` class for prompt analysis and optimization
+    - Token estimation for English/Chinese mixed text
+    - Redundancy detection and removal
+    - Whitespace compression
+    - Selective section loading
+  - `ModelSelector` class for intelligent model selection
+    - Task complexity evaluation (simple/medium/complex)
+    - Keyword-based scoring system
+    - Automatic model recommendation with fallback chain
+    - Usage statistics tracking
+  - `BackgroundTaskManager` class for long-running operations
+    - Priority-based task queue (low/normal/high/critical)
+    - Task status tracking (pending/running/completed/failed/cancelled)
+    - Task cancellation support
+    - Automatic cleanup of old tasks
+    - Thread-safe operations with persistent storage
+  - Design document: `docs/token-optimization-design.md`
+  - 46 unit tests covering all three modules
 - **Instinct Learning System**: Automatic pattern extraction from sessions
   - `vibe instinct` command with 6 subcommands (learn, learn-eval, status, export, import, evolve)
   - `InstinctManager` class for pattern CRUD, confidence scoring, and team sharing
