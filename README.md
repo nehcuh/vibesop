@@ -949,9 +949,30 @@ This template encodes several principles learned from daily AI-assisted developm
 
 ## Windows / WSL Support
 
-This workflow is designed for Unix-like environments (macOS, Linux). For Windows users:
+This workflow now supports Windows through multiple installation methods:
 
-**Recommended: Use WSL 2 (Windows Subsystem for Linux)**
+### Option 1: Native Windows (cmd.exe) - NEW ✨
+
+**Best for**: Corporate environments where PowerShell is restricted or Ruby is already installed.
+
+```cmd
+REM Install using native Windows batch scripts
+bin\vibe-install.bat
+
+REM Install hooks (optional)
+cd hooks
+install.bat
+```
+
+**Features**:
+- Works in cmd.exe (DOS) without PowerShell
+- Installs to `%USERPROFILE%\.local\bin`
+- No admin rights required
+- Full hook support with `.bat` scripts
+
+See [Windows Installation Guide](docs/windows-installation.md) for detailed instructions.
+
+### Option 2: WSL 2 (Recommended for full Unix experience)
 
 1. Install WSL 2 with Ubuntu:
    ```powershell
@@ -973,13 +994,9 @@ This workflow is designed for Unix-like environments (macOS, Linux). For Windows
 
 4. Access your Windows files from WSL at `/mnt/c/Users/YourName/`
 
-**Native Windows (Limited Support)**
+### Option 3: Git Bash Fallback (Limited support)
 
 If you cannot use WSL2 but have Git for Windows (which includes Git Bash):
-
-**Option 1: Use Bash Fallback Script (Recommended for locked-down environments)**
-
-For environments without Ruby, PowerShell, or WSL2 (e.g., corporate laptops with only Git Bash):
 
 ```bash
 # In Git Bash, use the pure Bash fallback script
@@ -999,14 +1016,15 @@ The fallback script supports:
 - Cannot apply overlays or complex merges
 - Works best with pre-generated configs in `generated/`
 
-**Option 2: Install Ruby for Windows**
+### Platform Comparison
 
-If you have admin rights or can use portable Ruby:
-- Install [RubyInstaller](https://rubyinstaller.org/) with DevKit
-- Use Git Bash as your terminal
-- Run `bin/vibe` normally
+| Method | cmd.exe Support | Admin Required | Hook Support | Full Features |
+|--------|----------------|----------------|--------------|---------------|
+| Native Windows (.bat) | ✅ Yes | ❌ No | ✅ Yes | ✅ Yes |
+| WSL 2 | N/A (Linux) | ⚠️ Initial setup | ✅ Yes | ✅ Yes |
+| Git Bash | ⚠️ Via bash | ❌ No | ⚠️ Limited | ⚠️ Limited |
 
-**Note:** The workflow's shell scripts, symlink handling, and path conventions are optimized for Unix. WSL provides the best experience if available.
+**Note:** The native Windows support is production-ready. WSL provides the best Unix-like experience if available.
 
 ## Prior Art & Credits
 

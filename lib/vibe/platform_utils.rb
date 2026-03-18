@@ -1,11 +1,34 @@
 # frozen_string_literal: true
 
+require "rbconfig"
+
 module Vibe
   # Platform-related utility methods.
   #
   # Host requirements:
   #   None (self-contained utilities)
   module PlatformUtils
+    # Detect current operating system
+    # @return [Symbol] :windows, :macos, :linux, or :unknown
+    def detect_os
+      case RbConfig::CONFIG["host_os"]
+      when /mswin|msys|mingw|cygwin|bccwin|wince|emc/
+        :windows
+      when /darwin|mac os/
+        :macos
+      when /linux/
+        :linux
+      else
+        :unknown
+      end
+    end
+
+    # Check if running on Windows
+    # @return [Boolean]
+    def windows?
+      detect_os == :windows
+    end
+
     # Focused on Claude Code and OpenCode
     VALID_TARGETS = %w[claude-code opencode].freeze
 
@@ -52,15 +75,27 @@ module Vibe
     # @param target [String] Target name
     # @return [String] Absolute path to global config directory
     def default_global_destination(target)
+      base_path = if windows?
+                    # Windows: Use %USERPROFILE% for config
+                    ENV["USERPROFILE"] || ENV["HOME"]
+                  else
+                    # Unix: Use ~ for config
+                    ENV["HOME"]
+                  end
+
       case target
       when "claude-code"
-        File.expand_path("~/.claude")
+        File.join(base_path, ".claude")
       when "opencode"
         # OpenCode uses XDG config directory per official docs
         # https://github.com/opencode-ai/opencode
-        File.expand_path("~/.config/opencode")
+        if windows?
+          File.join(base_path, ".config", "opencode")
+        else
+          File.expand_path("~/.config/opencode")
+        end
       else
-        File.expand_path("~/.#{target}")
+        File.join(base_path, ".#{target}")
       end
     end
 
