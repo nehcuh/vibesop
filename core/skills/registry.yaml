@@ -173,3 +173,31 @@ skills:
     <<: *superpowers_base
     intent: Performance optimization and profiling guidance.
     trigger_mode: manual
+
+  - id: riper-workflow
+    namespace: builtin
+    entrypoint: skills/riper-workflow/SKILL.md
+    intent: Structured 5-phase development workflow (Research, Innovate, Plan, Execute, Review).
+    trigger_mode: suggest
+    priority: P1
+    supported_targets:
+      claude-code: native-skill
+      opencode: native-skill
+    requires_tools:
+      - Read
+      - Grep
+      - Bash
+    safety_level: trusted_builtin
+
+  - id: using-git-worktrees
+    namespace: builtin
+    entrypoint: skills/using-git-worktrees/SKILL.md
+    intent: Branch isolation using git worktrees for parallel task execution.
+    trigger_mode: suggest
+    priority: P1
+    supported_targets:
+      claude-code: native-skill
+      opencode: native-skill
+    requires_tools:
+      - Bash
+    safety_level: trusted_builtin

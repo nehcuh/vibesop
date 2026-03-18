@@ -27,6 +27,7 @@ require_relative "../lib/vibe/cli/grade_commands"
 require_relative "../lib/vibe/cli/task_commands"
 require_relative "../lib/vibe/cli/parallel_commands"
 require_relative "../lib/vibe/cli/toolchain_commands"
+require_relative "../lib/vibe/cli/security_commands"
 require_relative "../lib/vibe/skill_manager"
 
 class VibeCLI
@@ -47,6 +48,7 @@ class VibeCLI
   include Vibe::TaskCommands
   include Vibe::ParallelCommands
   include Vibe::ToolchainCommands
+  include Vibe::SecurityCommands
 
   attr_accessor :skip_integrations
 
@@ -72,7 +74,8 @@ class VibeCLI
     "tasks"      => :run_tasks_command,
     "worktree"   => :run_worktree_command,
     "cascade"    => :run_cascade_command,
-    "toolchain"  => :run_toolchain_command
+    "toolchain"  => :run_toolchain_command,
+    "scan"       => :run_scan_command
   }.freeze unless defined?(COMMAND_REGISTRY)
 
   def initialize(repo_root)
@@ -420,6 +423,7 @@ class VibeCLI
         vibe tasks <command> [options]
         vibe worktree <command> [options]
         vibe cascade <command> <config.yaml>
+        vibe scan <subcommand> [args]
 
       Commands:
         init        Install global configuration for a platform (e.g., ~/.claude, ~/.config/opencode)
@@ -438,6 +442,8 @@ class VibeCLI
         tasks       Background tasks (submit, list, status, cancel)
         worktree    Git worktree management (create, list, finish, remove, cleanup)
         cascade     Dependency-aware parallel task execution (run, plan)
+        toolchain   Toolchain detection (detect, suggest)
+        scan        Security scanning and TDD audit (text, file, tdd, ctx)
 
       Typical workflow:
         1. vibe init --platform claude-code       # Install global config to ~/.claude

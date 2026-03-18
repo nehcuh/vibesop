@@ -8,7 +8,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Parallelization Enhancement**: Git worktrees + cascade task execution
+- **Community Best Practices Integration** (Phase 6)
+  - `SecurityScanner` — lightweight prompt-injection and jailbreak detector
+    - 5 rule categories: system_prompt_leak (critical), role_hijack, instruction_injection, privilege_escalation (high), indirect_injection (medium)
+    - `scan(text)` returns `{ safe:, threats:, risk_level: }`; `scan!` raises `SecurityError`
+    - Deduplication by rule ID; risk level derived from highest-severity threat
+    - 20 unit tests
+  - `TddEnforcer` — test-first development enforcement
+    - Detects implementation files missing corresponding test coverage
+    - Supports Ruby (minitest/rspec), Python (pytest), JS/TS (jest/vitest) conventions
+    - `check(file)`, `check_many(files)`, `audit` (full project scan)
+    - Excludes vendor/ and node_modules/ from audits
+    - 14 unit tests
+  - `ContextOptimizer` — context window engineering kit
+    - Token estimation for English/Chinese mixed text
+    - Priority-based context packaging within a token budget
+    - Filler phrase compression
+    - `build_package(budget:, required_ids:)` for structured context assembly
+    - 16 unit tests
+  - New skill: `skills/riper-workflow/SKILL.md` — structured 5-phase workflow (Research → Innovate → Plan → Execute → Review)
+  - CLI command: `vibe scan text/file/tdd/ctx` — security scanning and TDD audit
+  - Registered `riper-workflow` and `using-git-worktrees` skills in `core/skills/registry.yaml`
+- **Toolchain Detection** (Phase 5)
+  - `ToolchainDetector` — detects package managers, build tools, and test frameworks
+    - 10 package managers: bun, pnpm, yarn, npm, poetry, pipenv, pip, cargo, gomod, bundler
+    - 9 build tools: vite, webpack, rollup, esbuild, gradle, maven, cmake, make, rake
+    - 7 test frameworks: vitest, jest, pytest, rspec, minitest, cargo_test, go_test
+    - Primary language detection by ecosystem frequency
+    - Suggested commands for install/test/build
+    - 27 unit tests
+  - CLI commands: `vibe toolchain detect/suggest`
+
   - `WorktreeManager` — automated worktree lifecycle management
     - Create isolated worktrees per task with auto-generated branches
     - Finish / remove / cleanup lifecycle commands
