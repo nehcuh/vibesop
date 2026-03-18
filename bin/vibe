@@ -393,6 +393,8 @@ class VibeCLI
         vibe inspect [TARGET] [--overlay FILE] [--json]
         vibe targets
         vibe doctor
+        vibe skills <command>
+        vibe instinct <command> [options]
 
       Commands:
         init        Install global configuration for a platform (e.g., ~/.claude, ~/.config/opencode)
