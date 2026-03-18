@@ -36,3 +36,6 @@ settings.json
 
 # Migration logs
 /.vibe/migration-*.log
+
+# Company internal materials
+/公司推广材料.md
