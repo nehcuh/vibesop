@@ -40,10 +40,10 @@ bash: vibe: command not found
 ./bin/vibe --help
 
 # 方法 2: 添加到 PATH
-export PATH="$PATH:/path/to/claude-code-workflow/bin"
+export PATH="$PATH:/path/to/vibesop/bin"
 
 # 方法 3: 创建别名
-alias vibe='/path/to/claude-code-workflow/bin/vibe'
+alias vibe='/path/to/vibesop/bin/vibe'
 ```
 
 ---

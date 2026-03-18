@@ -30,7 +30,7 @@
     - Created: YYYY-MM-DD | Updated: YYYY-MM-DD
 -->
 
-- [ ] **T001**: Optimize project based on review feedback (claude-code-workflow) — Status: active
+- [ ] **T001**: Optimize project based on review feedback (vibesop) — Status: active
   - Context: Review identified documentation scattering and need for CI/CD
   - Next action: Verify all changes and commit
   - Blocker: none

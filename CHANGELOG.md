@@ -129,4 +129,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-This project is a fork of [@runes_leo](https://x.com/runes_leo)'s original claude-code-workflow, enhanced for maintainability and extended to serve Chinese developers.
+This project is a fork of [@runes_leo](https://x.com/runes_leo)'s original vibesop, enhanced for maintainability and extended to serve Chinese developers.

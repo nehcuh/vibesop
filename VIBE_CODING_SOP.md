@@ -160,8 +160,8 @@ Claude 在以下时刻自动保存进度：
 
 ```bash
 # 克隆工作流仓库
-git clone https://github.com/nehcuh/claude-code-workflow.git
-cd claude-code-workflow
+git clone https://github.com/nehcuh/vibesop.git
+cd vibesop
 
 # 安装 vibe 命令到系统 PATH
 bin/vibe-install

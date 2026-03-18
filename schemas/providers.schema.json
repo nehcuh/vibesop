@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://claude-code-workflow/schemas/providers.schema.json",
+  "$id": "https://vibesop/schemas/providers.schema.json",
   "title": "Providers Configuration",
   "description": "Schema for core/models/providers.yaml",
   "type": "object",

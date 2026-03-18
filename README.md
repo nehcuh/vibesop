@@ -1,33 +1,44 @@
-# Claude Code Workflow
+# VibeSOP
 
 **English** | [中文](README.zh-CN.md)
 
-A battle-tested workflow foundation for Claude Code and OpenCode — providing structured configuration, memory management, and consistent development practices.
+A battle-tested, multi-platform workflow SOP for AI-assisted development — supporting Claude Code, OpenCode, and future platforms with structured configuration, memory management, and consistent development practices.
 
-**Not a tutorial. Not a toy config. A production workflow that actually ships — now with a provider-neutral core spec in phase 1.**
+**Not a tutorial. Not a toy config. A production SOP that actually ships — with a provider-neutral portable core.**
 
 > **📖 New to this project?** Start with [PRINCIPLES.md](PRINCIPLES.md) — mandatory reading for all contributors covering our core philosophy: Production-First, Structure > Prompting, Memory > Intelligence, Verification > Confidence, and Portable > Specific.
 
-## Origin & Fork Status
+## How VibeSOP Differs from the Original
 
-This project is a fork of [runesleo/claude-code-workflow](https://github.com/runesleo/claude-code-workflow) with substantial architectural refactoring:
+VibeSOP is a fork of [runesleo/claude-code-workflow](https://github.com/runesleo/claude-code-workflow). While the original is a solid Claude Code configuration template, VibeSOP has diverged significantly in scope and architecture:
+
+| | runesleo/claude-code-workflow | VibeSOP |
+|---|---|---|
+| Platform support | Claude Code only | Claude Code + OpenCode + extensible to future platforms |
+| Core spec | Coupled to Claude Code | Provider-neutral `core/` (models, skills, policies, security) |
+| CLI | Basic shell scripts | Full Ruby CLI (`bin/vibe`) with 8 commands |
+| Architecture | Single-file config | 22 modular Ruby library modules |
+| Windows support | WSL2 / Git Bash only | Native cmd.exe batch scripts, cross-platform detection |
+| Customization | Manual file edits | Overlay system (`.vibe/overlay.yaml`) |
+| Test coverage | None | 289 tests, SimpleCov coverage enforcement |
+| Skill system | Static markdown | Portable skill registry with security audit |
+| Memory system | Single file | 3-tier (session / project-knowledge / overview) |
+| Documentation | English | English + Chinese (`README.zh-CN.md`) |
+
+### Key Architectural Decisions
+
+**Portable core** (`core/`): All model tiers, skill definitions, security policy, and behavior rules live in provider-neutral YAML. Target adapters (Claude Code, OpenCode, etc.) consume this core — so adding a new platform doesn't require rewriting the workflow logic.
+
+**Generator CLI** (`bin/vibe`): Instead of manually copying config files, `vibe generate` builds the correct target files from the portable core + your project overlay. This makes upgrades and platform switches non-destructive.
+
+**Overlay system**: Project-specific deviations go in `.vibe/overlay.yaml` rather than mutating shared defaults. The base workflow stays upgradeable.
+
+## Origin & Fork Status
 
 - **Original Author**: [@runes_leo](https://x.com/runes_leo)
 - **Fork Maintainer**: [@nehcuh](https://github.com/nehcuh)
-- **Major Changes**:
-  - Modularized CLI into 9 Ruby library modules (`lib/vibe/*.rb`)
-  - Added comprehensive unit test suite with 12 test files + benchmarks
-  - Integrated SimpleCov for test coverage enforcement (~58% coverage)
-  - Removed unused dependency injection container (YAGNI principle)
-  - Enhanced error handling with context support
-  - Thread-safe YAML loading with mutex protection
-  - Command registry pattern for better extensibility
-  - Added Chinese documentation (`README.zh-CN.md`)
-  - Enhanced overlay system with runtime preference examples (`examples/`)
-  - Improved path safety and symlink handling for macOS compatibility
-  - Refactored generator architecture for better maintainability
 
-While this fork maintains the original MIT license and credits the original author, the codebase has diverged significantly through refactoring and new features.
+This fork maintains the original MIT license and credits the original author. The codebase has diverged substantially — if you only need Claude Code support and prefer a simpler setup, the original project may be a better fit.
 
 ## Why This Exists
 
@@ -105,7 +116,7 @@ Generator
 ## What's Inside
 
 ```
-claude-code-workflow/
+vibesop/
 ├── CLAUDE.md                     # Entry point — Claude reads this first
 ├── README.md                     # You are here
 ├── PRINCIPLES.md                 # ⚠️ MANDATORY: Core philosophy & development principles
@@ -327,8 +338,8 @@ Understanding these principles is essential for getting the most out of this wor
 
 ```bash
 # 1. Clone the workflow repository
-git clone https://github.com/nehcuh/claude-code-workflow.git
-cd claude-code-workflow
+git clone https://github.com/nehcuh/vibesop.git
+cd vibesop
 
 # 2. Install vibe command to system PATH
 bin/vibe-install
@@ -987,8 +998,8 @@ See [Windows Installation Guide](docs/windows-installation.md) for detailed inst
 
 3. Clone and use the workflow normally within WSL:
    ```bash
-   git clone https://github.com/nehcuh/claude-code-workflow.git
-   cd claude-code-workflow
+   git clone https://github.com/nehcuh/vibesop.git
+   cd vibesop
    bin/vibe quickstart
    ```
 
@@ -1040,7 +1051,7 @@ This template draws from:
 
 ## Acknowledgments
 
-This project builds upon the excellent foundation laid by [@runes_leo](https://x.com/runes_leo)'s original claude-code-workflow. The fork aims to enhance maintainability and extend the workflow to serve Chinese-speaking developers while preserving the core philosophy.
+This project builds upon the excellent foundation laid by [@runes_leo](https://x.com/runes_leo)'s original vibesop. The fork aims to enhance maintainability and extend the workflow to serve Chinese-speaking developers while preserving the core philosophy.
 
 ## Star History
 

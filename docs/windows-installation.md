@@ -18,8 +18,8 @@ This method uses native Windows batch files (.bat) that work in cmd.exe without 
 
 1. **Clone the repository**:
    ```cmd
-   git clone https://github.com/your-org/claude-code-workflow.git
-   cd claude-code-workflow
+   git clone https://github.com/your-org/vibesop.git
+   cd vibesop
    ```
 
 2. **Run the Windows installer**:

@@ -1,6 +1,6 @@
 # Testing Documentation
 
-This directory contains test reports and improvement proposals for the claude-code-workflow project configuration.
+This directory contains test reports and improvement proposals for the vibesop project configuration.
 
 ## Files
 

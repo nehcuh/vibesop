@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://claude-code-workflow/schemas/security.schema.json",
+  "$id": "https://vibesop/schemas/security.schema.json",
   "title": "Security Policy",
   "description": "Schema for core/security/policy.yaml",
   "type": "object",

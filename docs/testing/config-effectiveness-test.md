@@ -1,4 +1,4 @@
-# Claude Code Workflow 配置效果测试报告
+# VibeSOP 配置效果测试报告
 
 **测试日期**: 2026-03-07
 **测试场景**: 为 vibe CLI 添加 `vibe clean` 命令

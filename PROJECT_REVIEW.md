@@ -1,4 +1,4 @@
-# Claude Code Workflow 项目评审报告
+# VibeSOP 项目评审报告
 
 **评审日期**: 2026-03-16
 **评审人**: Claude (Sonnet 4.6)

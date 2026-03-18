@@ -1,6 +1,6 @@
 # External Tool Integrations
 
-This document explains how the claude-code-workflow integrates with external tools and skill packs to enhance your development experience.
+This document explains how the vibesop integrates with external tools and skill packs to enhance your development experience.
 
 ## Overview
 
@@ -233,7 +233,7 @@ When `bin/vibe init` is run:
 ```bash
 $ bin/vibe init
 
-🚀 Claude Code Workflow Initialization
+🚀 VibeSOP Initialization
 ======================================
 
 Checking your environment...
@@ -355,7 +355,7 @@ Planned integrations:
 - Testing frameworks
 
 To request a new integration, open an issue at:
-https://github.com/nehcuh/claude-code-workflow/issues
+https://github.com/nehcuh/vibesop/issues
 
 ---
 
