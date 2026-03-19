@@ -170,6 +170,7 @@ module Vibe
       target_label = platform_label(platform_id)
       profile = manifest["profile"]
       overlay = overlay_sentence(manifest)
+      config = platform_configs[platform_id]
 
       # Platform-specific config directory hints
       config_dir = case platform_id
@@ -178,20 +179,29 @@ module Vibe
                    else "~/.#{platform_id}"
                    end
 
+      # Build asset list dynamically from platform config
+      assets = []
+
+      # Entrypoint
+      entrypoint = config.dig("output_paths", "global", "entrypoint_name")
+      assets << "- `#{entrypoint}`" if entrypoint
+
+      # Runtime directories
+      rt_dirs = config["runtime_dirs"]
+      global_dirs = rt_dirs.is_a?(Hash) ? (rt_dirs["global"] || []) : (rt_dirs || [])
+      global_dirs.each { |d| assets << "- `#{d}/`" }
+
+      # Native config
+      native_filename = config.dig("native_config", "global", "filename")
+      assets << "- `#{native_filename}`" if native_filename
+
       lines = [
         "# #{target_label} target",
         "",
         "This output is intended to be copied into a #{target_label} config directory such as `#{config_dir}`.",
         "",
         "Included runtime assets:",
-        "- `CLAUDE.md`",
-        "- `rules/`",
-        "- `docs/`",
-        "- `skills/`",
-        "- `agents/`",
-        "- `commands/`",
-        "- `memory/`",
-        "- `settings.json`",
+        *assets,
         "",
         "Active profile: `#{profile}`",
         "Applied overlay: #{overlay}",

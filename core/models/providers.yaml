@@ -28,7 +28,8 @@ profiles:
 
   opencode-default:
     target: opencode
-    maturity: planned
+    maturity: active
+    current_role: first_class_target
     mapping:
       critical_reasoner: configured.primary-high-reasoning
       workhorse_coder: configured.primary-coder

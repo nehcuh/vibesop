@@ -91,4 +91,52 @@ class TestOpenCodeClaudeCodeAlignment < Minitest::Test
     assert instructions.any? { |i| i.include?('safety.md') },
            "Should include safety.md"
   end
+
+  def test_opencode_global_copies_runtime_dirs
+    output = File.join(@tmp_dir, 'opencode-runtime')
+    system("#{@vibe} build opencode --output #{output} 2>/dev/null")
+
+    # OpenCode global build should include the same runtime dirs as Claude Code
+    %w[rules docs skills agents commands memory].each do |dir|
+      source = File.join(@repo_root, dir)
+      next unless File.exist?(source) # skip if source dir doesn't exist in repo
+
+      target = File.join(output, dir)
+      assert File.exist?(target),
+             "OpenCode global build should include #{dir}/ directory"
+    end
+  end
+
+  def test_opencode_project_does_not_copy_runtime_dirs
+    project_dir = File.join(@tmp_dir, 'opencode-project-rt')
+    FileUtils.mkdir_p(project_dir)
+    system("#{@vibe} use opencode #{project_dir} --force 2>/dev/null")
+
+    # Project-level build should NOT copy runtime dirs
+    %w[rules docs skills agents commands memory].each do |dir|
+      refute File.exist?(File.join(project_dir, dir)),
+             "OpenCode project build should NOT include #{dir}/ directory"
+    end
+  end
+
+  def test_opencode_vibe_readme_lists_correct_assets
+    output = File.join(@tmp_dir, 'opencode-readme')
+    system("#{@vibe} build opencode --output #{output} 2>/dev/null")
+
+    readme_path = File.join(output, '.vibe/opencode/README.md')
+    assert File.exist?(readme_path), "Should generate .vibe/opencode/README.md"
+
+    readme = File.read(readme_path)
+
+    # Should reference OpenCode-specific assets, not Claude Code ones
+    assert readme.include?('AGENTS.md'), "README should list AGENTS.md entrypoint"
+    assert readme.include?('opencode.json'), "README should list opencode.json"
+    refute readme.include?('CLAUDE.md'), "README should NOT list CLAUDE.md"
+    refute readme.include?('settings.json'), "README should NOT list settings.json"
+
+    # Should list runtime dirs
+    %w[rules/ docs/ skills/].each do |dir|
+      assert readme.include?(dir), "README should list #{dir}"
+    end
+  end
 end

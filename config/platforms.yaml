@@ -72,9 +72,19 @@ platforms:
         filename: opencode.json
         builder: opencode_project_config
 
-    runtime_dirs: []
+    runtime_dirs:
+      global:
+        - rules
+        - docs
+        - skills
+        - agents
+        - commands
+        - memory
+      project: []
 
-    copy_mode: minimal
+    copy_mode:
+      global: full
+      project: minimal
 
 # Platform aliases for user convenience
 aliases:

@@ -1,6 +1,26 @@
 # OpenCode Target
 
-OpenCode is a strong bridge target because it can work with repo rules, permission policies, and Claude-style assets with lighter adaptation.
+OpenCode is a first-class build target, aligned with Claude Code in runtime asset coverage.
+
+## Status
+
+- **Maturity**: `active` (first-class target)
+- **Build command**: `bin/vibe build opencode`
+- **Apply command**: `bin/vibe use opencode <project-dir>`
+
+## Runtime Assets (Global Build)
+
+| Asset | Description |
+|-------|-------------|
+| `AGENTS.md` | Entrypoint (equivalent to Claude Code's `CLAUDE.md`) |
+| `opencode.json` | Native config with instructions, permissions, and model settings |
+| `.vibe/opencode/` | Generated behavior, safety, routing, and test-standards docs |
+| `rules/` | Workflow rules |
+| `docs/` | Supporting documentation |
+| `skills/` | Portable skill definitions |
+| `agents/` | Agent templates |
+| `commands/` | Custom commands |
+| `memory/` | Memory layer files |
 
 ## Minimum Common Primitives
 
@@ -17,7 +37,7 @@ OpenCode is a strong bridge target because it can work with repo rules, permissi
 
 ## Phase 1 Notes
 
-- Use OpenCode as an early cross-target proving ground after Claude Code.
+- OpenCode shares the same runtime directory structure as Claude Code (rules/, docs/, skills/, agents/, commands/, memory/).
 - Keep the portable skill IDs stable even when the physical skill files are shared.
 - Prefer host-native permission controls for `P0/P1` enforcement.
 
