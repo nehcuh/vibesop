@@ -62,7 +62,7 @@ Claude Code is powerful out of the box, but without structure it becomes a smart
   - Auto-detected during `vibe init`, trigger rules generated in `skill-triggers.md`
   - Browser QA, cross-model review, release automation, safety guardrails
   - Complements builtin skills — gstack handles product/review/ship, VibeSOP handles memory/verification/session
-  - Install: `git clone https://github.com/garrytan/gstack.git ~/.claude/skills/gstack`
+  - Auto-install via `vibe init` or manual: `git clone https://github.com/garrytan/gstack.git ~/.claude/skills/gstack`
 - **🔀 Parallelization Enhancement**: Git worktrees + cascade execution
   - `vibe worktree create/list/finish/remove/cleanup` — isolated task branches
   - `vibe cascade run/plan <config.yaml>` — dependency-ordered parallel pipelines

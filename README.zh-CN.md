@@ -47,7 +47,7 @@ VibeSOP fork 自 [runesleo/claude-code-workflow](https://github.com/runesleo/cla
   - `vibe init` 时自动检测，触发规则自动生成到 `skill-triggers.md`
   - 浏览器 QA、跨模型审查、发布自动化、安全护栏
   - 与内置技能互补 — gstack 负责产品/审查/发布，VibeSOP 负责记忆/验证/会话
-  - 安装：`git clone https://github.com/garrytan/gstack.git ~/.claude/skills/gstack`
+  - 通过 `vibe init` 自动安装，或手动：`git clone https://github.com/garrytan/gstack.git ~/.claude/skills/gstack`
 - **🧠 Instinct 学习系统**：从 session 中自动提取可复用模式
   - `vibe instinct learn` — 提取或手动创建可复用模式
   - `vibe instinct status` — 按置信度分组查看 instinct

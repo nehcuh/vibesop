@@ -96,9 +96,11 @@ This configures a hook in `~/.claude/settings.json` to transparently intercept c
 **Author**: Garry Tan (@garrytan) | **License**: MIT
 
 **Installation**:
+- Automatic: `bin/vibe init` detects and offers to install gstack (clone + setup + verification)
 - Claude Code: `git clone https://github.com/garrytan/gstack.git ~/.claude/skills/gstack && cd ~/.claude/skills/gstack && ./setup`
 - Project-level: `cp -Rf ~/.claude/skills/gstack .claude/skills/gstack && cd .claude/skills/gstack && ./setup`
 - Requires: Bun v1.0+ (for `/browse` browser skills; other skills work without Bun)
+- China mirror: Gitee fallback is used automatically when GitHub is unreachable
 
 **Portable skill IDs exposed by this workflow**:
 - `gstack/office-hours` - Product brainstorming with forcing questions
@@ -304,7 +306,7 @@ Checking your environment...
 
 Checking external integrations...
 
-[1/2] Superpowers Skill Pack
+[1/3] Superpowers Skill Pack
    Status: Not installed
    Would you like to install? [Y/n]: y
 
@@ -312,12 +314,21 @@ Checking external integrations...
    /plugin marketplace add obra/superpowers-marketplace
    /plugin install superpowers@superpowers-marketplace
 
-[2/2] RTK (Token Optimizer)
+[2/3] RTK (Token Optimizer)
    Status: Not installed
    Would you like to install? [Y/n]: y
    Installing via Homebrew...
    ✓ RTK installed (version 0.x.x)
    ✓ Hook configured
+
+[3/3] gstack Skill Pack
+   Status: Not installed
+   Would you like to install? [Y/n]: y
+   Cloning gstack repository...
+   ✓ Cloned successfully from https://github.com/garrytan/gstack.git
+   Running gstack setup...
+   ✅ gstack installed successfully!
+   Location: ~/.claude/skills/gstack
 
 Configuration complete! 🎉
 ```
@@ -350,6 +361,13 @@ Verifying integrations...
     Binary: /opt/homebrew/bin/rtk
     Version: 0.x.x
     Hook: Configured
+    Status: Ready
+
+[✓] gstack
+    Location: ~/.claude/skills/gstack
+    Version: 1.1.0
+    Skills: 15 detected
+    Browser: Ready
     Status: Ready
 
 All integrations verified! 🎉
