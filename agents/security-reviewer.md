@@ -1,7 +1,10 @@
 ---
 name: security-reviewer
 description: Security Review Agent - checks code security vulnerabilities, sensitive info leaks, auth issues. Use during code review or security checks.
-tools: Read, Grep, Glob
+tools:
+  Read: true
+  Grep: true
+  Glob: true
 ---
 
 # Security Reviewer Agent

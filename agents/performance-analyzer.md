@@ -1,7 +1,11 @@
 ---
 name: performance-analyzer
 description: Performance Analysis Agent - analyzes performance bottlenecks, memory leaks, build optimization. Use when encountering performance issues or needing optimization.
-tools: Read, Grep, Glob, Bash
+tools:
+  Read: true
+  Grep: true
+  Glob: true
+  Bash: true
 ---
 
 # Performance Analyzer Agent

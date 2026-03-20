@@ -1,7 +1,11 @@
 ---
 name: pr-reviewer
 description: Pull Request Review Agent - checks code quality, architecture consistency, test coverage. Use during PR reviews.
-tools: Read, Grep, Glob, Bash
+tools:
+  Read: true
+  Grep: true
+  Glob: true
+  Bash: true
 ---
 
 # PR Reviewer Agent
