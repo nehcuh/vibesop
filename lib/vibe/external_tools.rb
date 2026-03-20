@@ -254,7 +254,8 @@ module Vibe
 
     GSTACK_DETECTION_PATHS = [
       "~/.claude/skills/gstack",
-      ".claude/skills/gstack"
+      ".claude/skills/gstack",
+      "~/.config/opencode/skills/gstack"
     ].freeze
 
     GSTACK_MARKER_FILES = %w[SKILL.md VERSION setup].freeze
@@ -309,17 +310,23 @@ module Vibe
       return { installed: false, ready: false } if status == :not_installed
 
       location = gstack_location
+      browse_ready = bun_available?
 
       {
         installed: true,
         ready: true,
         location: location,
         version: gstack_version,
-        skills_count: gstack_skills_count
+        skills_count: gstack_skills_count,
+        browse_ready: browse_ready
       }
     end
 
     private
+
+    def bun_available?
+      system("which bun > /dev/null 2>&1")
+    end
 
     def gstack_markers_present?(dir)
       GSTACK_MARKER_FILES.all? { |f| File.exist?(File.join(dir, f)) }
