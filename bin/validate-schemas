@@ -115,13 +115,13 @@ rescue => e
   false
 end
 
-# Main validation
+# Main validation - only for schemas that exist
 puts "🔍 Validating YAML files against schemas..."
 puts
 
 all_valid = true
 
-# Validate providers.yaml
+# Validate models (providers only - tiers uses inline documentation)
 if schema = load_schema("providers.schema.json")
   all_valid &= validate_file(File.join(CORE_DIR, "models", "providers.yaml"), schema)
 end

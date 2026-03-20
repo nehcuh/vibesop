@@ -332,25 +332,38 @@
 - [ ] TDD Guard 强制执行成功率 > 90%
 - [ ] Context 压缩后 token 减少 20-30%
 
+### Phase 7 (智能回顾与 Skill 生成)
+- [ ] 模式识别准确率 > 85%
+- [ ] 生成的 skill 用户采纳率 > 60%
+- [ ] 触发时机满意度 > 90%
+- [ ] 新生成的 skill 在后续 session 中使用率 > 40%
+
 ---
 
 ## 时间线
 
 ```
-2026 Q2-Q3
+2026 Q2-Q4
 ├── Week 1-6:   Phase 1 - Instinct 学习系统 (P0)
 ├── Week 7-9:   Phase 2 - Token 优化 (P1)
 ├── Week 10-11: Phase 3 - 验证增强 (P1)
 ├── Week 12-13: Phase 4 - 并行化 (P2)
 ├── Week 14:    Phase 5 - 工具链检测 (P2)
-└── Week 15-18: Phase 6 - 社区最佳实践 (P2)
-    ├── Week 15: RIPER 工作流
-    ├── Week 16: Parry 安全扫描
-    ├── Week 17: TDD Guard
-    └── Week 18: Context Engineering (可选)
+├── Week 15-18: Phase 6 - 社区最佳实践 (P2)
+│   ├── Week 15: RIPER 工作流
+│   ├── Week 16: Parry 安全扫描
+│   ├── Week 17: TDD Guard
+│   └── Week 18: Context Engineering (可选)
+└── Week 19-22: Phase 7 - 智能回顾与 Skill 生成 (P2) [待 Phase 1 完成后启动]
+    ├── Week 19: 触发机制设计
+    ├── Week 20: 历史分析引擎
+    ├── Week 21: Skill 生成器
+    └── Week 22: 集成与测试
 ```
 
-**总计**: 18 周（约 4.5 个月）
+**总计**: 22 周（约 5.5 个月）
+
+**Phase 7 前置条件**: Phase 1 (Instinct 学习系统) 必须完成并稳定运行
 
 ---
 
@@ -382,6 +395,100 @@
 
 ---
 
+## Phase 7: 智能回顾与 Skill 生成（P2，3-4 周）
+
+### 目标
+从历史对话中自动提炼个人专属 skill，实现"从实践到方法论"的进化。
+
+### 背景与动机
+用户在使用 Claude Code 的过程中，积累了大量成功的工作模式和解决方案。这些经验如果能够被系统性地提炼和固化，将形成独属于用户的个人 skill 库，极大提升未来工作效率。
+
+### 核心功能
+
+#### 1. 多场景触发机制
+- **项目完成时触发**：检测到 git merge/push to main 后，提示用户回顾
+- **累积触发**：累计 N 个 session（可配置，默认 10）后自动提示
+- **定期触发**：每周/每月定期提示用户回顾（可配置）
+- **主动触发**：用户可通过 `/skill-craft` 命令随时启动
+
+#### 2. 交互式回顾流程
+```
+┌─────────────────────────────────────────────┐
+│ 🎯 Skill Crafting Session                   │
+├─────────────────────────────────────────────┤
+│ 扫描最近 10 个 session...                    │
+│ 发现 3 个高频成功模式:                        │
+│                                             │
+│ 1. API 错误重试模式 (出现 8 次, 成功率 95%)   │
+│    - 指数退避重试                            │
+│    - 最大重试 3 次                           │
+│                                             │
+│ 2. Git 提交前检查模式 (出现 12 次, 成功率 100%)│
+│    - lint → test → commit                   │
+│                                             │
+│ 3. 调试日志分析模式 (出现 6 次, 成功率 83%)   │
+│    - grep 关键错误 → 定位文件 → 修复         │
+│                                             │
+│ 选择要提炼为 skill 的模式: [1,2,3/a/all/n]   │
+└─────────────────────────────────────────────┘
+```
+
+#### 3. 个性化 Skill 生成
+- 基于用户习惯生成 SKILL.md
+- 支持预览和编辑
+- 自动注册到 skill 系统
+- 支持版本控制和回滚
+
+### 实施计划
+
+**Week 1: 触发机制设计**
+- [ ] 设计触发条件检测器
+  - 项目完成检测（git hooks）
+  - Session 计数器
+  - 定时任务调度
+- [ ] 实现触发提示 UI
+- [ ] 用户偏好配置（启用/禁用/频率）
+
+**Week 2: 历史分析引擎**
+- [ ] 实现 session 历史扫描
+- [ ] 实现模式识别算法
+  - 工具调用序列分析
+  - 成功率统计
+  - 频率计算
+- [ ] 实现模式聚类（相似模式合并）
+
+**Week 3: Skill 生成器**
+- [ ] 设计 SKILL.md 模板
+- [ ] 实现 LLM 辅助的 skill 描述生成
+- [ ] 实现预览和编辑界面
+- [ ] 实现自动注册机制
+
+**Week 4: 集成与测试**
+- [ ] 集成到现有 instinct-learning 系统
+- [ ] 与 session-end skill 协作
+- [ ] 用户测试和反馈收集
+- [ ] 文档编写
+
+### 交付物
+- `skills/skill-craft/SKILL.md` - 核心技能定义
+- `lib/vibe/session_analyzer.rb` - 历史分析引擎
+- `lib/vibe/skill_generator.rb` - Skill 生成器
+- `lib/vibe/trigger_manager.rb` - 触发机制管理
+- 配置文件 `config/skill-craft.yaml`
+
+### 成功指标
+- [ ] 能够从 20 个 session 中识别出至少 5 个高质量模式
+- [ ] 生成的 skill 用户满意度 > 80%
+- [ ] 触发准确率 > 90%（不错过重要时刻，不过度打扰）
+- [ ] 生成的 skill 在后续 session 中被有效使用 > 50%
+
+### 与现有系统的关系
+- **依赖**: instinct-learning（提供基础模式数据）
+- **增强**: session-end（添加回顾提示）
+- **输出**: 新的 personal skills 到 `~/.claude/skills/personal/`
+
+---
+
 ## 下一步行动
 
 **立即开始**:
@@ -390,12 +497,17 @@
 3. 实现 MVP（最小可行产品）
 4. 内部测试和迭代
 
+**待 Phase 1 完成后**:
+5. 开始 Phase 7（智能回顾与 Skill 生成）的实现
+
 **需要决策**:
 - [ ] Instinct 存储格式：YAML vs SQLite？
 - [ ] Token 优化目标：30% 还是 50% 减少？
 - [ ] 是否需要 Instinct 云同步功能？
 - [ ] Phase 6 优先级：RIPER + parry 优先，还是全部实施？
 - [ ] TDD Guard 默认模式：严格 vs 宽松？
+- [ ] Phase 7 触发频率：默认多少个 session 后提示？
+- [ ] Phase 7 是否需要团队共享 personal skills？
 
 ---
 
