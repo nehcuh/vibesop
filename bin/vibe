@@ -28,6 +28,7 @@ require_relative "../lib/vibe/cli/task_commands"
 require_relative "../lib/vibe/cli/parallel_commands"
 require_relative "../lib/vibe/cli/toolchain_commands"
 require_relative "../lib/vibe/cli/security_commands"
+require_relative "../lib/vibe/cli/skill_craft_commands"
 require_relative "../lib/vibe/skill_manager"
 
 class VibeCLI
@@ -49,6 +50,7 @@ class VibeCLI
   include Vibe::ParallelCommands
   include Vibe::ToolchainCommands
   include Vibe::SecurityCommands
+  include Vibe::SkillCraftCommands
 
   attr_accessor :skip_integrations
 
@@ -75,7 +77,8 @@ class VibeCLI
     "worktree"   => :run_worktree_command,
     "cascade"    => :run_cascade_command,
     "toolchain"  => :run_toolchain_command,
-    "scan"       => :run_scan_command
+    "scan"       => :run_scan_command,
+    "skill-craft" => :run_skill_craft_command
   }.freeze unless defined?(COMMAND_REGISTRY)
 
   def initialize(repo_root)
@@ -489,6 +492,7 @@ class VibeCLI
         vibe worktree <command> [options]
         vibe cascade <command> <config.yaml>
         vibe scan <subcommand> [args]
+        vibe skill-craft [analyze|generate|triggers|status]
 
       Commands:
         init        Install global configuration for a platform (e.g., ~/.claude, ~/.config/opencode)
@@ -509,6 +513,7 @@ class VibeCLI
         cascade     Dependency-aware parallel task execution (run, plan)
         toolchain   Toolchain detection (detect, suggest)
         scan        Security scanning and TDD audit (text, file, tdd, ctx)
+        skill-craft Personal skill generation from session history
 
       Typical workflow:
         1. vibe init --platform claude-code       # Install global config to ~/.claude

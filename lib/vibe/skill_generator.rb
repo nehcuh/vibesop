@@ -70,13 +70,23 @@ module Vibe
       skill_name = generate_skill_name(pattern)
       skill_dir = File.join(@output_dir, skill_name)
       skill_file = File.join(skill_dir, "SKILL.md")
-      
+
+      if File.exist?(skill_file) && !options[:force]
+        return {
+          success: false,
+          skill_name: skill_name,
+          skill_path: skill_file,
+          error: :exists,
+          message: "Skill '#{skill_name}' already exists at #{skill_file}. Pass force: true to overwrite."
+        }
+      end
+
       FileUtils.mkdir_p(skill_dir)
-      
+
       content = render_skill_template(pattern, skill_name, options)
-      
+
       File.write(skill_file, content)
-      
+
       {
         success: true,
         skill_name: skill_name,

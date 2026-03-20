@@ -77,20 +77,23 @@ module Vibe
 
     # Periodic trigger: Check if it's time for periodic review
     def periodic_trigger?
-      return false if @state["last_review"]
-      
+      return false unless @state["last_review"]
+
       last_review = Time.parse(@state["last_review"])
       interval_days = @config.dig("triggers", "periodic_interval")
       today = Date.today
-      
+
+      # Check if enough time has passed since last review
+      return false if (today - last_review.to_date) < interval_days
+
       # Check day of week
       periodic_day = @config.dig("triggers", "periodic_day")
       return false unless today.wday == periodic_day
-      
+
       # Check if already prompted today
-      prompts_today = @state["prompts_today"] || []
+      prompts_today = (@state["prompts_today"] || []).count(today.to_s)
       max_prompts = @config.dig("triggers", "max_prompts_per_day")
-      
+
       prompts_today < max_prompts
     end
 

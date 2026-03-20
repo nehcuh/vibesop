@@ -42,6 +42,12 @@ VibeSOP fork 自 [runesleo/claude-code-workflow](https://github.com/runesleo/cla
 
 ## 最新更新 (2026-03)
 
+- **🛠️ Skill Craft 系统**：从自己的会话历史中生成可复用的个人技能
+  - `vibe skill-craft` — 交互式会话：分析 → 选择模式 → 生成技能
+  - `vibe skill-craft analyze` — 检测重复工具序列、错误恢复流程和工作流
+  - `vibe skill-craft generate --pattern <id> [--force]` — 从检测到的模式生成技能
+  - `vibe skill-craft status` — 查看会话计数和上次评审时间
+  - 自动保存到 `~/.claude/skills/personal/`
 - **🔧 gstack 集成**：虚拟工程团队作为可插拔技能包
   - 21 个技能覆盖 7 个冲刺阶段（构思 → 规划 → 开发 → 审查 → 测试 → 发布 → 回顾）
   - `vibe init` 时自动检测，触发规则自动生成到 `skill-triggers.md`

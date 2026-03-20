@@ -462,6 +462,73 @@ If multiple tools provide similar functionality:
 4. **Test in isolation**: Verify each integration works independently
 5. **Review security**: External tools may require additional permissions
 
+## Hooks
+
+Vibe ships two standalone hook scripts in `hooks/`. They are **not enabled by default** — install them manually based on your needs.
+
+### parry-scan.rb — Claude Code Pre-Tool-Use Hook
+
+Scans user input for prompt injection, system-prompt leakage attempts, and other security patterns before Claude processes them.
+
+**Install as a Claude Code hook:**
+
+Claude Code hooks receive tool input as JSON on stdin. The hook reads from stdin automatically when stdin is not a TTY.
+
+```json
+// .claude/settings.json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "ruby /path/to/vibe/hooks/parry-scan.rb"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Or call manually:**
+```bash
+ruby hooks/parry-scan.rb "your input text"
+echo "some input" | ruby hooks/parry-scan.rb
+```
+
+Exit codes: `0` = safe, `1` = high risk, `2` = critical risk.
+
+---
+
+### tdd-guard.rb — Git Pre-Commit Hook
+
+Checks that source file changes are accompanied by test files. Warns (or blocks in strict mode) commits that lack test coverage.
+
+**Install as a git pre-commit hook:**
+
+```bash
+cp hooks/tdd-guard.rb .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
+**Configure via `.tdd-guard.yml` in your project root** (see `config/tdd-guard.example.yml`):
+
+```yaml
+strict_mode: false    # true = block commit, false = warn only
+min_coverage: 80.0
+```
+
+**Or call manually:**
+```bash
+ruby hooks/tdd-guard.rb                     # audit changed files (git diff --cached)
+ruby hooks/tdd-guard.rb path/to/file.rb     # check a specific file
+```
+
+---
+
 ## Security Considerations
 
 - **Skill Packs**: Review skills before enabling auto-triggers

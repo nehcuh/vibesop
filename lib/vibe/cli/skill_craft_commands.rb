@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative '../session_analyzer"
-require_relative '../skill_generator"
-require_relative '../trigger_manager"
+require_relative '../session_analyzer'
+require_relative '../skill_generator'
+require_relative '../trigger_manager'
 
 module Vibe
   module SkillCraftCommands
@@ -53,11 +53,14 @@ module Vibe
       end
       
       generator = SkillGenerator.new(output_dir: options[:output])
-      result = generator.generate(options[:pattern])
-      
+      result = generator.generate(options[:pattern], force: options[:force])
+
       if result[:success]
         puts "✅ Skill generated: #{result[:skill_name]}"
         puts "   Location: #{result[:skill_path]}"
+      elsif result[:error] == :exists
+        puts "❌ #{result[:message]}"
+        puts "   Use --force to overwrite."
       else
         puts "❌ Failed to generate skill"
       end
@@ -162,8 +165,8 @@ module Vibe
     end
 
     def parse_generate_options(argv)
-      options = { pattern: nil, output: nil }
-      
+      options = { pattern: nil, output: nil, force: false }
+
       i = 0
       while i < argv.length
         arg = argv[i]
@@ -174,10 +177,12 @@ module Vibe
         when '--output'
           i += 1
           options[:output] = argv[i]
+        when '--force'
+          options[:force] = true
         end
         i += 1
       end
-      
+
       options
     end
 

@@ -87,6 +87,11 @@ module Vibe
       end
 
       puts
+      puts "   ⚠️  About to execute: #{setup_script}"
+      puts "   Source: #{GSTACK_REPO_URLS.first} (floating HEAD — not pinned to a tag or SHA)"
+      puts "   The setup script installs Bun dependencies and builds the /browse binary."
+      puts "   Review it at: #{setup_script}"
+      puts
       puts "   Running gstack setup..."
 
       stdout, stderr, status = Open3.capture3("bash", setup_script, chdir: target_dir)

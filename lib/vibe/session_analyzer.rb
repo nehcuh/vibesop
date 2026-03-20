@@ -33,6 +33,9 @@ module Vibe
       content = File.read(path)
       @sessions = parse_sessions(content)
       @sessions
+    rescue Errno::EACCES, Errno::ENOENT => e
+      warn "skill-craft: could not read session file (#{e.message})"
+      []
     end
 
     # Analyze loaded sessions for patterns
