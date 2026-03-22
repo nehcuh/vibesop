@@ -119,7 +119,7 @@ module ParryScanner
   end
 
   # Main scan function
-  def self.scan(input, context: {})
+  def self.scan(input, context: nil)
     if input.nil? || input.empty?
       return ScanResult.new(risk_level: :none, matches: [],
                             recommendations: [])

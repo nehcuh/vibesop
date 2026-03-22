@@ -9,3 +9,7 @@ AllCops:
 
 Layout/LineLength:
   Max: 90
+
+# fetch with block is intentional in tests — the cache's fetch method requires a block
+Style/RedundantFetchBlock:
+  Enabled: false

@@ -116,7 +116,7 @@ class TestTddEnforcer < Minitest::Test
     touch('vendor/gems/foo/lib/foo.rb')
     result = @enforcer.audit
     all_files = (result[:ok] + result[:missing]).map { |r| r[:file] }
-    refute all_files.any? { |f| f.include?('vendor/') }
+    refute(all_files.any? { |f| f.include?('vendor/') })
   end
 
   # ── test candidates ───────────────────────────────────────────────────────────
@@ -128,6 +128,6 @@ class TestTddEnforcer < Minitest::Test
 
   def test_candidates_include_minitest_path
     result = @enforcer.check('lib/vibe/foo.rb')
-    assert result[:test_candidates].any? { |c| c.include?('test_foo') }
+    assert(result[:test_candidates].any? { |c| c.include?('test_foo') })
   end
 end

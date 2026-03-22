@@ -105,11 +105,11 @@ class VibeUninstaller
   def installed_platforms
     PLATFORM_DIRS.select do |_platform, dir|
       expanded = File.expand_path(dir)
-      Dir.exist?(expanded) && has_vibe_marker?(expanded)
+      Dir.exist?(expanded) && vibe_marker?(expanded)
     end
   end
 
-  def has_vibe_marker?(dir)
+  def vibe_marker?(dir)
     File.exist?(File.join(dir, '.vibe-target.json'))
   end
 

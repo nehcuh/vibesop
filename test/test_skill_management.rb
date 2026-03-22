@@ -311,11 +311,11 @@ class TestSkillAdapter < Minitest::Test
     skill_id = 'systematic-debugging'
     @adapter.adapt_skill(skill_id, :skip)
     config = @adapter.send(:load_project_config)
-    assert config['skipped_skills'].any? { |s| s['id'] == skill_id }
+    assert(config['skipped_skills'].any? { |s| s['id'] == skill_id })
 
     @adapter.adapt_skill(skill_id, :suggest)
     config = @adapter.send(:load_project_config)
-    refute config['skipped_skills'].any? { |s| s['id'] == skill_id }
+    refute(config['skipped_skills'].any? { |s| s['id'] == skill_id })
     assert config['adapted_skills'].key?(skill_id)
   end
 
@@ -329,7 +329,7 @@ class TestSkillAdapter < Minitest::Test
     @adapter.adapt_skill(skill_id, :skip)
     config = @adapter.send(:load_project_config)
     refute config['adapted_skills'].key?(skill_id)
-    assert config['skipped_skills'].any? { |s| s['id'] == skill_id }
+    assert(config['skipped_skills'].any? { |s| s['id'] == skill_id })
   end
 
   # --- adapt_interactively: empty skills returns early ---

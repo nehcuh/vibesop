@@ -86,7 +86,7 @@ class TestUserInteraction < Minitest::Test
 
     @host.define_singleton_method(:system) do |*args|
       system_called = true
-      url_arg = args.last if args.length > 0
+      url_arg = args.last if args.length.positive?
       true # Return success without actually calling system
     end
 

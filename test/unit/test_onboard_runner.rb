@@ -40,7 +40,7 @@ class TestOnboardRunner < Minitest::Test
 
   # --- STEPS constant ---
 
-  def test_steps_constant_is_5
+  def test_steps_constant_is_five
     assert_equal 5, Vibe::OnboardRunner::STEPS
   end
 

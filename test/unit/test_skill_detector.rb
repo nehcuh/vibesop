@@ -97,12 +97,6 @@ class TestSkillDetector < Minitest::Test
     assert result.is_a?(Array)
   end
 
-  def test_detect_newly_installed_packs_returns_array
-    result = @detector.detect_newly_installed_packs
-    assert result.is_a?(Array)
-    # Length can vary based on system state
-  end
-
   def test_detect_newly_installed_packs_handles_missing_dir
     # Should handle missing directory gracefully
     result = @detector.detect_newly_installed_packs

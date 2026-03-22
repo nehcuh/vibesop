@@ -173,7 +173,7 @@ class TestSkillGenerator < Minitest::Test
     ]
     results = @gen.generate_batch(patterns)
     assert_equal 2, results.size
-    assert results.all? { |r| r[:success] }
+    assert(results.all? { |r| r[:success] })
   end
 end
 
