@@ -28,14 +28,18 @@ class TestUseCommandProjectSemantics < Minitest::Test
     assert status.success?, "use command should succeed: #{output}"
 
     # Should generate project-level files
-    assert File.exist?(File.join(project_dir, 'CLAUDE.md')), "Should have CLAUDE.md"
-    assert File.exist?(File.join(project_dir, 'settings.json')), "Should have settings.json"
-    assert File.exist?(File.join(project_dir, '.vibe/manifest.json')), "Should have manifest.json"
+    assert File.exist?(File.join(project_dir, 'CLAUDE.md')), 'Should have CLAUDE.md'
+    assert File.exist?(File.join(project_dir, 'settings.json')),
+           'Should have settings.json'
+    assert File.exist?(File.join(project_dir, '.vibe/manifest.json')),
+           'Should have manifest.json'
 
     # Should NOT copy runtime dirs (project is lightweight)
-    refute File.exist?(File.join(project_dir, 'rules')), "Project should NOT have rules/"
-    refute File.exist?(File.join(project_dir, 'skills')), "Project should NOT have skills/"
-    refute File.exist?(File.join(project_dir, 'memory')), "Project should NOT have memory/"
+    refute File.exist?(File.join(project_dir, 'rules')), 'Project should NOT have rules/'
+    refute File.exist?(File.join(project_dir, 'skills')),
+           'Project should NOT have skills/'
+    refute File.exist?(File.join(project_dir, 'memory')),
+           'Project should NOT have memory/'
   end
 
   def test_use_opencode_to_project_dir_generates_project_config
@@ -50,24 +54,26 @@ class TestUseCommandProjectSemantics < Minitest::Test
     assert status.success?, "use command should succeed: #{output}"
 
     # Should generate project-level files
-    assert File.exist?(File.join(project_dir, 'AGENTS.md')), "Should have AGENTS.md"
-    assert File.exist?(File.join(project_dir, 'opencode.json')), "Should have opencode.json"
-    assert File.exist?(File.join(project_dir, '.vibe/manifest.json')), "Should have manifest.json"
+    assert File.exist?(File.join(project_dir, 'AGENTS.md')), 'Should have AGENTS.md'
+    assert File.exist?(File.join(project_dir, 'opencode.json')),
+           'Should have opencode.json'
+    assert File.exist?(File.join(project_dir, '.vibe/manifest.json')),
+           'Should have manifest.json'
 
     # Verify it's project-level config (minimal instructions, no extends)
     # Note: OpenCode does NOT support 'extends' - it auto-merges configs by precedence
     config = JSON.parse(File.read(File.join(project_dir, 'opencode.json')))
-    refute config['extends'], "OpenCode project config should NOT have extends key"
+    refute config['extends'], 'OpenCode project config should NOT have extends key'
 
     # Should have minimal instructions (project-level)
-    assert config['instructions'].length < 5, "Project should have minimal instructions"
+    assert config['instructions'].length < 5, 'Project should have minimal instructions'
   end
 
   def test_use_opencode_to_global_dir_generates_global_config
     # Create a temp HOME directory to fully control the environment
     temp_home = File.join(@tmp_dir, 'home')
     FileUtils.mkdir_p(temp_home)
-    
+
     # Create the global config directory inside temp HOME
     global_dir = File.join(temp_home, '.config', 'opencode')
     FileUtils.mkdir_p(global_dir)
@@ -82,9 +88,9 @@ class TestUseCommandProjectSemantics < Minitest::Test
 
     # Should generate global-level config (no extends)
     config = JSON.parse(File.read(File.join(global_dir, 'opencode.json')))
-    refute config['extends'], "Global opencode.json should NOT extend"
+    refute config['extends'], 'Global opencode.json should NOT extend'
 
     # Should have full instructions
-    assert config['instructions'].length > 3, "Global should have full instructions"
+    assert config['instructions'].length > 3, 'Global should have full instructions'
   end
 end

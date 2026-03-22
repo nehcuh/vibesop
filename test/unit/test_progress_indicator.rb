@@ -1,23 +1,23 @@
 # frozen_string_literal: true
 
-require "minitest/autorun"
-require_relative "../../lib/vibe/progress_indicator"
+require 'minitest/autorun'
+require_relative '../../lib/vibe/progress_indicator'
 
 class TestProgressIndicator < Minitest::Test
   def setup
-    @progress = Vibe::ProgressIndicator.new("Test Operation", 100)
+    @progress = Vibe::ProgressIndicator.new('Test Operation', 100)
   end
 
   def test_initialization
-    assert_equal "Test Operation", @progress.title
+    assert_equal 'Test Operation', @progress.title
     assert_equal 100, @progress.total
     assert_equal 0, @progress.current
     assert_nil @progress.start_time
   end
 
   def test_initialization_without_total
-    progress = Vibe::ProgressIndicator.new("Simple Test")
-    assert_equal "Simple Test", progress.title
+    progress = Vibe::ProgressIndicator.new('Simple Test')
+    assert_equal 'Simple Test', progress.title
     assert_nil progress.total
   end
 
@@ -42,7 +42,7 @@ class TestProgressIndicator < Minitest::Test
   def test_update_with_message
     @progress.start
     capture_io do
-      @progress.update(50, "Halfway there")
+      @progress.update(50, 'Halfway there')
     end
     assert_equal 50, @progress.current
   end
@@ -60,7 +60,7 @@ class TestProgressIndicator < Minitest::Test
 
   def test_increment_with_message
     @progress.start
-    @progress.increment("First step done")
+    @progress.increment('First step done')
     assert_equal 1, @progress.current
   end
 
@@ -72,12 +72,12 @@ class TestProgressIndicator < Minitest::Test
 
   def test_finish_with_custom_message
     @progress.start
-    output = capture_io { @progress.finish("All done!") }
-    assert output.first.length > 0 || output.last.length > 0
+    output = capture_io { @progress.finish('All done!') }
+    assert output.first.length.positive? || output.last.length.positive?
   end
 
   def test_finish_without_start_does_nothing
-    output = capture_io { @progress.finish("Should not appear") }
+    output = capture_io { @progress.finish('Should not appear') }
     # Should not crash
     assert true
   end
@@ -85,7 +85,7 @@ class TestProgressIndicator < Minitest::Test
   def test_double_finish
     @progress.start
     @progress.finish
-    output = capture_io { @progress.finish("Second finish") }
+    output = capture_io { @progress.finish('Second finish') }
     # Second finish should not produce output
     assert true
   end
@@ -116,18 +116,18 @@ class TestProgressIndicator < Minitest::Test
   end
 
   def test_indeterminate_progress
-    progress = Vibe::ProgressIndicator.new("Indeterminate")
+    progress = Vibe::ProgressIndicator.new('Indeterminate')
     progress.start
     capture_io do
-      progress.increment("Step 1")
-      progress.increment("Step 2")
+      progress.increment('Step 1')
+      progress.increment('Step 2')
     end
     # Should not crash
     assert true
   end
 
   def test_zero_total
-    progress = Vibe::ProgressIndicator.new("Zero Total", 0)
+    progress = Vibe::ProgressIndicator.new('Zero Total', 0)
     progress.start
     capture_io do
       progress.update(0)
@@ -138,7 +138,7 @@ class TestProgressIndicator < Minitest::Test
 
   def test_tty_detection
     # Test that tty? method exists and returns boolean
-    progress = Vibe::ProgressIndicator.new("TTY Test")
+    progress = Vibe::ProgressIndicator.new('TTY Test')
     result = progress.send(:tty?)
     assert [true, false].include?(result)
   end
@@ -146,7 +146,7 @@ class TestProgressIndicator < Minitest::Test
   def test_progress_bar_formatting
     bar = @progress.send(:progress_bar, 50)
     assert bar.is_a?(String)
-    assert bar.length > 0
+    assert bar.length.positive?
   end
 
   def test_progress_bar_extremes
@@ -170,20 +170,20 @@ class TestProgressIndicator < Minitest::Test
   def test_duration_formatting
     duration = @progress.send(:format_duration, 65.5)
     assert duration.is_a?(String)
-    assert duration.length > 0
+    assert duration.length.positive?
     # Should contain minute indicator
-    assert_includes duration, "m"
+    assert_includes duration, 'm'
   end
 
   def test_duration_formatting_zero
     duration = @progress.send(:format_duration, 0)
     assert duration.is_a?(String)
-    assert duration.length > 0
+    assert duration.length.positive?
   end
 
   def test_duration_formatting_hours
     duration = @progress.send(:format_duration, 3665.0)
     assert duration.is_a?(String)
-    assert duration.length > 0
+    assert duration.length.positive?
   end
 end

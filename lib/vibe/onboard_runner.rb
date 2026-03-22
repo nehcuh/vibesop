@@ -18,11 +18,11 @@ module Vibe
       puts '=' * 50
 
       # Step 1: Deploy base config
-      unless options[:skip_deploy]
+      if options[:skip_deploy]
+        puts "\n[1/#{STEPS}] Skipping deploy (--skip-deploy)"
+      else
         puts "\n[1/#{STEPS}] Deploying base configuration..."
         run_quickstart(force: true)
-      else
-        puts "\n[1/#{STEPS}] Skipping deploy (--skip-deploy)"
       end
 
       # Step 2: Capture user role
@@ -53,7 +53,7 @@ module Vibe
       print '  Describe your role in one sentence (e.g. "Full-stack engineer"): '
       $stdout.flush
       line = $stdin.gets
-      line ? line.chomp : nil
+      line&.chomp
     rescue Interrupt
       nil
     end
@@ -63,7 +63,7 @@ module Vibe
       FileUtils.mkdir_p(File.dirname(session_path))
       entry = "\n## User Role\n#{role}\n"
       File.open(session_path, 'a') { |f| f.write(entry) }
-      puts "  ✓ Role saved to ~/.claude/memory/session.md"
+      puts '  ✓ Role saved to ~/.claude/memory/session.md'
     rescue StandardError => e
       warn "  Could not save role: #{e.message}"
     end

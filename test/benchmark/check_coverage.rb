@@ -25,7 +25,7 @@ threshold = (ENV['COVERAGE_THRESHOLD'] || 60).to_f
 
 unless File.exist?(coverage_file)
   puts "ERROR: Coverage file not found at #{coverage_file}"
-  puts "Please ensure SimpleCov is configured correctly in test/test_helper.rb"
+  puts 'Please ensure SimpleCov is configured correctly in test/test_helper.rb'
   exit 2
 end
 
@@ -35,7 +35,7 @@ begin
   covered_percent = result['result']['line'] || result['result']['covered_percent']
 
   unless covered_percent.is_a?(Numeric)
-    puts "ERROR: Coverage data is not numeric"
+    puts 'ERROR: Coverage data is not numeric'
     puts "Available keys: #{result['result'].keys.inspect}"
     exit 1
   end

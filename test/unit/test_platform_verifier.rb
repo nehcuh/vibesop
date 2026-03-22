@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "minitest/autorun"
-require_relative "../../lib/vibe/platform_verifier"
+require 'minitest/autorun'
+require_relative '../../lib/vibe/platform_verifier'
 
 class TestPlatformVerifier < Minitest::Test
   def test_module_exists
@@ -32,7 +32,8 @@ class TestPlatformVerifier < Minitest::Test
     instance_methods = Vibe::PlatformVerifier.instance_methods(false)
 
     # Should have methods related to platform verification
-    relevant_methods = [:verify_platform_installation, :suggest_platform_setup, :verify_all_platforms]
+    relevant_methods = %i[verify_platform_installation suggest_platform_setup
+                          verify_all_platforms]
     relevant_methods.each do |method|
       assert instance_methods.include?(method), "Module should have #{method} method"
     end
@@ -54,7 +55,7 @@ class TestPlatformVerifier < Minitest::Test
 
     # Should include claude-code and opencode
     valid_targets = Vibe::PlatformUtils::VALID_TARGETS
-    assert_includes valid_targets, "claude-code"
-    assert_includes valid_targets, "opencode"
+    assert_includes valid_targets, 'claude-code'
+    assert_includes valid_targets, 'opencode'
   end
 end

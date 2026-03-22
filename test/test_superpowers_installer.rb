@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require_relative "test_helper"
-require "fileutils"
-require "tmpdir"
-require "open3"
-require_relative "../lib/vibe/superpowers_installer"
+require_relative 'test_helper'
+require 'fileutils'
+require 'tmpdir'
+require 'open3'
+require_relative '../lib/vibe/superpowers_installer'
 
 class TestSuperpowersInstaller < Minitest::Test
   def setup
-    @test_dir = Dir.mktmpdir("vibe_test_superpowers")
+    @test_dir = Dir.mktmpdir('vibe_test_superpowers')
     @original_install_dir = Vibe::SuperpowersInstaller::SUPERPOWERS_DEFAULT_INSTALL_DIR
   end
 
@@ -28,12 +28,12 @@ class TestSuperpowersInstaller < Minitest::Test
 
   def test_repo_urls_include_github
     urls = Vibe::SuperpowersInstaller::SUPERPOWERS_REPO_URLS
-    assert urls.any? { |url| url.include?("github.com") }, "Should include GitHub URL"
+    assert urls.any? { |url| url.include?('github.com') }, 'Should include GitHub URL'
   end
 
   def test_repo_urls_include_mirror
     urls = Vibe::SuperpowersInstaller::SUPERPOWERS_REPO_URLS
-    assert urls.size >= 2, "Should have at least 2 mirror URLs"
+    assert urls.size >= 2, 'Should have at least 2 mirror URLs'
   end
 
   # --- Platform Symlink Paths ---
@@ -43,8 +43,8 @@ class TestSuperpowersInstaller < Minitest::Test
     assert_kind_of Hash, paths
 
     # Check key platforms
-    assert_includes paths.keys, "claude-code"
-    assert_includes paths.keys, "opencode"
+    assert_includes paths.keys, 'claude-code'
+    assert_includes paths.keys, 'opencode'
   end
 
   def test_platform_symlink_paths_structure
@@ -52,7 +52,8 @@ class TestSuperpowersInstaller < Minitest::Test
 
     paths.each do |platform, config|
       assert_kind_of Hash, config, "Config for #{platform} should be a Hash"
-      assert_includes config.keys, :source_subdir, "#{platform} should have :source_subdir"
+      assert_includes config.keys, :source_subdir,
+                      "#{platform} should have :source_subdir"
       assert_includes config.keys, :target_dir, "#{platform} should have :target_dir"
     end
   end
@@ -63,7 +64,7 @@ class TestSuperpowersInstaller < Minitest::Test
     # Mock clone_with_retry to avoid actual network calls
     Vibe::SuperpowersInstaller.stub :clone_with_retry, true do
       result = Vibe::SuperpowersInstaller.clone_from_mirrors(
-        ["https://example.com/repo.git"],
+        ['https://example.com/repo.git'],
         @test_dir
       )
 
@@ -76,20 +77,20 @@ class TestSuperpowersInstaller < Minitest::Test
 
   def test_clone_from_mirrors_first_success
     call_count = 0
-    stub_clone = lambda do |url, _target|
+    stub_clone = lambda do |_url, _target|
       call_count += 1
-      true  # First attempt succeeds
+      true # First attempt succeeds
     end
 
     Vibe::SuperpowersInstaller.stub :clone_with_retry, stub_clone do
       success, used_url = Vibe::SuperpowersInstaller.clone_from_mirrors(
-        ["https://first.com/repo.git", "https://second.com/repo.git"],
+        ['https://first.com/repo.git', 'https://second.com/repo.git'],
         @test_dir
       )
 
       assert_equal true, success
-      assert_equal "https://first.com/repo.git", used_url
-      assert_equal 1, call_count, "Should only try first URL"
+      assert_equal 'https://first.com/repo.git', used_url
+      assert_equal 1, call_count, 'Should only try first URL'
     end
   end
 
@@ -97,27 +98,27 @@ class TestSuperpowersInstaller < Minitest::Test
     call_count = 0
     stub_clone = lambda do |url, _target|
       call_count += 1
-      url.include?("second")  # Only second URL succeeds
+      url.include?('second') # Only second URL succeeds
     end
 
     Vibe::SuperpowersInstaller.stub :clone_with_retry, stub_clone do
       success, used_url = Vibe::SuperpowersInstaller.clone_from_mirrors(
-        ["https://first.com/repo.git", "https://second.com/repo.git"],
+        ['https://first.com/repo.git', 'https://second.com/repo.git'],
         @test_dir
       )
 
       assert_equal true, success
-      assert_equal "https://second.com/repo.git", used_url
-      assert_equal 2, call_count, "Should try both URLs"
+      assert_equal 'https://second.com/repo.git', used_url
+      assert_equal 2, call_count, 'Should try both URLs'
     end
   end
 
   def test_clone_from_mirrors_all_fail
-    stub_clone = lambda { |_url, _target| false }
+    stub_clone = ->(_url, _target) { false }
 
     Vibe::SuperpowersInstaller.stub :clone_with_retry, stub_clone do
       success, used_url = Vibe::SuperpowersInstaller.clone_from_mirrors(
-        ["https://first.com/repo.git", "https://second.com/repo.git"],
+        ['https://first.com/repo.git', 'https://second.com/repo.git'],
         @test_dir
       )
 
@@ -129,7 +130,7 @@ class TestSuperpowersInstaller < Minitest::Test
   # --- Verification ---
 
   def test_verify_installation_structure
-    result = Vibe::SuperpowersInstaller.verify_installation("claude-code")
+    result = Vibe::SuperpowersInstaller.verify_installation('claude-code')
 
     assert_kind_of Hash, result
     assert_includes result.keys, :success
@@ -140,12 +141,12 @@ class TestSuperpowersInstaller < Minitest::Test
   end
 
   def test_verify_installation_returns_boolean_success
-    result = Vibe::SuperpowersInstaller.verify_installation("claude-code")
-    assert [true, false].include?(result[:success]), "success should be boolean"
+    result = Vibe::SuperpowersInstaller.verify_installation('claude-code')
+    assert [true, false].include?(result[:success]), 'success should be boolean'
   end
 
   def test_verify_installation_invalid_platform
-    result = Vibe::SuperpowersInstaller.verify_installation("invalid-platform")
+    result = Vibe::SuperpowersInstaller.verify_installation('invalid-platform')
     assert_equal false, result[:success]
     refute_empty result[:issues]
   end
@@ -156,8 +157,8 @@ class TestSuperpowersInstaller < Minitest::Test
     # This test verifies the git check happens
     # We can't easily mock system() in a clean way, so we just verify
     # the method exists and returns a boolean
-    result = Vibe::SuperpowersInstaller.install_superpowers("claude-code")
-    assert [true, false].include?(result), "Should return boolean"
+    result = Vibe::SuperpowersInstaller.install_superpowers('claude-code')
+    assert [true, false].include?(result), 'Should return boolean'
   end
 
   # --- Edge Cases ---
@@ -169,22 +170,22 @@ class TestSuperpowersInstaller < Minitest::Test
   end
 
   def test_clone_from_mirrors_single_url_success
-    stub_clone = lambda { |_url, _target| true }
+    stub_clone = ->(_url, _target) { true }
 
     Vibe::SuperpowersInstaller.stub :clone_with_retry, stub_clone do
       success, used_url = Vibe::SuperpowersInstaller.clone_from_mirrors(
-        ["https://only.com/repo.git"],
+        ['https://only.com/repo.git'],
         @test_dir
       )
 
       assert_equal true, success
-      assert_equal "https://only.com/repo.git", used_url
+      assert_equal 'https://only.com/repo.git', used_url
     end
   end
 
   def test_verify_installation_with_nonexistent_directory
     # Use a platform that doesn't have installation
-    result = Vibe::SuperpowersInstaller.verify_installation("claude-code")
+    result = Vibe::SuperpowersInstaller.verify_installation('claude-code')
 
     # Should handle gracefully even if not installed
     assert_kind_of Hash, result
@@ -194,12 +195,12 @@ class TestSuperpowersInstaller < Minitest::Test
   def test_install_superpowers_default_platform
     # Test that install_superpowers uses default platform
     result = Vibe::SuperpowersInstaller.install_superpowers
-    assert [true, false].include?(result), "Should return boolean"
+    assert [true, false].include?(result), 'Should return boolean'
   end
 
   def test_install_superpowers_with_explicit_platform
-    result = Vibe::SuperpowersInstaller.install_superpowers("opencode")
-    assert [true, false].include?(result), "Should return boolean"
+    result = Vibe::SuperpowersInstaller.install_superpowers('opencode')
+    assert [true, false].include?(result), 'Should return boolean'
   end
 
   # --- Symlink Configuration ---
@@ -209,14 +210,14 @@ class TestSuperpowersInstaller < Minitest::Test
 
     paths.each do |platform, config|
       assert_kind_of String, config[:source_subdir],
-        "#{platform} source_subdir should be String"
+                     "#{platform} source_subdir should be String"
       assert_kind_of String, config[:target_dir],
-        "#{platform} target_dir should be String"
+                     "#{platform} target_dir should be String"
 
       refute_empty config[:source_subdir],
-        "#{platform} source_subdir should not be empty"
+                   "#{platform} source_subdir should not be empty"
       refute_empty config[:target_dir],
-        "#{platform} target_dir should not be empty"
+                   "#{platform} target_dir should not be empty"
     end
   end
 
@@ -226,7 +227,7 @@ class TestSuperpowersInstaller < Minitest::Test
     paths.each do |platform, config|
       target = config[:target_dir]
       assert(
-        target.start_with?("~") || target.start_with?("/"),
+        target.start_with?('~') || target.start_with?('/'),
         "#{platform} target_dir should be absolute or tilde path: #{target}"
       )
     end
@@ -238,9 +239,9 @@ class TestSuperpowersInstaller < Minitest::Test
     urls = Vibe::SuperpowersInstaller::SUPERPOWERS_REPO_URLS
 
     urls.each do |url|
-      assert url.end_with?(".git"), "URL should end with .git: #{url}"
+      assert url.end_with?('.git'), "URL should end with .git: #{url}"
       assert(
-        url.start_with?("https://") || url.start_with?("git://"),
+        url.start_with?('https://') || url.start_with?('git://'),
         "URL should use https or git protocol: #{url}"
       )
     end
@@ -248,58 +249,58 @@ class TestSuperpowersInstaller < Minitest::Test
 
   def test_repo_urls_no_duplicates
     urls = Vibe::SuperpowersInstaller::SUPERPOWERS_REPO_URLS
-    assert_equal urls.size, urls.uniq.size, "Should not have duplicate URLs"
+    assert_equal urls.size, urls.uniq.size, 'Should not have duplicate URLs'
   end
 
   # --- Constants Validation ---
 
   def test_clone_timeout_is_positive
-    assert Vibe::SuperpowersInstaller::CLONE_TIMEOUT > 0,
-      "CLONE_TIMEOUT should be positive"
+    assert Vibe::SuperpowersInstaller::CLONE_TIMEOUT.positive?,
+           'CLONE_TIMEOUT should be positive'
   end
 
   def test_max_retries_is_positive
-    assert Vibe::SuperpowersInstaller::MAX_RETRIES > 0,
-      "MAX_RETRIES should be positive"
+    assert Vibe::SuperpowersInstaller::MAX_RETRIES.positive?,
+           'MAX_RETRIES should be positive'
   end
 
   def test_max_retries_is_reasonable
     assert Vibe::SuperpowersInstaller::MAX_RETRIES <= 5,
-      "MAX_RETRIES should not be too high (avoid excessive waiting)"
+           'MAX_RETRIES should not be too high (avoid excessive waiting)'
   end
 
   def test_default_install_dir_is_absolute
     dir = Vibe::SuperpowersInstaller::SUPERPOWERS_DEFAULT_INSTALL_DIR
-    assert dir.start_with?("/"), "Default install dir should be absolute path"
+    assert dir.start_with?('/'), 'Default install dir should be absolute path'
   end
 
   # --- Platform Coverage ---
 
   def test_supports_major_platforms
     paths = Vibe::SuperpowersInstaller::SUPERPOWERS_PLATFORM_SYMLINK_PATHS
-    major_platforms = ["claude-code", "opencode"]
+    major_platforms = %w[claude-code opencode]
 
     major_platforms.each do |platform|
       assert_includes paths.keys, platform,
-        "Should support major platform: #{platform}"
+                      "Should support major platform: #{platform}"
     end
   end
 
   def test_platform_symlink_paths_frozen
     paths = Vibe::SuperpowersInstaller::SUPERPOWERS_PLATFORM_SYMLINK_PATHS
-    assert paths.frozen?, "SUPERPOWERS_PLATFORM_SYMLINK_PATHS should be frozen"
+    assert paths.frozen?, 'SUPERPOWERS_PLATFORM_SYMLINK_PATHS should be frozen'
   end
 
   def test_repo_urls_frozen
     urls = Vibe::SuperpowersInstaller::SUPERPOWERS_REPO_URLS
-    assert urls.frozen?, "SUPERPOWERS_REPO_URLS should be frozen"
+    assert urls.frozen?, 'SUPERPOWERS_REPO_URLS should be frozen'
   end
 
   # --- skill_linked?: direct unit tests ---
 
   def test_skill_linked_returns_true_for_matching_symlink
-    source = File.join(@test_dir, "skill_source")
-    link   = File.join(@test_dir, "skill_link")
+    source = File.join(@test_dir, 'skill_source')
+    link   = File.join(@test_dir, 'skill_link')
     FileUtils.mkdir_p(source)
     File.symlink(source, link)
 
@@ -307,16 +308,16 @@ class TestSuperpowersInstaller < Minitest::Test
   end
 
   def test_skill_linked_returns_false_when_not_a_symlink
-    path = File.join(@test_dir, "regular_file")
-    File.write(path, "content")
+    path = File.join(@test_dir, 'regular_file')
+    File.write(path, 'content')
 
     refute Vibe::SuperpowersInstaller.skill_linked?(path, @test_dir)
   end
 
   def test_skill_linked_returns_false_when_symlink_points_elsewhere
-    source  = File.join(@test_dir, "correct_source")
-    other   = File.join(@test_dir, "other_dir")
-    link    = File.join(@test_dir, "skill_link")
+    source  = File.join(@test_dir, 'correct_source')
+    other   = File.join(@test_dir, 'other_dir')
+    link    = File.join(@test_dir, 'skill_link')
     FileUtils.mkdir_p(source)
     FileUtils.mkdir_p(other)
     File.symlink(other, link)
@@ -325,7 +326,8 @@ class TestSuperpowersInstaller < Minitest::Test
   end
 
   def test_skill_linked_returns_false_when_path_does_not_exist
-    refute Vibe::SuperpowersInstaller.skill_linked?("/nonexistent/link", "/nonexistent/source")
+    refute Vibe::SuperpowersInstaller.skill_linked?('/nonexistent/link',
+                                                    '/nonexistent/source')
   end
 
   # --- windows_os?: returns a boolean ---
@@ -341,38 +343,39 @@ class TestSuperpowersInstaller < Minitest::Test
   def test_uninstall_superpowers_when_not_installed
     # Point to a dir that doesn't exist — should return gracefully
     original = Vibe::SuperpowersInstaller::SUPERPOWERS_DEFAULT_INSTALL_DIR
-    non_existent = File.join(@test_dir, "not_here")
+    non_existent = File.join(@test_dir, 'not_here')
 
-    Vibe::SuperpowersInstaller.stub_const(:SUPERPOWERS_DEFAULT_INSTALL_DIR, non_existent) do
+    Vibe::SuperpowersInstaller.stub_const(:SUPERPOWERS_DEFAULT_INSTALL_DIR,
+                                          non_existent) do
       result = Vibe::SuperpowersInstaller.uninstall_superpowers
       assert_kind_of Hash, result
       assert_equal false, result[:success]
     end
   rescue NoMethodError
     # stub_const not available — skip this test in older Minitest
-    skip "stub_const not available"
+    skip 'stub_const not available'
   end
 
   # --- create_skill_link: Unix path creates symlink ---
 
   def test_create_skill_link_creates_symlink_on_unix
-    skip "Windows-only test skipped" if Vibe::SuperpowersInstaller.windows_os?
+    skip 'Windows-only test skipped' if Vibe::SuperpowersInstaller.windows_os?
 
-    source = File.join(@test_dir, "skill_source")
-    link   = File.join(@test_dir, "skill_link")
+    source = File.join(@test_dir, 'skill_source')
+    link   = File.join(@test_dir, 'skill_link')
     FileUtils.mkdir_p(source)
 
     Vibe::SuperpowersInstaller.create_skill_link(source, link)
 
-    assert File.symlink?(link), "Should have created a symlink"
+    assert File.symlink?(link), 'Should have created a symlink'
     assert_equal source, File.readlink(link)
   end
 
   def test_create_skill_link_is_idempotent_on_unix
-    skip "Windows-only test skipped" if Vibe::SuperpowersInstaller.windows_os?
+    skip 'Windows-only test skipped' if Vibe::SuperpowersInstaller.windows_os?
 
-    source = File.join(@test_dir, "skill_source")
-    link   = File.join(@test_dir, "skill_link")
+    source = File.join(@test_dir, 'skill_source')
+    link   = File.join(@test_dir, 'skill_link')
     FileUtils.mkdir_p(source)
 
     Vibe::SuperpowersInstaller.create_skill_link(source, link)

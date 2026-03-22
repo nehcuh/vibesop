@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "minitest/autorun"
-require_relative "../../lib/vibe/integration_setup"
+require 'minitest/autorun'
+require_relative '../../lib/vibe/integration_setup'
 
 class TestIntegrationSetup < Minitest::Test
   class TestHost
@@ -11,12 +11,12 @@ class TestIntegrationSetup < Minitest::Test
 
     def initialize(repo_root)
       @repo_root = repo_root
-      @target_platform = "claude-code"
+      @target_platform = 'claude-code'
     end
   end
 
   def setup
-    @repo_root = File.expand_path("../../", __dir__)
+    @repo_root = File.expand_path('../../', __dir__)
     @host = TestHost.new(@repo_root)
   end
 
@@ -30,7 +30,7 @@ class TestIntegrationSetup < Minitest::Test
 
   def test_host_has_repo_root
     assert_equal @repo_root, @host.repo_root
-    assert_equal "claude-code", @host.target_platform
+    assert_equal 'claude-code', @host.target_platform
   end
 
   def test_setup_integrations_method_exists

@@ -11,8 +11,8 @@ module Vibe
     attr_reader :data, :path
 
     DEFAULT_WEIGHTS = {
-      success_rate:     0.6,
-      usage_frequency:  0.3,
+      success_rate: 0.6,
+      usage_frequency: 0.3,
       source_diversity: 0.1
     }.freeze
 
@@ -157,8 +157,10 @@ module Vibe
     # @return [Float] Confidence score (0.0-1.0)
     def calculate_confidence(instinct)
       base_score      = instinct['success_rate'] * @weights[:success_rate]
-      usage_score     = [instinct['usage_count'] / 20.0, 1.0].min * @weights[:usage_frequency]
-      diversity_score = [instinct['source_sessions'].size / 5.0, 1.0].min * @weights[:source_diversity]
+      usage_score     = [instinct['usage_count'] / 20.0,
+                         1.0].min * @weights[:usage_frequency]
+      diversity_score = [instinct['source_sessions'].size / 5.0,
+                         1.0].min * @weights[:source_diversity]
       [base_score + usage_score + diversity_score, 1.0].min
     end
 

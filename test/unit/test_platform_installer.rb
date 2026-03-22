@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "minitest/autorun"
-require_relative "../../lib/vibe/platform_installer"
+require 'minitest/autorun'
+require_relative '../../lib/vibe/platform_installer'
 
 class TestPlatformInstaller < Minitest::Test
   def test_module_exists
@@ -44,10 +44,9 @@ class TestPlatformInstaller < Minitest::Test
     instance_methods = Vibe::PlatformInstaller.instance_methods(false)
 
     # Should have methods related to platform operations
-    core_methods = [:install_global_config, :build_and_deploy_target]
+    core_methods = %i[install_global_config build_and_deploy_target]
     core_methods.each do |method|
       assert instance_methods.include?(method), "Module should have #{method} method"
     end
   end
 end
-

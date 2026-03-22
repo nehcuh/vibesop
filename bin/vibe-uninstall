@@ -1,21 +1,21 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require "fileutils"
-require "json"
+require 'fileutils'
+require 'json'
 
 # Vibe uninstallation script
 # Removes vibe command from system PATH and optionally cleans up configurations
 
 class VibeUninstaller
-  INSTALL_DIR = "/usr/local/bin"
-  CONFIG_DIR = File.expand_path("~/.vibe")
-  CONFIG_FILE = File.join(CONFIG_DIR, "config.json")
-  VIBE_BIN = File.join(INSTALL_DIR, "vibe")
+  INSTALL_DIR = '/usr/local/bin'
+  CONFIG_DIR = File.expand_path('~/.vibe')
+  CONFIG_FILE = File.join(CONFIG_DIR, 'config.json')
+  VIBE_BIN = File.join(INSTALL_DIR, 'vibe')
 
   PLATFORM_DIRS = {
-    "claude-code" => "~/.claude",
-    "opencode" => "~/.config/opencode"
+    'claude-code' => '~/.claude',
+    'opencode' => '~/.config/opencode'
   }.freeze
 
   def initialize(options = {})
@@ -26,14 +26,14 @@ class VibeUninstaller
   end
 
   def run
-    puts "Vibe Uninstallation"
-    puts "=" * 50
+    puts 'Vibe Uninstallation'
+    puts '=' * 50
     puts
 
     check_installation
 
     if @dry_run
-      puts "DRY RUN MODE - No changes will be made"
+      puts 'DRY RUN MODE - No changes will be made'
       puts
     end
 
@@ -43,7 +43,7 @@ class VibeUninstaller
     uninstall!
 
     puts
-    puts "✅ Uninstallation complete!"
+    puts '✅ Uninstallation complete!'
     puts
   end
 
@@ -54,54 +54,48 @@ class VibeUninstaller
     @config_exists = File.exist?(CONFIG_FILE)
     @wrapper_path = find_wrapper_path
 
-    unless @vibe_installed || @config_exists
-      puts "⚠️  Vibe does not appear to be installed."
-      puts
-      exit 0
-    end
+    return if @vibe_installed || @config_exists
+
+    puts '⚠️  Vibe does not appear to be installed.'
+    puts
+    exit 0
   end
 
   def find_wrapper_path
     return nil unless @config_exists
 
     config = JSON.parse(File.read(CONFIG_FILE))
-    repo_root = config["repo_root"]
-    File.join(repo_root, "bin", "vibe-wrapper") if repo_root
-  rescue
+    repo_root = config['repo_root']
+    File.join(repo_root, 'bin', 'vibe-wrapper') if repo_root
+  rescue StandardError
     nil
   end
 
   def show_plan
-    puts "The following will be removed:"
+    puts 'The following will be removed:'
     puts
 
-    if @vibe_installed
-      puts "✓ System command: #{VIBE_BIN}"
-    end
+    puts "✓ System command: #{VIBE_BIN}" if @vibe_installed
 
     if @wrapper_path && File.exist?(@wrapper_path)
       puts "✓ Wrapper script: #{@wrapper_path}"
     end
 
-    if @config_exists
-      puts "✓ Configuration: #{CONFIG_FILE}"
-    end
+    puts "✓ Configuration: #{CONFIG_FILE}" if @config_exists
 
     if @remove_configs || @remove_all
       puts
-      puts "Platform configurations:"
+      puts 'Platform configurations:'
       installed_platforms.each do |platform, dir|
         expanded = File.expand_path(dir)
-        if Dir.exist?(expanded)
-          puts "✓ #{platform}: #{expanded}"
-        end
+        puts "✓ #{platform}: #{expanded}" if Dir.exist?(expanded)
       end
     end
 
     if @remove_all
       puts
-      puts "⚠️  WARNING: This will remove ALL vibe-related files including:"
-      puts "   - All platform configurations"
+      puts '⚠️  WARNING: This will remove ALL vibe-related files including:'
+      puts '   - All platform configurations'
       puts "   - Configuration directory: #{CONFIG_DIR}"
     end
 
@@ -116,13 +110,13 @@ class VibeUninstaller
   end
 
   def has_vibe_marker?(dir)
-    File.exist?(File.join(dir, ".vibe-target.json"))
+    File.exist?(File.join(dir, '.vibe-target.json'))
   end
 
   def confirm_uninstall
-    print "Continue with uninstallation? [y/N] "
+    print 'Continue with uninstallation? [y/N] '
     response = $stdin.gets
-    if response.nil? || !["y", "yes"].include?(response.chomp.downcase)
+    if response.nil? || !%w[y yes].include?(response.chomp.downcase)
       puts "\nUninstallation cancelled."
       exit 0
     end
@@ -131,25 +125,21 @@ class VibeUninstaller
 
   def uninstall!
     # Remove system command
-    if @vibe_installed
-      remove_system_command
-    end
+    remove_system_command if @vibe_installed
 
     # Remove wrapper script
     if @wrapper_path && File.exist?(@wrapper_path)
-      remove_file(@wrapper_path, "wrapper script")
+      remove_file(@wrapper_path, 'wrapper script')
     end
 
     # Remove platform configurations
-    if @remove_configs || @remove_all
-      remove_platform_configs
-    end
+    remove_platform_configs if @remove_configs || @remove_all
 
     # Remove config directory
     if @remove_all && Dir.exist?(CONFIG_DIR)
-      remove_directory(CONFIG_DIR, "configuration directory")
+      remove_directory(CONFIG_DIR, 'configuration directory')
     elsif @config_exists
-      remove_file(CONFIG_FILE, "configuration file")
+      remove_file(CONFIG_FILE, 'configuration file')
     end
   end
 
@@ -163,8 +153,8 @@ class VibeUninstaller
       FileUtils.rm_f(VIBE_BIN)
       puts "✓ Removed system command: #{VIBE_BIN}"
     else
-      puts "Removing system command (requires sudo)..."
-      if system("sudo", "rm", "-f", VIBE_BIN)
+      puts 'Removing system command (requires sudo)...'
+      if system('sudo', 'rm', '-f', VIBE_BIN)
         puts "✓ Removed system command: #{VIBE_BIN}"
       else
         warn "⚠️  Failed to remove #{VIBE_BIN}. You may need to remove it manually."
@@ -204,7 +194,7 @@ class VibeUninstaller
 
       print "Remove #{platform} configuration at #{expanded}? [y/N] "
       response = $stdin.gets
-      if response && ["y", "yes"].include?(response.chomp.downcase)
+      if response && %w[y yes].include?(response.chomp.downcase)
         FileUtils.rm_rf(expanded)
         puts "✓ Removed #{platform} configuration: #{expanded}"
       else
@@ -259,16 +249,16 @@ if __FILE__ == $PROGRAM_NAME
 
   ARGV.each do |arg|
     case arg
-    when "--remove-configs"
+    when '--remove-configs'
       options[:remove_configs] = true
-    when "--remove-all"
+    when '--remove-all'
       options[:remove_all] = true
       options[:remove_configs] = true
-    when "--dry-run"
+    when '--dry-run'
       options[:dry_run] = true
-    when "--force"
+    when '--force'
       options[:force] = true
-    when "-h", "--help"
+    when '-h', '--help'
       show_help
       exit 0
     else

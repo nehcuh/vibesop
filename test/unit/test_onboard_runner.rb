@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require "vibe/onboard_runner"
-require "tmpdir"
-require "fileutils"
-require "stringio"
+require 'test_helper'
+require 'vibe/onboard_runner'
+require 'tmpdir'
+require 'fileutils'
+require 'stringio'
 
 # Minimal host that satisfies OnboardRunner's dependencies
 class OnboardHost
@@ -31,7 +31,7 @@ end
 class TestOnboardRunner < Minitest::Test
   def setup
     @host = OnboardHost.new
-    @tmpdir = Dir.mktmpdir("onboard-test")
+    @tmpdir = Dir.mktmpdir('onboard-test')
   end
 
   def teardown
@@ -48,7 +48,7 @@ class TestOnboardRunner < Minitest::Test
 
   def test_run_onboard_calls_quickstart_by_default
     # Simulate empty stdin so prompt_role returns nil
-    simulate_stdin("") do
+    simulate_stdin('') do
       capture_io { @host.run_onboard }
     end
     assert_equal 1, @host.quickstart_calls.size
@@ -56,14 +56,14 @@ class TestOnboardRunner < Minitest::Test
   end
 
   def test_run_onboard_skips_quickstart_with_skip_deploy
-    simulate_stdin("") do
+    simulate_stdin('') do
       capture_io { @host.run_onboard(skip_deploy: true) }
     end
     assert_equal 0, @host.quickstart_calls.size
   end
 
   def test_run_onboard_calls_doctor
-    simulate_stdin("") do
+    simulate_stdin('') do
       capture_io { @host.run_onboard(skip_deploy: true) }
     end
     assert_equal 1, @host.doctor_calls.size
@@ -71,18 +71,18 @@ class TestOnboardRunner < Minitest::Test
   end
 
   def test_run_onboard_outputs_all_5_steps
-    out, = simulate_stdin("") do
+    out, = simulate_stdin('') do
       capture_io { @host.run_onboard(skip_deploy: true) }
     end
-    assert_match(/\[1\/5\]/, out)
-    assert_match(/\[2\/5\]/, out)
-    assert_match(/\[3\/5\]/, out)
-    assert_match(/\[4\/5\]/, out)
-    assert_match(/\[5\/5\]/, out)
+    assert_match(%r{\[1/5\]}, out)
+    assert_match(%r{\[2/5\]}, out)
+    assert_match(%r{\[3/5\]}, out)
+    assert_match(%r{\[4/5\]}, out)
+    assert_match(%r{\[5/5\]}, out)
   end
 
   def test_run_onboard_outputs_completion_message
-    out, = simulate_stdin("") do
+    out, = simulate_stdin('') do
       capture_io { @host.run_onboard(skip_deploy: true) }
     end
     assert_match(/Onboarding complete/, out)
@@ -91,27 +91,27 @@ class TestOnboardRunner < Minitest::Test
   # --- onboard_write_role ---
 
   def test_write_role_appends_to_session_file
-    session_path = File.join(@tmpdir, "session.md")
+    session_path = File.join(@tmpdir, 'session.md')
     # Redirect the write to a temp path by stubbing expand_path
     @host.define_singleton_method(:onboard_write_role) do |role|
       FileUtils.mkdir_p(File.dirname(session_path))
       File.open(session_path, 'a') { |f| f.write("\n## User Role\n#{role}\n") }
     end
 
-    @host.send(:onboard_write_role, "Full-stack engineer")
+    @host.send(:onboard_write_role, 'Full-stack engineer')
     content = File.read(session_path)
     assert_match(/## User Role/, content)
     assert_match(/Full-stack engineer/, content)
   end
 
   def test_write_role_appends_not_overwrites
-    session_path = File.join(@tmpdir, "session.md")
+    session_path = File.join(@tmpdir, 'session.md')
     File.write(session_path, "existing content\n")
     @host.define_singleton_method(:onboard_write_role) do |role|
       File.open(session_path, 'a') { |f| f.write("\n## User Role\n#{role}\n") }
     end
 
-    @host.send(:onboard_write_role, "Backend engineer")
+    @host.send(:onboard_write_role, 'Backend engineer')
     content = File.read(session_path)
     assert_match(/existing content/, content)
     assert_match(/Backend engineer/, content)
@@ -123,11 +123,11 @@ class TestOnboardRunner < Minitest::Test
     role = simulate_stdin("Data scientist\n") do
       @host.send(:onboard_prompt_role)
     end
-    assert_equal "Data scientist", role
+    assert_equal 'Data scientist', role
   end
 
   def test_prompt_role_returns_nil_on_empty_stdin
-    role = simulate_stdin("") do
+    role = simulate_stdin('') do
       @host.send(:onboard_prompt_role)
     end
     # gets on empty string IO returns nil or ""
@@ -143,7 +143,7 @@ class TestOnboardRunner < Minitest::Test
     simulate_stdin("   \n") do
       capture_io { @host.run_onboard(skip_deploy: true) }
     end
-    refute written, "onboard_write_role should not be called for blank input"
+    refute written, 'onboard_write_role should not be called for blank input'
   end
 
   def test_run_onboard_calls_write_role_when_provided
@@ -153,7 +153,7 @@ class TestOnboardRunner < Minitest::Test
     simulate_stdin("ML engineer\n") do
       capture_io { @host.run_onboard(skip_deploy: true) }
     end
-    assert_equal "ML engineer", written_role
+    assert_equal 'ML engineer', written_role
   end
 
   # --- onboard_skill_summary ---

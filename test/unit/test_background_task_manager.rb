@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require "minitest/autorun"
-require "fileutils"
-require "tmpdir"
-require_relative "../../lib/vibe/background_task_manager"
+require 'minitest/autorun'
+require 'fileutils'
+require 'tmpdir'
+require_relative '../../lib/vibe/background_task_manager'
 
 class TestTaskRunner < Minitest::Test
   def setup
     @temp_dir = Dir.mktmpdir
-    @storage_path = File.join(@temp_dir, "tasks.yaml")
+    @storage_path = File.join(@temp_dir, 'tasks.yaml')
     @manager = Vibe::TaskRunner.new(@storage_path)
   end
 
@@ -18,45 +18,45 @@ class TestTaskRunner < Minitest::Test
   end
 
   def test_submit_task
-    task_id = @manager.submit("echo 'test'", description: "Test task")
+    task_id = @manager.submit("echo 'test'", description: 'Test task')
 
     refute_nil task_id
-    assert task_id.length > 0
+    assert task_id.length.positive?
 
     task = @manager.status(task_id)
     # Tasks execute synchronously, so status is completed after submit
-    assert_equal "completed", task["status"]
-    assert_equal "Test task", task["description"]
+    assert_equal 'completed', task['status']
+    assert_equal 'Test task', task['description']
   end
 
   def test_submit_with_priority
     task_id = @manager.submit("echo 'high priority'", priority: :high)
 
     task = @manager.status(task_id)
-    assert_equal Vibe::TaskRunner::PRIORITY[:high], task["priority"]
+    assert_equal Vibe::TaskRunner::PRIORITY[:high], task['priority']
   end
 
   def test_task_execution
     task_id = @manager.submit("echo 'hello world'")
 
     task = @manager.status(task_id)
-    assert_equal "completed", task["status"]
-    assert_includes task["output"], "hello world"
+    assert_equal 'completed', task['status']
+    assert_includes task['output'], 'hello world'
   end
 
   def test_task_failure
-    task_id = @manager.submit("exit 1")
+    task_id = @manager.submit('exit 1')
 
     task = @manager.status(task_id)
-    assert_equal "failed", task["status"]
-    assert_equal 1, task["exit_code"]
+    assert_equal 'failed', task['status']
+    assert_equal 1, task['exit_code']
   end
 
   def test_cannot_cancel_completed_task
     task_id = @manager.submit("echo 'done'")
 
     result = @manager.cancel(task_id)
-    refute result, "Should not cancel completed task"
+    refute result, 'Should not cancel completed task'
   end
 
   def test_list_all_tasks
@@ -69,9 +69,9 @@ class TestTaskRunner < Minitest::Test
 
   def test_list_with_status_filter
     @manager.submit("echo 'test'")
-    @manager.submit("exit 1")
+    @manager.submit('exit 1')
 
-    failed_tasks = @manager.list(status: "failed")
+    failed_tasks = @manager.list(status: 'failed')
     assert_equal 1, failed_tasks.size
   end
 
@@ -90,18 +90,18 @@ class TestTaskRunner < Minitest::Test
 
     tasks = @manager.list
     # Should be ordered by priority (high to low)
-    assert_equal high_id, tasks[0]["id"]
-    assert_equal normal_id, tasks[1]["id"]
-    assert_equal low_id, tasks[2]["id"]
+    assert_equal high_id, tasks[0]['id']
+    assert_equal normal_id, tasks[1]['id']
+    assert_equal low_id, tasks[2]['id']
   end
 
   def test_cleanup_old_tasks
     task_id = @manager.submit("echo 'old'")
 
     task = @manager.status(task_id)
-    task["created_at"] = (Time.now - 100000).iso8601
+    task['created_at'] = (Time.now - 100_000).iso8601
 
-    removed = @manager.cleanup(86400)
+    removed = @manager.cleanup(86_400)
     assert_equal 1, removed
 
     assert_nil @manager.status(task_id)
@@ -110,7 +110,7 @@ class TestTaskRunner < Minitest::Test
   def test_cleanup_keeps_recent_tasks
     task_id = @manager.submit("echo 'recent'")
 
-    removed = @manager.cleanup(86400)
+    removed = @manager.cleanup(86_400)
     assert_equal 0, removed
 
     refute_nil @manager.status(task_id)
@@ -124,13 +124,13 @@ class TestTaskRunner < Minitest::Test
     task = manager2.status(task_id)
 
     refute_nil task
-    assert_equal task_id, task["id"]
+    assert_equal task_id, task['id']
 
     manager2.stop_worker
   end
 
   def test_status_nonexistent_task
-    result = @manager.status("nonexistent-id")
+    result = @manager.status('nonexistent-id')
     assert_nil result
   end
 
@@ -138,9 +138,9 @@ class TestTaskRunner < Minitest::Test
     task_id = @manager.submit("echo 'test'")
 
     task = @manager.status(task_id)
-    refute_nil task["created_at"]
+    refute_nil task['created_at']
     # Synchronous execution means timestamps are set immediately
-    refute_nil task["started_at"]
-    refute_nil task["completed_at"]
+    refute_nil task['started_at']
+    refute_nil task['completed_at']
   end
 end

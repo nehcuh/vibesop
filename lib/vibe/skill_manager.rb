@@ -175,9 +175,9 @@ module Vibe
       doc = YAML.safe_load(File.read(config_path), aliases: true) || {}
 
       {
-        adapted: doc['adapted_skills']&.map { |id, info|
+        adapted: doc['adapted_skills']&.map do |id, info|
           { id: id, **(info.is_a?(Hash) ? info : {}) }
-        } || [],
+        end || [],
         skipped: doc['skipped_skills'] || []
       }
     end

@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require_relative "test_helper"
-require_relative "../lib/vibe/utils"
+require_relative 'test_helper'
+require_relative '../lib/vibe/utils'
 
 class UtilsHost
   include Vibe::Utils
@@ -14,17 +14,17 @@ end
 
 class TestVibeUtilsValidation < Minitest::Test
   def setup
-    @host = UtilsHost.new("/fake/repo")
+    @host = UtilsHost.new('/fake/repo')
   end
 
   def test_deep_merge_string_base_returns_extra
-    result = @host.deep_merge("invalid", {})
+    result = @host.deep_merge('invalid', {})
     assert_equal({}, result)
   end
 
   def test_deep_merge_string_extra_returns_extra
-    result = @host.deep_merge({}, "invalid")
-    assert_equal("invalid", result)
+    result = @host.deep_merge({}, 'invalid')
+    assert_equal('invalid', result)
   end
 
   def test_deep_merge_accepts_nil_base

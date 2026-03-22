@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "minitest/autorun"
-require_relative "../../lib/vibe/version"
+require 'minitest/autorun'
+require_relative '../../lib/vibe/version'
 
 class TestVersion < Minitest::Test
   def test_version_constant_exists
@@ -21,12 +21,12 @@ class TestVersion < Minitest::Test
   end
 
   def test_version_has_three_parts
-    parts = Vibe::VERSION.split(".")
+    parts = Vibe::VERSION.split('.')
     assert_equal 3, parts.length
   end
 
   def test_version_parts_are_numeric
-    parts = Vibe::VERSION.split(".")
+    parts = Vibe::VERSION.split('.')
     parts.each do |part|
       # Remove any non-numeric suffixes (like -rc1, -beta, etc.)
       numeric_part = part.match(/^\d+/)[0]

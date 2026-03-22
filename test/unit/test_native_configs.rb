@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative "../test_helper"
-require "vibe/utils"
-require "vibe/native_configs"
+require_relative '../test_helper'
+require 'vibe/utils'
+require 'vibe/native_configs'
 
 # Test class that includes required modules
 class NativeConfigsTester
@@ -14,9 +14,9 @@ class TestNativeConfigs < Minitest::Test
   def setup
     @tester = NativeConfigsTester.new
     @base_manifest = {
-      "target" => "claude-code",
-      "profile" => "claude-code-default",
-      "native_config_overlay" => {}
+      'target' => 'claude-code',
+      'profile' => 'claude-code-default',
+      'native_config_overlay' => {}
     }
   end
 
@@ -25,43 +25,44 @@ class TestNativeConfigs < Minitest::Test
   def test_base_claude_settings_config_structure
     config = @tester.base_claude_settings_config
 
-    assert config.is_a?(Hash), "Config should be a Hash"
-    assert config.key?("permissions"), "Config should have permissions key"
-    assert config["permissions"].key?("defaultMode"), "Permissions should have defaultMode"
-    assert config["permissions"].key?("ask"), "Permissions should have ask list"
-    assert config["permissions"].key?("deny"), "Permissions should have deny list"
+    assert config.is_a?(Hash), 'Config should be a Hash'
+    assert config.key?('permissions'), 'Config should have permissions key'
+    assert config['permissions'].key?('defaultMode'),
+           'Permissions should have defaultMode'
+    assert config['permissions'].key?('ask'), 'Permissions should have ask list'
+    assert config['permissions'].key?('deny'), 'Permissions should have deny list'
   end
 
   def test_base_claude_settings_ask_permissions
     config = @tester.base_claude_settings_config
-    ask = config["permissions"]["ask"]
+    ask = config['permissions']['ask']
 
     # Check for dangerous operations that should ask
-    assert_includes ask, "Bash(curl:*)"
-    assert_includes ask, "Bash(wget:*)"
-    assert_includes ask, "Bash(scp:*)"
-    assert_includes ask, "Bash(rsync:*)"
-    assert_includes ask, "Bash(git push:*)"
-    assert_includes ask, "Bash(npm publish:*)"
-    assert_includes ask, "Bash(base64:*)"
-    assert_includes ask, "Bash(eval:*)"
-    assert_includes ask, "Bash(exec:*)"
-    assert_includes ask, "WebFetch"
+    assert_includes ask, 'Bash(curl:*)'
+    assert_includes ask, 'Bash(wget:*)'
+    assert_includes ask, 'Bash(scp:*)'
+    assert_includes ask, 'Bash(rsync:*)'
+    assert_includes ask, 'Bash(git push:*)'
+    assert_includes ask, 'Bash(npm publish:*)'
+    assert_includes ask, 'Bash(base64:*)'
+    assert_includes ask, 'Bash(eval:*)'
+    assert_includes ask, 'Bash(exec:*)'
+    assert_includes ask, 'WebFetch'
   end
 
   def test_base_claude_settings_deny_permissions
     config = @tester.base_claude_settings_config
-    deny = config["permissions"]["deny"]
+    deny = config['permissions']['deny']
 
     # Check for operations that should be denied
-    assert_includes deny, "Bash(rm -rf:*)"
-    assert_includes deny, "Bash(shred:*)"
-    assert_includes deny, "Read(./.env)"
-    assert_includes deny, "Read(./.env.*)"
-    assert_includes deny, "Read(./secrets/**)"
-    assert_includes deny, "Read(./**/*.key)"
-    assert_includes deny, "Write(./**/.env*)"
-    assert_includes deny, "Write(./**/*.key)"
+    assert_includes deny, 'Bash(rm -rf:*)'
+    assert_includes deny, 'Bash(shred:*)'
+    assert_includes deny, 'Read(./.env)'
+    assert_includes deny, 'Read(./.env.*)'
+    assert_includes deny, 'Read(./secrets/**)'
+    assert_includes deny, 'Read(./**/*.key)'
+    assert_includes deny, 'Write(./**/.env*)'
+    assert_includes deny, 'Write(./**/*.key)'
   end
 
   def test_claude_settings_config_with_empty_overlay
@@ -69,36 +70,36 @@ class TestNativeConfigs < Minitest::Test
     base = @tester.base_claude_settings_config
 
     # Should return base config when overlay is empty
-    assert_equal base["permissions"]["ask"], config["permissions"]["ask"]
-    assert_equal base["permissions"]["deny"], config["permissions"]["deny"]
+    assert_equal base['permissions']['ask'], config['permissions']['ask']
+    assert_equal base['permissions']['deny'], config['permissions']['deny']
   end
 
   def test_claude_settings_config_with_overlay
     manifest = @base_manifest.dup
-    manifest["native_config_overlay"] = {
-      "permissions" => {
-        "ask" => ["Bash(custom:*)"],
-        "allow" => ["Read(./safe/**)"]
+    manifest['native_config_overlay'] = {
+      'permissions' => {
+        'ask' => ['Bash(custom:*)'],
+        'allow' => ['Read(./safe/**)']
       }
     }
 
     config = @tester.claude_settings_config(manifest)
 
     # Overlay should be merged
-    assert_includes config["permissions"]["ask"], "Bash(custom:*)"
+    assert_includes config['permissions']['ask'], 'Bash(custom:*)'
     # Base permissions should still be present (deep_merge behavior)
-    assert_includes config["permissions"]["ask"], "Bash(curl:*)"
+    assert_includes config['permissions']['ask'], 'Bash(curl:*)'
   end
 
   def test_claude_settings_config_without_overlay_key
     manifest = @base_manifest.dup
-    manifest.delete("native_config_overlay")
+    manifest.delete('native_config_overlay')
 
     config = @tester.claude_settings_config(manifest)
     base = @tester.base_claude_settings_config
 
     # Should handle missing overlay gracefully
-    assert_equal base["permissions"]["deny"], config["permissions"]["deny"]
+    assert_equal base['permissions']['deny'], config['permissions']['deny']
   end
 
   # === OpenCode opencode.json tests ===
@@ -106,101 +107,101 @@ class TestNativeConfigs < Minitest::Test
   def test_base_opencode_config_structure
     config = @tester.base_opencode_config
 
-    assert config.is_a?(Hash), "Config should be a Hash"
-    assert_equal "https://opencode.ai/config.json", config["$schema"]
-    assert config.key?("instructions"), "Config should have instructions"
-    assert config.key?("permission"), "Config should have permission"
+    assert config.is_a?(Hash), 'Config should be a Hash'
+    assert_equal 'https://opencode.ai/config.json', config['$schema']
+    assert config.key?('instructions'), 'Config should have instructions'
+    assert config.key?('permission'), 'Config should have permission'
   end
 
   def test_base_opencode_instructions
     config = @tester.base_opencode_config
-    instructions = config["instructions"]
+    instructions = config['instructions']
 
     # Aligned with Claude Code structure
-    assert_includes instructions, "AGENTS.md"
-    assert_includes instructions, ".vibe/opencode/behavior-policies.md"
-    assert_includes instructions, ".vibe/opencode/safety.md"
-    assert_includes instructions, ".vibe/opencode/task-routing.md"
-    assert_includes instructions, ".vibe/opencode/test-standards.md"
+    assert_includes instructions, 'AGENTS.md'
+    assert_includes instructions, '.vibe/opencode/behavior-policies.md'
+    assert_includes instructions, '.vibe/opencode/safety.md'
+    assert_includes instructions, '.vibe/opencode/task-routing.md'
+    assert_includes instructions, '.vibe/opencode/test-standards.md'
     # Old OpenCode-specific docs removed (general, routing, skills, execution)
   end
 
   def test_base_opencode_permission_structure
     config = @tester.base_opencode_config
-    perm = config["permission"]
+    perm = config['permission']
 
-    assert perm.key?("read"), "Should have read permissions"
-    assert perm.key?("write"), "Should have write permissions"
-    assert perm.key?("edit"), "Should have edit permissions"
-    assert perm.key?("bash"), "Should have bash permissions"
-    assert perm.key?("list"), "Should have list permission"
-    assert perm.key?("glob"), "Should have glob permission"
-    assert perm.key?("grep"), "Should have grep permission"
+    assert perm.key?('read'), 'Should have read permissions'
+    assert perm.key?('write'), 'Should have write permissions'
+    assert perm.key?('edit'), 'Should have edit permissions'
+    assert perm.key?('bash'), 'Should have bash permissions'
+    assert perm.key?('list'), 'Should have list permission'
+    assert perm.key?('glob'), 'Should have glob permission'
+    assert perm.key?('grep'), 'Should have grep permission'
   end
 
   def test_opencode_read_permissions
-    perm = @tester.base_opencode_config["permission"]["read"]
+    perm = @tester.base_opencode_config['permission']['read']
 
-    assert_equal "allow", perm["*"]
-    assert_equal "deny", perm["**/.env"]
-    assert_equal "deny", perm["**/.env.*"]
-    assert_equal "deny", perm["**/secrets/**"]
-    assert_equal "deny", perm["**/*.key"]
+    assert_equal 'allow', perm['*']
+    assert_equal 'deny', perm['**/.env']
+    assert_equal 'deny', perm['**/.env.*']
+    assert_equal 'deny', perm['**/secrets/**']
+    assert_equal 'deny', perm['**/*.key']
   end
 
   def test_opencode_write_permissions
-    perm = @tester.base_opencode_config["permission"]["write"]
+    perm = @tester.base_opencode_config['permission']['write']
 
-    assert_equal "ask", perm["*"]
-    assert_equal "deny", perm["**/.env*"]
-    assert_equal "deny", perm["**/secrets/**"]
-    assert_equal "deny", perm["**/*.key"]
+    assert_equal 'ask', perm['*']
+    assert_equal 'deny', perm['**/.env*']
+    assert_equal 'deny', perm['**/secrets/**']
+    assert_equal 'deny', perm['**/*.key']
   end
 
   def test_opencode_bash_permissions
-    perm = @tester.base_opencode_config["permission"]["bash"]
+    perm = @tester.base_opencode_config['permission']['bash']
 
     # Allow list
-    assert_equal "allow", perm["pwd"]
-    assert_equal "allow", perm["ls*"]
-    assert_equal "allow", perm["cat *"]
-    assert_equal "allow", perm["grep *"]
-    assert_equal "allow", perm["rg *"]
-    assert_equal "allow", perm["find *"]
-    assert_equal "allow", perm["git status*"]
-    assert_equal "allow", perm["git diff*"]
-    assert_equal "allow", perm["git log*"]
+    assert_equal 'allow', perm['pwd']
+    assert_equal 'allow', perm['ls*']
+    assert_equal 'allow', perm['cat *']
+    assert_equal 'allow', perm['grep *']
+    assert_equal 'allow', perm['rg *']
+    assert_equal 'allow', perm['find *']
+    assert_equal 'allow', perm['git status*']
+    assert_equal 'allow', perm['git diff*']
+    assert_equal 'allow', perm['git log*']
 
     # Deny list
-    assert_equal "deny", perm["rm *"]
-    assert_equal "deny", perm["shred *"]
+    assert_equal 'deny', perm['rm *']
+    assert_equal 'deny', perm['shred *']
 
     # Ask list
-    assert_equal "ask", perm["curl *"]
-    assert_equal "ask", perm["wget *"]
-    assert_equal "ask", perm["scp *"]
-    assert_equal "ask", perm["rsync *"]
-    assert_equal "ask", perm["git push *"]
-    assert_equal "ask", perm["npm publish *"]
+    assert_equal 'ask', perm['curl *']
+    assert_equal 'ask', perm['wget *']
+    assert_equal 'ask', perm['scp *']
+    assert_equal 'ask', perm['rsync *']
+    assert_equal 'ask', perm['git push *']
+    assert_equal 'ask', perm['npm publish *']
 
     # Default
-    assert_equal "ask", perm["*"]
+    assert_equal 'ask', perm['*']
   end
 
   def test_opencode_config_with_empty_overlay
     config = @tester.opencode_config(@base_manifest)
     base = @tester.base_opencode_config
 
-    assert_equal base["instructions"], config["instructions"]
-    assert_equal base["permission"]["read"], config["permission"]["read"]
+    assert_equal base['instructions'], config['instructions']
+    assert_equal base['permission']['read'], config['permission']['read']
   end
 
   def test_opencode_config_with_overlay
     manifest = @base_manifest.dup
-    manifest["native_config_overlay"] = {
-      "permission" => {
-        "bash" => {
-          "custom *" => "allow"
+    manifest['native_config_overlay'] = {
+      'permission' => {
+        'bash' => {
+          'custom *' => 'allow'
         }
       }
     }
@@ -208,21 +209,21 @@ class TestNativeConfigs < Minitest::Test
     config = @tester.opencode_config(manifest)
 
     # Overlay should be merged
-    assert_equal "allow", config["permission"]["bash"]["custom *"]
+    assert_equal 'allow', config['permission']['bash']['custom *']
     # Base permissions should still be present
-    assert_equal "deny", config["permission"]["bash"]["rm *"]
+    assert_equal 'deny', config['permission']['bash']['rm *']
   end
 
   def test_opencode_project_config_structure
     manifest = @base_manifest.dup
-    manifest["target"] = "opencode"
+    manifest['target'] = 'opencode'
     config = @tester.opencode_project_config(manifest)
 
-    assert_equal "https://opencode.ai/config.json", config["$schema"]
-    assert config["instructions"].include?("AGENTS.md")
-    assert config["instructions"].include?(".vibe/opencode/behavior-policies.md")
+    assert_equal 'https://opencode.ai/config.json', config['$schema']
+    assert config['instructions'].include?('AGENTS.md')
+    assert config['instructions'].include?('.vibe/opencode/behavior-policies.md')
     # OpenCode does NOT support 'extends' - it auto-merges configs by precedence
-    refute config["extends"], "OpenCode project config should NOT have extends"
+    refute config['extends'], 'OpenCode project config should NOT have extends'
   end
 
   def test_opencode_project_has_fewer_instructions
@@ -230,43 +231,43 @@ class TestNativeConfigs < Minitest::Test
     full_config = @tester.base_opencode_config
 
     # Project config should have fewer instructions than full config
-    assert project_config["instructions"].length < full_config["instructions"].length
+    assert project_config['instructions'].length < full_config['instructions'].length
   end
 
   # === deep_merge integration tests ===
 
   def test_deep_merge_preserves_base_structure
     manifest = @base_manifest.dup
-    manifest["native_config_overlay"] = {
-      "new_key" => "new_value"
+    manifest['native_config_overlay'] = {
+      'new_key' => 'new_value'
     }
 
     claude_config = @tester.claude_settings_config(manifest)
     opencode_config = @tester.opencode_config(manifest)
 
     # Both should preserve their base structures
-    assert claude_config["permissions"]["ask"].is_a?(Array)
-    assert opencode_config["permission"]["read"].is_a?(Hash)
+    assert claude_config['permissions']['ask'].is_a?(Array)
+    assert opencode_config['permission']['read'].is_a?(Hash)
 
     # And include the overlay
-    assert_equal "new_value", claude_config["new_key"]
-    assert_equal "new_value", opencode_config["new_key"]
+    assert_equal 'new_value', claude_config['new_key']
+    assert_equal 'new_value', opencode_config['new_key']
   end
 
   def test_deep_merge_with_nested_overlay
     manifest = @base_manifest.dup
-    manifest["native_config_overlay"] = {
-      "permissions" => {
-        "ask" => ["CustomAsk"],
-        "new_permission_category" => ["Item"]
+    manifest['native_config_overlay'] = {
+      'permissions' => {
+        'ask' => ['CustomAsk'],
+        'new_permission_category' => ['Item']
       }
     }
 
     config = @tester.claude_settings_config(manifest)
 
     # Nested arrays should be merged
-    assert_includes config["permissions"]["ask"], "CustomAsk"
-    assert_includes config["permissions"]["ask"], "Bash(curl:*)" # From base
-    assert_includes config["permissions"]["new_permission_category"], "Item"
+    assert_includes config['permissions']['ask'], 'CustomAsk'
+    assert_includes config['permissions']['ask'], 'Bash(curl:*)' # From base
+    assert_includes config['permissions']['new_permission_category'], 'Item'
   end
 end

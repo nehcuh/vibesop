@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require_relative "test_helper"
-require "tmpdir"
-require "fileutils"
-require_relative "../lib/vibe/session_analyzer"
-require_relative "../lib/vibe/skill_generator"
-require_relative "../lib/vibe/trigger_manager"
+require_relative 'test_helper'
+require 'tmpdir'
+require 'fileutils'
+require_relative '../lib/vibe/session_analyzer'
+require_relative '../lib/vibe/skill_generator'
+require_relative '../lib/vibe/trigger_manager'
 
 # ────────────────────────────────────────────────────────────
 # SessionAnalyzer
@@ -16,25 +16,29 @@ class TestSessionAnalyzer < Minitest::Test
   end
 
   def test_load_sessions_returns_empty_for_missing_file
-    result = @analyzer.load_sessions("/nonexistent/path/session.md")
+    result = @analyzer.load_sessions('/nonexistent/path/session.md')
     assert_equal [], result
   end
 
   def test_load_sessions_returns_empty_for_unreadable_file
     Dir.mktmpdir do |dir|
-      path = File.join(dir, "session.md")
-      File.write(path, "")
+      path = File.join(dir, 'session.md')
+      File.write(path, '')
       File.chmod(0o000, path)
       result = @analyzer.load_sessions(path)
       assert_equal [], result
     ensure
-      File.chmod(0o644, path) rescue nil
+      begin
+        File.chmod(0o644, path)
+      rescue StandardError
+        nil
+      end
     end
   end
 
   def test_load_sessions_parses_session_headers
     Dir.mktmpdir do |dir|
-      path = File.join(dir, "session.md")
+      path = File.join(dir, 'session.md')
       File.write(path, <<~MD)
         ### S1 (09:00) Debugging
         Bash: ruby test.rb
@@ -45,14 +49,14 @@ class TestSessionAnalyzer < Minitest::Test
       MD
       result = @analyzer.load_sessions(path)
       assert_equal 2, result.size
-      assert_equal "09:00", result[0][:time]
-      assert_equal "14:30", result[1][:time]
+      assert_equal '09:00', result[0][:time]
+      assert_equal '14:30', result[1][:time]
     end
   end
 
   def test_load_sessions_extracts_tool_calls
     Dir.mktmpdir do |dir|
-      path = File.join(dir, "session.md")
+      path = File.join(dir, 'session.md')
       File.write(path, <<~MD)
         ### S1 (10:00) Test session
         Bash: ruby test.rb
@@ -60,8 +64,8 @@ class TestSessionAnalyzer < Minitest::Test
       MD
       result = @analyzer.load_sessions(path)
       tools = result[0][:tool_calls].map { |tc| tc[:tool] }
-      assert_includes tools, "Bash"
-      assert_includes tools, "Edit"
+      assert_includes tools, 'Bash'
+      assert_includes tools, 'Edit'
     end
   end
 
@@ -72,7 +76,7 @@ class TestSessionAnalyzer < Minitest::Test
 
   def test_analyze_returns_patterns_when_sessions_present
     Dir.mktmpdir do |dir|
-      path = File.join(dir, "session.md")
+      path = File.join(dir, 'session.md')
       # Build 5 sessions with the same tool sequence to exceed min_occurrences=3
       content = (1..5).map do |i|
         "### S#{i} (0#{i}:00) Session\nBash: cmd\nEdit: file\nBash: verify\n"
@@ -113,11 +117,11 @@ class TestSkillGenerator < Minitest::Test
   def sample_pattern
     {
       type: :tool_sequence,
-      pattern: "Bash → Edit → Bash",
+      pattern: 'Bash → Edit → Bash',
       occurrences: 5,
       success_rate: 0.9,
       confidence: 0.85,
-      sessions: ["s1", "s2", "s3"]
+      sessions: %w[s1 s2 s3]
     }
   end
 
@@ -159,13 +163,13 @@ class TestSkillGenerator < Minitest::Test
   def test_preview_does_not_write_file
     result = @gen.preview(sample_pattern)
     skill_dir = File.join(@tmpdir, result[:skill_name])
-    refute Dir.exist?(skill_dir), "preview should not create directories"
+    refute Dir.exist?(skill_dir), 'preview should not create directories'
   end
 
   def test_generate_batch_creates_multiple_skills
     patterns = [
-      sample_pattern.merge(pattern: "Bash → Glob"),
-      sample_pattern.merge(pattern: "Read → Edit → Write")
+      sample_pattern.merge(pattern: 'Bash → Glob'),
+      sample_pattern.merge(pattern: 'Read → Edit → Write')
     ]
     results = @gen.generate_batch(patterns)
     assert_equal 2, results.size
@@ -187,7 +191,7 @@ class TestTriggerManager < Minitest::Test
 
   def setup
     @tmpdir = Dir.mktmpdir
-    @state_file = File.join(@tmpdir, ".skill-craft-state.yaml")
+    @state_file = File.join(@tmpdir, '.skill-craft-state.yaml')
     @mgr = make_manager
   end
 
@@ -196,16 +200,16 @@ class TestTriggerManager < Minitest::Test
   end
 
   def test_initial_state_has_version
-    assert_equal "1.0", @mgr.state["version"]
+    assert_equal '1.0', @mgr.state['version']
   end
 
   def test_initial_state_has_zero_session_count
-    assert_equal 0, @mgr.state["session_count"]
+    assert_equal 0, @mgr.state['session_count']
   end
 
   def test_increment_session_count_increments_count
     @mgr.increment_session_count
-    assert_equal 1, @mgr.state["session_count"]
+    assert_equal 1, @mgr.state['session_count']
   end
 
   def test_increment_session_count_saves_state
@@ -213,7 +217,7 @@ class TestTriggerManager < Minitest::Test
     @mgr.save_state
     assert File.exist?(@state_file)
     saved = YAML.safe_load(File.read(@state_file))
-    assert_equal 1, saved["session_count"]
+    assert_equal 1, saved['session_count']
   end
 
   def test_check_triggers_returns_array
@@ -223,15 +227,15 @@ class TestTriggerManager < Minitest::Test
 
   def test_accumulation_trigger_fires_at_threshold
     # Set count just at threshold
-    threshold = @mgr.config.dig("triggers", "accumulation_threshold") || 10
-    @mgr.state["session_count"] = threshold
+    threshold = @mgr.config.dig('triggers', 'accumulation_threshold') || 10
+    @mgr.state['session_count'] = threshold
     triggers = @mgr.check_triggers
     types = triggers.map { |t| t[:type] }
     assert_includes types, :accumulation
   end
 
   def test_no_trigger_below_threshold
-    @mgr.state["session_count"] = 1
+    @mgr.state['session_count'] = 1
     triggers = @mgr.check_triggers
     types = triggers.map { |t| t[:type] }
     refute_includes types, :accumulation
@@ -239,15 +243,15 @@ class TestTriggerManager < Minitest::Test
 
   def test_default_config_has_required_keys
     config = @mgr.config
-    triggers = config["triggers"]
-    assert triggers.key?("accumulation_threshold")
-    assert triggers.key?("periodic_interval")
-    assert triggers.key?("max_prompts_per_day")
+    triggers = config['triggers']
+    assert triggers.key?('accumulation_threshold')
+    assert triggers.key?('periodic_interval')
+    assert triggers.key?('max_prompts_per_day')
   end
 
   def test_load_state_handles_missing_file
     mgr = make_manager
     # state file hasn't been written yet — should default to 0
-    assert_equal 0, mgr.state["session_count"]
+    assert_equal 0, mgr.state['session_count']
   end
 end

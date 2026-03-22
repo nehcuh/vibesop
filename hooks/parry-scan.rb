@@ -20,7 +20,7 @@ module ParryScanner
       /jailbreak/i,
       /DAN\s*mode/i,
       /developer mode/i,
-      /override (safety|security)/i,
+      /override (safety|security)/i
     ],
 
     # System prompt leakage attempts
@@ -29,7 +29,7 @@ module ParryScanner
       /show me (your|the) instructions/i,
       /print (your|the) (system |initial )?prompt/i,
       /repeat (your|the) (system |initial )?instructions/i,
-      /output (your|the) (system |initial )?prompt/i,
+      /output (your|the) (system |initial )?prompt/i
     ],
 
     # Sensitive data extraction
@@ -38,7 +38,7 @@ module ParryScanner
       /upload (this|the|all) (data|content|file|code) to/i,
       /post (this|the|all) (data|content|file|code) to/i,
       /curl.*-X.*POST/i,
-      /wget.*--post/i,
+      /wget.*--post/i
     ],
 
     # Command injection
@@ -47,7 +47,7 @@ module ParryScanner
       /\|\s*rm\s+-rf/i,
       /`[^`]*rm\s+-rf[^`]*`/,
       /\$\([^)]*rm\s+-rf[^)]*\)/,
-      /&&\s*rm\s+-rf/i,
+      /&&\s*rm\s+-rf/i
     ],
 
     # File system danger
@@ -55,7 +55,7 @@ module ParryScanner
       /delete\s+(all|everything)/i,
       /wipe\s+(the\s+)?(disk|drive|system)/i,
       /format\s+(the\s+)?(disk|drive)/i,
-      /drop\s+(table|database)/i,
+      /drop\s+(table|database)/i
     ],
 
     # Obfuscation attempts
@@ -63,8 +63,8 @@ module ParryScanner
       /base64\s*[-—]\s*decode/i,
       /eval\s*\(/i,
       /exec\s*\(/i,
-      /\\x[0-9a-f]{2}/i,  # hex escape sequences
-    ],
+      /\\x[0-9a-f]{2}/i # hex escape sequences
+    ]
   }.freeze
 
   # Risk levels
@@ -72,7 +72,7 @@ module ParryScanner
     critical: 3,
     high: 2,
     medium: 1,
-    low: 0,
+    low: 0
   }.freeze
 
   # Pattern to risk level mapping
@@ -82,7 +82,7 @@ module ParryScanner
     data_extraction: :critical,
     command_injection: :critical,
     filesystem_danger: :critical,
-    obfuscation: :high,
+    obfuscation: :high
   }.freeze
 
   # Whitelist patterns (safe patterns that should be ignored)
@@ -90,7 +90,7 @@ module ParryScanner
     /example\.com/i,
     /localhost/i,
     /test\s+data/i,
-    /sample\s+code/i,
+    /sample\s+code/i
   ].freeze
 
   class ScanResult
@@ -107,21 +107,29 @@ module ParryScanner
     end
 
     def to_s
-      return "✅ No security risks detected" if safe?
+      return '✅ No security risks detected' if safe?
 
-      level_icon = { critical: "🚨", high: "⚠️", medium: "⚡" }[@risk_level] || "❓"
+      level_icon = { critical: '🚨', high: '⚠️', medium: '⚡' }[@risk_level] || '❓'
       "#{level_icon} Security risk detected: #{@risk_level.upcase}\n" \
-        "Matches: #{@matches.map { |m| "- #{m[:pattern]} (#{m[:category]})" }.join("\n")}\n" \
+        "Matches: #{@matches.map do |m|
+                      "- #{m[:pattern]} (#{m[:category]})"
+                    end.join("\n")}\n" \
         "Recommendations: #{@recommendations.join(', ')}"
     end
   end
 
   # Main scan function
   def self.scan(input, context: {})
-    return ScanResult.new(risk_level: :none, matches: [], recommendations: []) if input.nil? || input.empty?
+    if input.nil? || input.empty?
+      return ScanResult.new(risk_level: :none, matches: [],
+                            recommendations: [])
+    end
 
     # Check whitelist first
-    return ScanResult.new(risk_level: :none, matches: [], recommendations: []) if whitelisted?(input)
+    if whitelisted?(input)
+      return ScanResult.new(risk_level: :none, matches: [],
+                            recommendations: [])
+    end
 
     matches = []
     max_risk = :none
@@ -133,7 +141,7 @@ module ParryScanner
         matches << {
           category: category,
           pattern: pattern.inspect,
-          matched: input.match(pattern)&.[](0),
+          matched: input.match(pattern)&.[](0)
         }
 
         risk = PATTERN_RISK[category]
@@ -146,7 +154,7 @@ module ParryScanner
     ScanResult.new(
       risk_level: max_risk,
       matches: matches,
-      recommendations: recommendations,
+      recommendations: recommendations
     )
   end
 
@@ -155,28 +163,28 @@ module ParryScanner
   end
 
   def self.generate_recommendations(risk_level, matches)
-    return [] if risk_level == :none || risk_level == :low
+    return [] if %i[none low].include?(risk_level)
 
     recommendations = []
 
     if matches.any? { |m| m[:category] == :prompt_injection }
-      recommendations << "Review input for prompt injection attempts"
+      recommendations << 'Review input for prompt injection attempts'
     end
 
     if matches.any? { |m| m[:category] == :data_extraction }
-      recommendations << "Verify data destination is authorized"
+      recommendations << 'Verify data destination is authorized'
     end
 
     if matches.any? { |m| m[:category] == :command_injection }
-      recommendations << "Sanitize command input"
+      recommendations << 'Sanitize command input'
     end
 
     if matches.any? { |m| m[:category] == :system_leak }
-      recommendations << "System prompts are protected"
+      recommendations << 'System prompts are protected'
     end
 
-    recommendations << "Proceed with caution" if risk_level == :medium
-    recommendations << "Block this request" if risk_level == :critical
+    recommendations << 'Proceed with caution' if risk_level == :medium
+    recommendations << 'Block this request' if risk_level == :critical
 
     recommendations
   end
@@ -190,7 +198,7 @@ end
 
 # CLI interface
 if __FILE__ == $PROGRAM_NAME
-  require "json"
+  require 'json'
 
   if ARGV.empty?
     puts "Usage: #{$PROGRAM_NAME} <input_string>"
@@ -198,16 +206,14 @@ if __FILE__ == $PROGRAM_NAME
     exit 1
   end
 
-  input = ARGV.join(" ")
+  input = ARGV.join(' ')
 
   # Also read from stdin if piped
-  if !$stdin.tty?
-    input += " " + $stdin.read
-  end
+  input += " #{$stdin.read}" unless $stdin.tty?
 
   result = ParryScanner.scan(input)
 
-  puts result.to_s
+  puts result
 
   # Exit with appropriate code
   exit(2) if result.risk_level == :critical

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "minitest/autorun"
-require "tmpdir"
-require "fileutils"
-require_relative "../../lib/vibe/toolchain_detector"
+require 'minitest/autorun'
+require 'tmpdir'
+require 'fileutils'
+require_relative '../../lib/vibe/toolchain_detector'
 
 class TestToolchainDetector < Minitest::Test
   def setup
@@ -23,55 +23,55 @@ class TestToolchainDetector < Minitest::Test
   # ── package managers ─────────────────────────────────────────────────────────
 
   def test_detects_npm
-    touch("package-lock.json")
+    touch('package-lock.json')
     pms = @detector.detect_package_managers
     assert_includes pms.map { |p| p[:name] }, :npm
   end
 
   def test_detects_yarn
-    touch("yarn.lock")
+    touch('yarn.lock')
     pms = @detector.detect_package_managers
     assert_includes pms.map { |p| p[:name] }, :yarn
   end
 
   def test_detects_pnpm
-    touch("pnpm-lock.yaml")
+    touch('pnpm-lock.yaml')
     pms = @detector.detect_package_managers
     assert_includes pms.map { |p| p[:name] }, :pnpm
   end
 
   def test_detects_bun
-    touch("bun.lockb")
+    touch('bun.lockb')
     pms = @detector.detect_package_managers
     assert_includes pms.map { |p| p[:name] }, :bun
   end
 
   def test_detects_poetry
-    touch("poetry.lock", "pyproject.toml")
+    touch('poetry.lock', 'pyproject.toml')
     pms = @detector.detect_package_managers
     assert_includes pms.map { |p| p[:name] }, :poetry
   end
 
   def test_detects_pip
-    touch("requirements.txt")
+    touch('requirements.txt')
     pms = @detector.detect_package_managers
     assert_includes pms.map { |p| p[:name] }, :pip
   end
 
   def test_detects_cargo
-    touch("Cargo.toml", "Cargo.lock")
+    touch('Cargo.toml', 'Cargo.lock')
     pms = @detector.detect_package_managers
     assert_includes pms.map { |p| p[:name] }, :cargo
   end
 
   def test_detects_gomod
-    touch("go.mod")
+    touch('go.mod')
     pms = @detector.detect_package_managers
     assert_includes pms.map { |p| p[:name] }, :gomod
   end
 
   def test_detects_bundler
-    touch("Gemfile", "Gemfile.lock")
+    touch('Gemfile', 'Gemfile.lock')
     pms = @detector.detect_package_managers
     assert_includes pms.map { |p| p[:name] }, :bundler
   end
@@ -83,93 +83,93 @@ class TestToolchainDetector < Minitest::Test
   # ── build tools ──────────────────────────────────────────────────────────────
 
   def test_detects_vite
-    touch("vite.config.ts")
+    touch('vite.config.ts')
     assert_includes @detector.detect_build_tools.map { |t| t[:name] }, :vite
   end
 
   def test_detects_webpack
-    touch("webpack.config.js")
+    touch('webpack.config.js')
     assert_includes @detector.detect_build_tools.map { |t| t[:name] }, :webpack
   end
 
   def test_detects_make
-    touch("Makefile")
+    touch('Makefile')
     assert_includes @detector.detect_build_tools.map { |t| t[:name] }, :make
   end
 
   def test_detects_gradle
-    touch("gradlew")
+    touch('gradlew')
     assert_includes @detector.detect_build_tools.map { |t| t[:name] }, :gradle
   end
 
   def test_detects_maven
-    touch("pom.xml")
+    touch('pom.xml')
     assert_includes @detector.detect_build_tools.map { |t| t[:name] }, :maven
   end
 
   # ── test frameworks ───────────────────────────────────────────────────────────
 
   def test_detects_jest
-    touch("jest.config.js")
+    touch('jest.config.js')
     assert_includes @detector.detect_test_frameworks.map { |t| t[:name] }, :jest
   end
 
   def test_detects_vitest
-    touch("vitest.config.ts")
+    touch('vitest.config.ts')
     assert_includes @detector.detect_test_frameworks.map { |t| t[:name] }, :vitest
   end
 
   def test_detects_pytest
-    touch("pytest.ini")
+    touch('pytest.ini')
     assert_includes @detector.detect_test_frameworks.map { |t| t[:name] }, :pytest
   end
 
   def test_detects_rspec
-    FileUtils.mkdir_p(File.join(@dir, "spec"))
-    touch(".rspec")
+    FileUtils.mkdir_p(File.join(@dir, 'spec'))
+    touch('.rspec')
     assert_includes @detector.detect_test_frameworks.map { |t| t[:name] }, :rspec
   end
 
   # ── primary language ──────────────────────────────────────────────────────────
 
   def test_primary_language_node
-    touch("package-lock.json", "vite.config.ts", "jest.config.js")
-    assert_equal "node", @detector.primary_language
+    touch('package-lock.json', 'vite.config.ts', 'jest.config.js')
+    assert_equal 'node', @detector.primary_language
   end
 
   def test_primary_language_python
-    touch("requirements.txt", "pytest.ini")
-    assert_equal "python", @detector.primary_language
+    touch('requirements.txt', 'pytest.ini')
+    assert_equal 'python', @detector.primary_language
   end
 
   def test_primary_language_unknown_when_empty
-    assert_equal "unknown", @detector.primary_language
+    assert_equal 'unknown', @detector.primary_language
   end
 
   # ── suggested commands ────────────────────────────────────────────────────────
 
   def test_suggested_install_npm
-    touch("package-lock.json")
+    touch('package-lock.json')
     cmds = @detector.suggested_commands
-    assert_equal "npm install", cmds[:install]
+    assert_equal 'npm install', cmds[:install]
   end
 
   def test_suggested_test_pytest
-    touch("pytest.ini")
+    touch('pytest.ini')
     cmds = @detector.suggested_commands
-    assert_equal "pytest", cmds[:test]
+    assert_equal 'pytest', cmds[:test]
   end
 
   def test_suggested_build_make
-    touch("Makefile")
+    touch('Makefile')
     cmds = @detector.suggested_commands
-    assert_equal "make", cmds[:build]
+    assert_equal 'make', cmds[:build]
   end
 
   # ── full detect ───────────────────────────────────────────────────────────────
 
   def test_detect_returns_full_structure
-    touch("package-lock.json", "vite.config.ts", "jest.config.js")
+    touch('package-lock.json', 'vite.config.ts', 'jest.config.js')
     result = @detector.detect
 
     assert result[:ecosystems]
@@ -182,7 +182,7 @@ class TestToolchainDetector < Minitest::Test
   end
 
   def test_detect_multiple_tools
-    touch("package-lock.json", "yarn.lock", "Makefile", "vite.config.js")
+    touch('package-lock.json', 'yarn.lock', 'Makefile', 'vite.config.js')
     result = @detector.detect
 
     pm_names = result[:package_managers].map { |p| p[:name] }

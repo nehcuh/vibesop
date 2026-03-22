@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "minitest/autorun"
-require_relative "../../lib/vibe/external_tools"
+require 'minitest/autorun'
+require_relative '../../lib/vibe/external_tools'
 
 class ExternalToolsTestHost
   include Vibe::ExternalTools
@@ -15,7 +15,7 @@ end
 
 class TestExternalTools < Minitest::Test
   def setup
-    @repo_root = File.expand_path("../../", __dir__)
+    @repo_root = File.expand_path('../../', __dir__)
     @host = ExternalToolsTestHost.new(@repo_root)
   end
 
@@ -30,28 +30,28 @@ class TestExternalTools < Minitest::Test
   def test_superpowers_platform_paths_constant
     assert Vibe::ExternalTools.const_defined?(:SUPERPOWERS_PLATFORM_PATHS)
     paths = Vibe::ExternalTools::SUPERPOWERS_PLATFORM_PATHS
-    assert paths.key?("claude-code")
-    assert paths.key?("opencode")
+    assert paths.key?('claude-code')
+    assert paths.key?('opencode')
   end
 
   def test_cmd_exist_with_ruby
     # 'ruby' should exist since we're running Ruby
-    assert @host.cmd_exist?("ruby")
+    assert @host.cmd_exist?('ruby')
   end
 
   def test_cmd_exist_with_nonexistent_command
-    refute @host.cmd_exist?("thiscommanddoesnotexist12345")
+    refute @host.cmd_exist?('thiscommanddoesnotexist12345')
   end
 
   def test_load_integration_config_with_existing_tool
     # Load config for an integration that should exist
-    result = @host.load_integration_config("superpowers")
+    result = @host.load_integration_config('superpowers')
     # Should return a hash or nil if file doesn't exist
     assert result.nil? || result.is_a?(Hash)
   end
 
   def test_load_integration_config_with_nonexistent_tool
-    result = @host.load_integration_config("nonexistent-tool-xyz")
+    result = @host.load_integration_config('nonexistent-tool-xyz')
     assert_nil result
   end
 
@@ -80,7 +80,7 @@ class TestExternalTools < Minitest::Test
   end
 
   def test_detect_superpowers_with_platform
-    result = @host.detect_superpowers("claude-code")
+    result = @host.detect_superpowers('claude-code')
     # Should return a symbol or nil
     assert result.nil? || result.is_a?(Symbol)
   end
@@ -88,7 +88,8 @@ class TestExternalTools < Minitest::Test
   def test_module_has_required_methods
     instance_methods = Vibe::ExternalTools.instance_methods(false)
 
-    required_methods = [:cmd_exist?, :load_integration_config, :list_integrations, :detect_superpowers]
+    required_methods = %i[cmd_exist? load_integration_config list_integrations
+                          detect_superpowers]
     required_methods.each do |method|
       assert instance_methods.include?(method), "Module should have #{method} method"
     end

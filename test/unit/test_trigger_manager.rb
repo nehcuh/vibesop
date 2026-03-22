@@ -131,7 +131,8 @@ class TriggerManagerTest < Minitest::Test
   def test_periodic_trigger_false_when_max_prompts_reached
     eight_days_ago = (Date.today - 8).to_s
     today_str = Date.today.to_s
-    write_state('last_review' => eight_days_ago, 'prompts_today' => [today_str, today_str])
+    write_state('last_review' => eight_days_ago,
+                'prompts_today' => [today_str, today_str])
     m = new_manager('triggers' => { 'periodic_interval' => 7, 'periodic_day' => Date.today.wday,
                                     'max_prompts_per_day' => 2 })
     refute m.periodic_trigger?

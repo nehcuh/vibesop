@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require "minitest/autorun"
-require "tmpdir"
-require "fileutils"
-require_relative "../../lib/vibe/skill_installer"
+require 'minitest/autorun'
+require 'tmpdir'
+require 'fileutils'
+require_relative '../../lib/vibe/skill_installer'
 
 class TestSkillInstaller < Minitest::Test
   def setup
-    @repo_root = File.expand_path("../../", __dir__)
-    @project_root = Dir.mktmpdir("vibe-skill-installer-test")
+    @repo_root = File.expand_path('../../', __dir__)
+    @project_root = Dir.mktmpdir('vibe-skill-installer-test')
     @installer = Vibe::SkillInstaller.new(@repo_root, @project_root)
   end
 
@@ -30,30 +30,30 @@ class TestSkillInstaller < Minitest::Test
       result = @installer.install('unknown-pack-xyz')
       assert_equal false, result
     end
-    assert_includes output.first, "Unknown skill pack"
+    assert_includes output.first, 'Unknown skill pack'
   end
 
   def test_preview_installation_known_pack
     output = capture_io do
       @installer.preview_installation('superpowers', platform: 'claude-code')
     end
-    assert_includes output.first, "DRY RUN"
-    assert_includes output.first, "superpowers"
+    assert_includes output.first, 'DRY RUN'
+    assert_includes output.first, 'superpowers'
   end
 
   def test_preview_installation_unknown_pack
     output = capture_io do
       @installer.preview_installation('unknown-pack')
     end
-    assert_includes output.first, "Unknown skill pack"
+    assert_includes output.first, 'Unknown skill pack'
   end
 
   def test_preview_installation_without_platform
     output = capture_io do
       @installer.preview_installation('superpowers')
     end
-    assert_includes output.first, "DRY RUN"
-    assert_includes output.first, "No changes were made"
+    assert_includes output.first, 'DRY RUN'
+    assert_includes output.first, 'No changes were made'
   end
 
   def test_install_superpowers_integration
@@ -63,7 +63,7 @@ class TestSkillInstaller < Minitest::Test
       result = @installer.install('unknown-pack')
       assert_equal false, result
     end
-    assert_includes output.first, "Unknown skill pack"
+    assert_includes output.first, 'Unknown skill pack'
   end
 
   def test_supported_packs_is_frozen

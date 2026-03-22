@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require "minitest/autorun"
-require "tmpdir"
-require "fileutils"
-require_relative "../../lib/vibe/skill_detector"
+require 'minitest/autorun'
+require 'tmpdir'
+require 'fileutils'
+require_relative '../../lib/vibe/skill_detector'
 
 class TestSkillDetector < Minitest::Test
   def setup
-    @repo_root = File.expand_path("../../", __dir__)
-    @project_root = Dir.mktmpdir("vibe-skill-detector-test")
+    @repo_root = File.expand_path('../../', __dir__)
+    @project_root = Dir.mktmpdir('vibe-skill-detector-test')
     @detector = Vibe::SkillDetector.new(@repo_root, @project_root)
   end
 
@@ -47,12 +47,12 @@ class TestSkillDetector < Minitest::Test
 
   def test_get_skill_info_for_existing_skill
     # Try to get info about a known skill
-    result = @detector.get_skill_info("systematic-debugging")
+    result = @detector.get_skill_info('systematic-debugging')
     assert result.is_a?(Hash) if result
   end
 
   def test_get_skill_info_for_nonexistent_skill
-    result = @detector.get_skill_info("nonexistent-skill-xyz-123")
+    result = @detector.get_skill_info('nonexistent-skill-xyz-123')
     assert_nil result
   end
 
@@ -66,8 +66,9 @@ class TestSkillDetector < Minitest::Test
     skill_ids = skills.map { |s| s[:id] }
 
     # Should contain some built-in skills
-    known_skills = ["systematic-debugging", "verification-before-completion", "session-end"]
-    known_skills.each do |skill|
+    known_skills = %w[systematic-debugging verification-before-completion
+                      session-end]
+    known_skills.each do |_skill|
       # Just verify the skills list is not empty
       assert skill_ids.any? if skills.any?
     end
@@ -82,7 +83,8 @@ class TestSkillDetector < Minitest::Test
   end
 
   def test_user_skills_dir_constant
-    assert_equal File.expand_path('~/.config/skills'), Vibe::SkillDetector::USER_SKILLS_DIR
+    assert_equal File.expand_path('~/.config/skills'),
+                 Vibe::SkillDetector::USER_SKILLS_DIR
   end
 
   def test_project_skills_config_constant
@@ -109,14 +111,14 @@ class TestSkillDetector < Minitest::Test
 
   def test_get_skill_info_handles_namespaced_skills
     # Test with namespace prefix
-    result = @detector.get_skill_info("systematic-debugging")
+    result = @detector.get_skill_info('systematic-debugging')
     # Should handle namespaced skills
     assert result.nil? || result.is_a?(Hash)
   end
 
   def test_get_skill_info_with_slash_format
     # Test with slash format
-    result = @detector.get_skill_info("superpowers/tdd")
+    result = @detector.get_skill_info('superpowers/tdd')
     # Should handle slash format
     assert result.nil? || result.is_a?(Hash)
   end
@@ -124,11 +126,13 @@ class TestSkillDetector < Minitest::Test
   def test_list_available_skills_returns_skills_with_metadata
     skills = @detector.list_available_skills
 
+    return unless skills.any?
+
     skills.each do |skill|
       assert skill.is_a?(Hash)
       assert skill.key?(:id)
       # Title might be optional depending on the skill
-    end if skills.any?
+    end
   end
 
   def test_check_skill_changes_includes_timestamp
@@ -143,8 +147,8 @@ class TestSkillDetector < Minitest::Test
 
     skills_file = File.join(skills_dir, 'skills.yaml')
     File.write(skills_file, YAML.dump({
-      'adapted' => [{ 'id' => 'test-skill', 'mode' => 'suggest' }]
-    }))
+                                        'adapted' => [{ 'id' => 'test-skill', 'mode' => 'suggest' }]
+                                      }))
 
     result = @detector.detect_new_skills
     assert result.is_a?(Array)
@@ -159,11 +163,11 @@ class TestSkillDetector < Minitest::Test
 
     # Should not include disabled skills
     skills.each do |skill|
-      if skill.key?(:enabled)
-        # If enabled field exists, it should be true
-        # (or we just verify the skill has required fields)
-        assert skill.key?(:id)
-      end
+      next unless skill.key?(:enabled)
+
+      # If enabled field exists, it should be true
+      # (or we just verify the skill has required fields)
+      assert skill.key?(:id)
     end
   end
 end

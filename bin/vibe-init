@@ -1,13 +1,13 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require "fileutils"
-require "json"
-require "optparse"
-require "yaml"
-require_relative "../lib/vibe/utils"
-require_relative "../lib/vibe/external_tools"
-require_relative "../lib/vibe/init_support"
+require 'fileutils'
+require 'json'
+require 'optparse'
+require 'yaml'
+require_relative '../lib/vibe/utils'
+require_relative '../lib/vibe/external_tools'
+require_relative '../lib/vibe/init_support'
 
 class VibeInitCLI
   include Vibe::Utils
@@ -34,17 +34,17 @@ class VibeInitCLI
     options = { verify: false }
 
     parser = OptionParser.new do |opts|
-      opts.banner = "Usage: bin/vibe-init [--verify]"
-      opts.separator ""
-      opts.separator "Initialize external tool integrations (superpowers, rtk)"
-      opts.separator ""
-      opts.separator "Options:"
+      opts.banner = 'Usage: bin/vibe-init [--verify]'
+      opts.separator ''
+      opts.separator 'Initialize external tool integrations (superpowers, rtk)'
+      opts.separator ''
+      opts.separator 'Options:'
 
-      opts.on("--verify", "Verify existing integrations without installing") do
+      opts.on('--verify', 'Verify existing integrations without installing') do
         options[:verify] = true
       end
 
-      opts.on("-h", "--help", "Show this help message") do
+      opts.on('-h', '--help', 'Show this help message') do
         puts opts
         exit 0
       end
@@ -59,7 +59,7 @@ end
 
 if __FILE__ == $PROGRAM_NAME
   begin
-    repo_root = File.expand_path("..", __dir__)
+    repo_root = File.expand_path('..', __dir__)
     cli = VibeInitCLI.new(repo_root)
     cli.run(ARGV)
   rescue Vibe::ValidationError, Vibe::ConfigurationError, Vibe::ExternalToolError => e

@@ -4,37 +4,37 @@
 # Validate YAML files against JSON Schema
 # Usage: bin/validate-schemas
 
-require "json"
-require "yaml"
+require 'json'
+require 'yaml'
 begin
-  require "json-schema"
+  require 'json-schema'
 rescue LoadError
-  warn "Missing dependency: json-schema"
-  warn "Run: bundle install"
+  warn 'Missing dependency: json-schema'
+  warn 'Run: bundle install'
   exit 2
 end
 
-SCHEMA_DIR = File.join(__dir__, "..", "schemas")
-CORE_DIR = File.join(__dir__, "..", "core")
+SCHEMA_DIR = File.join(__dir__, '..', 'schemas')
+CORE_DIR = File.join(__dir__, '..', 'core')
 
 VALIDATIONS = [
   {
-    schema: File.join(SCHEMA_DIR, "providers.schema.json"),
-    yaml: File.join(CORE_DIR, "models", "providers.yaml")
+    schema: File.join(SCHEMA_DIR, 'providers.schema.json'),
+    yaml: File.join(CORE_DIR, 'models', 'providers.yaml')
   },
   {
-    schema: File.join(SCHEMA_DIR, "skills.schema.json"),
-    yaml: File.join(CORE_DIR, "skills", "registry.yaml")
+    schema: File.join(SCHEMA_DIR, 'skills.schema.json'),
+    yaml: File.join(CORE_DIR, 'skills', 'registry.yaml')
   },
   {
-    schema: File.join(SCHEMA_DIR, "security.schema.json"),
-    yaml: File.join(CORE_DIR, "security", "policy.yaml")
+    schema: File.join(SCHEMA_DIR, 'security.schema.json'),
+    yaml: File.join(CORE_DIR, 'security', 'policy.yaml')
   }
 ].freeze
 
 def format_error(error)
-  fragment = error[:fragment] || error["fragment"] || "#"
-  message = error[:message] || error["message"] || error.inspect
+  fragment = error[:fragment] || error['fragment'] || '#'
+  message = error[:message] || error['message'] || error.inspect
   "#{fragment}: #{message}"
 end
 
@@ -54,13 +54,13 @@ def validate_file(yaml_path, schema_path)
     errors.each { |error| puts "  - #{format_error(error)}" }
     false
   end
-rescue => e
+rescue StandardError => e
   puts "✗ #{yaml_path}: #{e.message}"
   false
 end
 
 # Main validation - only for schemas that exist
-puts "🔍 Validating YAML files against schemas..."
+puts '🔍 Validating YAML files against schemas...'
 puts
 
 all_valid = true
@@ -70,9 +70,9 @@ end
 
 puts
 if all_valid
-  puts "✅ All schema validations passed."
+  puts '✅ All schema validations passed.'
   exit 0
 else
-  puts "❌ Some schema validations failed."
+  puts '❌ Some schema validations failed.'
   exit 1
 end

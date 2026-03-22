@@ -4,35 +4,35 @@
 # Platform Configuration Validator
 # Validates config/platforms.yaml using JSON Schema and extra integrity checks.
 
-require "json"
-require "yaml"
+require 'json'
+require 'yaml'
 begin
-  require "json-schema"
+  require 'json-schema'
 rescue LoadError
-  warn "Missing dependency: json-schema"
-  warn "Run: bundle install"
+  warn 'Missing dependency: json-schema'
+  warn 'Run: bundle install'
   exit 2
 end
 
-ROOT = File.expand_path("..", __dir__)
-SCHEMA_PATH = File.join(ROOT, "config", "schemas", "platform_config.schema.json")
-CONFIG_PATH = File.join(ROOT, "config", "platforms.yaml")
+ROOT = File.expand_path('..', __dir__)
+SCHEMA_PATH = File.join(ROOT, 'config', 'schemas', 'platform_config.schema.json')
+CONFIG_PATH = File.join(ROOT, 'config', 'platforms.yaml')
 
 def format_error(error)
-  fragment = error[:fragment] || error["fragment"] || "#"
-  message = error[:message] || error["message"] || error.inspect
+  fragment = error[:fragment] || error['fragment'] || '#'
+  message = error[:message] || error['message'] || error.inspect
   "#{fragment}: #{message}"
 end
 
 def validate_platform_config
-  puts "🔍 Validating platform configuration..."
+  puts '🔍 Validating platform configuration...'
   puts "   Schema: #{SCHEMA_PATH}"
   puts "   Config: #{CONFIG_PATH}"
   puts
 
   config = YAML.safe_load(File.read(CONFIG_PATH), aliases: true)
-  puts "✅ Configuration loaded successfully"
-  puts "   Platforms defined: #{config.fetch("platforms", {}).keys.size}"
+  puts '✅ Configuration loaded successfully'
+  puts "   Platforms defined: #{config.fetch('platforms', {}).keys.size}"
   puts
 
   schema_errors = JSON::Validator.fully_validate(
@@ -42,8 +42,8 @@ def validate_platform_config
   )
 
   alias_errors = []
-  aliases = config["aliases"]
-  platforms = config.fetch("platforms", {})
+  aliases = config['aliases']
+  platforms = config.fetch('platforms', {})
   if aliases.is_a?(Hash)
     aliases.each do |alias_name, target|
       next if platforms.key?(target)
@@ -57,23 +57,23 @@ def validate_platform_config
 
   errors = schema_errors + alias_errors
 
-  puts "\n" + "=" * 60
+  puts "\n#{'=' * 60}"
   if errors.empty?
-    puts "✅ Validation passed successfully!"
+    puts '✅ Validation passed successfully!'
     puts "\nSummary:"
-    puts "  Platforms: #{config.fetch("platforms", {}).keys.size}"
-    puts "  Aliases: #{config.fetch("aliases", {}).keys.size}"
-    puts "  Errors: 0"
+    puts "  Platforms: #{config.fetch('platforms', {}).keys.size}"
+    puts "  Aliases: #{config.fetch('aliases', {}).keys.size}"
+    puts '  Errors: 0'
     true
   else
-    puts "❌ Validation failed!"
+    puts '❌ Validation failed!'
     puts "\nErrors found (#{errors.size}):"
     errors.each_with_index do |error, index|
       puts "  #{index + 1}. #{format_error(error)}"
     end
     false
   end
-rescue => e
+rescue StandardError => e
   puts "❌ Validation crashed: #{e.class} - #{e.message}"
   false
 end

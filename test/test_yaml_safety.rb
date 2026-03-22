@@ -1,12 +1,12 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require_relative "test_helper"
-require "yaml"
-require "fileutils"
-require "tmpdir"
-require_relative "../lib/vibe/utils"
-require_relative "../lib/vibe/external_tools"
+require_relative 'test_helper'
+require 'yaml'
+require 'fileutils'
+require 'tmpdir'
+require_relative '../lib/vibe/utils'
+require_relative '../lib/vibe/external_tools'
 
 # Test host for external tools
 class ExternalToolsHost
@@ -68,11 +68,11 @@ class TestYAMLSafety < Minitest::Test
     YAML
 
     result = YAML.safe_load(safe_yaml, aliases: true)
-    assert_equal "hello", result["string"]
-    assert_equal 42, result["number"]
-    assert_equal true, result["boolean"]
-    assert_equal ["item1", "item2"], result["array"]
-    assert_equal({ "key" => "value" }, result["hash"])
+    assert_equal 'hello', result['string']
+    assert_equal 42, result['number']
+    assert_equal true, result['boolean']
+    assert_equal %w[item1 item2], result['array']
+    assert_equal({ 'key' => 'value' }, result['hash'])
   end
 
   def test_safe_load_handles_aliases
@@ -86,32 +86,32 @@ class TestYAMLSafety < Minitest::Test
     YAML
 
     result = YAML.safe_load(yaml_with_aliases, aliases: true)
-    assert_equal "value", result["instance"]["key"]
-    assert_equal "data", result["instance"]["extra"]
+    assert_equal 'value', result['instance']['key']
+    assert_equal 'data', result['instance']['extra']
   end
 
   def test_safe_load_handles_empty_document
-    result = YAML.safe_load("", aliases: true)
+    result = YAML.safe_load('', aliases: true)
     assert_nil result
   end
 
   def test_safe_load_handles_nil_value
-    result = YAML.safe_load("null", aliases: true)
+    result = YAML.safe_load('null', aliases: true)
     assert_nil result
   end
 
   # --- Integration config loading ---
 
   def test_load_integration_config_handles_missing_file
-    result = @host.load_integration_config("nonexistent")
+    result = @host.load_integration_config('nonexistent')
     assert_nil result
   end
 
   def test_load_integration_config_handles_valid_yaml
-    integrations_dir = File.join(@tmpdir, "core", "integrations")
+    integrations_dir = File.join(@tmpdir, 'core', 'integrations')
     FileUtils.mkdir_p(integrations_dir)
-    
-    config_path = File.join(integrations_dir, "test-tool.yaml")
+
+    config_path = File.join(integrations_dir, 'test-tool.yaml')
     File.write(config_path, <<~YAML)
       ---
       name: Test Tool
@@ -121,17 +121,17 @@ class TestYAMLSafety < Minitest::Test
         - feature2
     YAML
 
-    result = @host.load_integration_config("test-tool")
-    assert_equal "Test Tool", result["name"]
-    assert_equal "1.0", result["version"]
-    assert_equal ["feature1", "feature2"], result["features"]
+    result = @host.load_integration_config('test-tool')
+    assert_equal 'Test Tool', result['name']
+    assert_equal '1.0', result['version']
+    assert_equal %w[feature1 feature2], result['features']
   end
 
   def test_load_integration_config_handles_malformed_yaml
-    integrations_dir = File.join(@tmpdir, "core", "integrations")
+    integrations_dir = File.join(@tmpdir, 'core', 'integrations')
     FileUtils.mkdir_p(integrations_dir)
-    
-    config_path = File.join(integrations_dir, "bad-tool.yaml")
+
+    config_path = File.join(integrations_dir, 'bad-tool.yaml')
     File.write(config_path, <<~YAML)
       ---
       name: [unclosed array
@@ -139,32 +139,32 @@ class TestYAMLSafety < Minitest::Test
     YAML
 
     # Should catch error and return nil
-    result = @host.load_integration_config("bad-tool")
+    result = @host.load_integration_config('bad-tool')
     assert_nil result
   end
 
   def test_load_integration_config_handles_missing_keys
-    integrations_dir = File.join(@tmpdir, "core", "integrations")
+    integrations_dir = File.join(@tmpdir, 'core', 'integrations')
     FileUtils.mkdir_p(integrations_dir)
-    
-    config_path = File.join(integrations_dir, "incomplete.yaml")
+
+    config_path = File.join(integrations_dir, 'incomplete.yaml')
     File.write(config_path, <<~YAML)
       ---
       name: Incomplete Config
       # Missing other required keys
     YAML
 
-    result = @host.load_integration_config("incomplete")
-    assert_equal "Incomplete Config", result["name"]
+    result = @host.load_integration_config('incomplete')
+    assert_equal 'Incomplete Config', result['name']
     # Missing keys should return nil
-    assert_nil result["version"]
+    assert_nil result['version']
   end
 
   def test_load_integration_config_rejects_ruby_objects
-    integrations_dir = File.join(@tmpdir, "core", "integrations")
+    integrations_dir = File.join(@tmpdir, 'core', 'integrations')
     FileUtils.mkdir_p(integrations_dir)
-    
-    config_path = File.join(integrations_dir, "malicious.yaml")
+
+    config_path = File.join(integrations_dir, 'malicious.yaml')
     File.write(config_path, <<~YAML)
       ---
       exploit: !ruby/object:Object
@@ -172,15 +172,15 @@ class TestYAMLSafety < Minitest::Test
     YAML
 
     # Should catch error and return nil
-    result = @host.load_integration_config("malicious")
+    result = @host.load_integration_config('malicious')
     assert_nil result
   end
 
   def test_load_integration_config_handles_unicode
-    integrations_dir = File.join(@tmpdir, "core", "integrations")
+    integrations_dir = File.join(@tmpdir, 'core', 'integrations')
     FileUtils.mkdir_p(integrations_dir)
-    
-    config_path = File.join(integrations_dir, "unicode.yaml")
+
+    config_path = File.join(integrations_dir, 'unicode.yaml')
     File.write(config_path, <<~YAML)
       ---
       name: 工具名称
@@ -188,17 +188,17 @@ class TestYAMLSafety < Minitest::Test
       emoji: 🛠️
     YAML
 
-    result = @host.load_integration_config("unicode")
-    assert_equal "工具名称", result["name"]
-    assert_equal "Описание инструмента", result["description"]
-    assert_equal "🛠️", result["emoji"]
+    result = @host.load_integration_config('unicode')
+    assert_equal '工具名称', result['name']
+    assert_equal 'Описание инструмента', result['description']
+    assert_equal '🛠️', result['emoji']
   end
 
   def test_load_integration_config_handles_deep_nesting
-    integrations_dir = File.join(@tmpdir, "core", "integrations")
+    integrations_dir = File.join(@tmpdir, 'core', 'integrations')
     FileUtils.mkdir_p(integrations_dir)
-    
-    config_path = File.join(integrations_dir, "nested.yaml")
+
+    config_path = File.join(integrations_dir, 'nested.yaml')
     File.write(config_path, <<~YAML)
       ---
       level1:
@@ -209,7 +209,8 @@ class TestYAMLSafety < Minitest::Test
                 value: deep
     YAML
 
-    result = @host.load_integration_config("nested")
-    assert_equal "deep", result.dig("level1", "level2", "level3", "level4", "level5", "value")
+    result = @host.load_integration_config('nested')
+    assert_equal 'deep',
+                 result.dig('level1', 'level2', 'level3', 'level4', 'level5', 'value')
   end
 end

@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require_relative "test_helper"
-require_relative "../lib/vibe/skill_detector"
-require_relative "../lib/vibe/skill_adapter"
-require_relative "../lib/vibe/skill_manager"
+require_relative 'test_helper'
+require_relative '../lib/vibe/skill_detector'
+require_relative '../lib/vibe/skill_adapter'
+require_relative '../lib/vibe/skill_manager'
 
 class TestSkillManager < Minitest::Test
   def setup
     @repo_root = Dir.pwd
-    @test_dir = Dir.mktmpdir("skill-manager-test")
+    @test_dir = Dir.mktmpdir('skill-manager-test')
     @manager = Vibe::SkillManager.new(@repo_root, @test_dir)
   end
 
@@ -35,11 +35,11 @@ class TestSkillManager < Minitest::Test
     new_skills = @manager.detector.detect_new_skills
 
     # Should find skills from registry
-    assert new_skills.length > 0
+    assert new_skills.length.positive?
 
     # Should include builtin skills
     builtin_skills = new_skills.select { |s| s[:namespace] == 'builtin' }
-    assert builtin_skills.length > 0
+    assert builtin_skills.length.positive?
   end
 
   def test_adapt_skill_creates_config
@@ -49,7 +49,7 @@ class TestSkillManager < Minitest::Test
     assert @manager.adapt_skill(skill_id, :suggest)
 
     # Check config file created
-    config_path = File.join(@test_dir, ".vibe/skills.yaml")
+    config_path = File.join(@test_dir, '.vibe/skills.yaml')
     assert File.exist?(config_path)
 
     # Check config content
@@ -65,7 +65,7 @@ class TestSkillManager < Minitest::Test
     assert @manager.skip_skill(skill_id)
 
     # Check config
-    config_path = File.join(@test_dir, ".vibe/skills.yaml")
+    config_path = File.join(@test_dir, '.vibe/skills.yaml')
     config = YAML.safe_load(File.read(config_path))
 
     skipped = config['skipped_skills'].find { |s| s['id'] == skill_id }
@@ -86,7 +86,7 @@ class TestSkillManager < Minitest::Test
   def test_update_check_timestamp
     @manager.update_check_timestamp
 
-    config_path = File.join(@test_dir, ".vibe/skills.yaml")
+    config_path = File.join(@test_dir, '.vibe/skills.yaml')
     config = YAML.safe_load(File.read(config_path))
 
     assert config['last_checked']
@@ -94,14 +94,14 @@ class TestSkillManager < Minitest::Test
   end
 
   def test_update_check_timestamp_creates_directory_if_missing
-    FileUtils.rm_rf(File.join(@test_dir, ".vibe"))
+    FileUtils.rm_rf(File.join(@test_dir, '.vibe'))
     @manager.update_check_timestamp
-    config_path = File.join(@test_dir, ".vibe/skills.yaml")
+    config_path = File.join(@test_dir, '.vibe/skills.yaml')
     assert File.exist?(config_path)
   end
 
   def test_update_check_timestamp_preserves_existing_fields
-    config_path = File.join(@test_dir, ".vibe/skills.yaml")
+    config_path = File.join(@test_dir, '.vibe/skills.yaml')
     FileUtils.mkdir_p(File.dirname(config_path))
     File.write(config_path, YAML.dump('schema_version' => 1, 'custom_key' => 'preserved'))
     @manager.update_check_timestamp
@@ -113,20 +113,20 @@ class TestSkillManager < Minitest::Test
 
   def test_update_check_timestamp_no_tmp_file_left_behind
     @manager.update_check_timestamp
-    config_path = File.join(@test_dir, ".vibe/skills.yaml")
+    config_path = File.join(@test_dir, '.vibe/skills.yaml')
     tmp_files = Dir.glob("#{config_path}.tmp.*")
-    assert_empty tmp_files, "Temporary file left behind after atomic write"
+    assert_empty tmp_files, 'Temporary file left behind after atomic write'
   end
 
   def test_update_check_timestamp_last_checked_is_iso8601
     @manager.update_check_timestamp
-    config_path = File.join(@test_dir, ".vibe/skills.yaml")
+    config_path = File.join(@test_dir, '.vibe/skills.yaml')
     config = YAML.safe_load(File.read(config_path))
     assert_match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/, config['last_checked'])
   end
 
   def test_skill_info_returns_nil_for_nonexistent_skill
-    result = @manager.skill_info("nonexistent-skill-xyz")
+    result = @manager.skill_info('nonexistent-skill-xyz')
     assert_nil result
   end
 
@@ -139,7 +139,7 @@ class TestSkillManager < Minitest::Test
   def test_list_skills_tolerates_non_hash_adapted_skill_entry
     # Write a skills.yaml where one adapted_skills entry is a plain string, not a Hash.
     # Before the fix, this raised TypeError from **info splat.
-    config_path = File.join(@test_dir, ".vibe/skills.yaml")
+    config_path = File.join(@test_dir, '.vibe/skills.yaml')
     FileUtils.mkdir_p(File.dirname(config_path))
     malformed = {
       'schema_version' => 1,
@@ -157,7 +157,7 @@ class TestSkillManager < Minitest::Test
   end
 
   def test_list_skills_tolerates_nil_adapted_skill_entry
-    config_path = File.join(@test_dir, ".vibe/skills.yaml")
+    config_path = File.join(@test_dir, '.vibe/skills.yaml')
     FileUtils.mkdir_p(File.dirname(config_path))
     malformed = {
       'schema_version' => 1,
@@ -175,7 +175,7 @@ end
 class TestSkillDetector < Minitest::Test
   def setup
     @repo_root = Dir.pwd
-    @test_dir = Dir.mktmpdir("skill-detector-test")
+    @test_dir = Dir.mktmpdir('skill-detector-test')
     @detector = Vibe::SkillDetector.new(@repo_root, @test_dir)
   end
 
@@ -186,7 +186,7 @@ class TestSkillDetector < Minitest::Test
   def test_load_registry_skills
     skills = @detector.send(:load_registry_skills)
 
-    assert skills.length > 0
+    assert skills.length.positive?
 
     # Check skill structure
     skill = skills.first
@@ -221,7 +221,7 @@ end
 class TestSkillAdapter < Minitest::Test
   def setup
     @repo_root = Dir.pwd
-    @test_dir = Dir.mktmpdir("skill-adapter-test")
+    @test_dir = Dir.mktmpdir('skill-adapter-test')
     @adapter = Vibe::SkillAdapter.new(@repo_root, @test_dir)
   end
 

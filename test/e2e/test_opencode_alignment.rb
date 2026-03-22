@@ -28,16 +28,16 @@ class TestOpenCodeClaudeCodeAlignment < Minitest::Test
     assert File.exist?(File.join(opencode_output, '.vibe/opencode/behavior-policies.md'))
 
     # Both should generate task-routing.md (NEW - aligned)
-    assert File.exist?(File.join(claude_output, '.vibe/claude-code/task-routing.md')), 
-           "Claude Code should have task-routing.md"
-    assert File.exist?(File.join(opencode_output, '.vibe/opencode/task-routing.md')), 
-           "OpenCode should have task-routing.md (aligned with Claude Code)"
+    assert File.exist?(File.join(claude_output, '.vibe/claude-code/task-routing.md')),
+           'Claude Code should have task-routing.md'
+    assert File.exist?(File.join(opencode_output, '.vibe/opencode/task-routing.md')),
+           'OpenCode should have task-routing.md (aligned with Claude Code)'
 
     # Both should generate test-standards.md (NEW - aligned)
-    assert File.exist?(File.join(claude_output, '.vibe/claude-code/test-standards.md')), 
-           "Claude Code should have test-standards.md"
-    assert File.exist?(File.join(opencode_output, '.vibe/opencode/test-standards.md')), 
-           "OpenCode should have test-standards.md (aligned with Claude Code)"
+    assert File.exist?(File.join(claude_output, '.vibe/claude-code/test-standards.md')),
+           'Claude Code should have test-standards.md'
+    assert File.exist?(File.join(opencode_output, '.vibe/opencode/test-standards.md')),
+           'OpenCode should have test-standards.md (aligned with Claude Code)'
   end
 
   def test_opencode_project_generates_minimal_docs_like_claude_code
@@ -59,18 +59,19 @@ class TestOpenCodeClaudeCodeAlignment < Minitest::Test
     assert File.exist?(File.join(opencode_project, 'opencode.json'))
 
     # Both should have minimal docs (behavior + safety only)
-    assert File.exist?(File.join(claude_project, '.vibe/claude-code/behavior-policies.md'))
+    assert File.exist?(File.join(claude_project,
+                                 '.vibe/claude-code/behavior-policies.md'))
     assert File.exist?(File.join(opencode_project, '.vibe/opencode/behavior-policies.md'))
 
     # Neither should have task-routing or test-standards in project mode
     refute File.exist?(File.join(claude_project, '.vibe/claude-code/task-routing.md')),
-           "Claude Code project should NOT have task-routing.md"
+           'Claude Code project should NOT have task-routing.md'
     refute File.exist?(File.join(opencode_project, '.vibe/opencode/task-routing.md')),
-           "OpenCode project should NOT have task-routing.md"
+           'OpenCode project should NOT have task-routing.md'
     refute File.exist?(File.join(claude_project, '.vibe/claude-code/test-standards.md')),
-           "Claude Code project should NOT have test-standards.md"
+           'Claude Code project should NOT have test-standards.md'
     refute File.exist?(File.join(opencode_project, '.vibe/opencode/test-standards.md')),
-           "OpenCode project should NOT have test-standards.md"
+           'OpenCode project should NOT have test-standards.md'
   end
 
   def test_opencode_instructions_aligned_with_claude_code_structure
@@ -81,15 +82,15 @@ class TestOpenCodeClaudeCodeAlignment < Minitest::Test
     instructions = config['instructions']
 
     # Should reference AGENTS.md (entrypoint)
-    assert instructions.include?('AGENTS.md'), "Should include AGENTS.md"
+    assert instructions.include?('AGENTS.md'), 'Should include AGENTS.md'
 
     # Should reference behavior-policies.md
     assert instructions.any? { |i| i.include?('behavior-policies.md') },
-           "Should include behavior-policies.md"
+           'Should include behavior-policies.md'
 
     # Should reference safety.md
     assert instructions.any? { |i| i.include?('safety.md') },
-           "Should include safety.md"
+           'Should include safety.md'
   end
 
   def test_opencode_global_copies_runtime_dirs
@@ -124,15 +125,15 @@ class TestOpenCodeClaudeCodeAlignment < Minitest::Test
     system("#{@vibe} build opencode --output #{output} 2>/dev/null")
 
     readme_path = File.join(output, '.vibe/opencode/README.md')
-    assert File.exist?(readme_path), "Should generate .vibe/opencode/README.md"
+    assert File.exist?(readme_path), 'Should generate .vibe/opencode/README.md'
 
     readme = File.read(readme_path)
 
     # Should reference OpenCode-specific assets, not Claude Code ones
-    assert readme.include?('AGENTS.md'), "README should list AGENTS.md entrypoint"
-    assert readme.include?('opencode.json'), "README should list opencode.json"
-    refute readme.include?('CLAUDE.md'), "README should NOT list CLAUDE.md"
-    refute readme.include?('settings.json'), "README should NOT list settings.json"
+    assert readme.include?('AGENTS.md'), 'README should list AGENTS.md entrypoint'
+    assert readme.include?('opencode.json'), 'README should list opencode.json'
+    refute readme.include?('CLAUDE.md'), 'README should NOT list CLAUDE.md'
+    refute readme.include?('settings.json'), 'README should NOT list settings.json'
 
     # Should list runtime dirs
     %w[rules/ docs/ skills/].each do |dir|

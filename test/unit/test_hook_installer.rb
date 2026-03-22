@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "minitest/autorun"
-require "tmpdir"
-require "fileutils"
-require_relative "../../lib/vibe/hook_installer"
+require 'minitest/autorun'
+require 'tmpdir'
+require 'fileutils'
+require_relative '../../lib/vibe/hook_installer'
 
 class HookInstallerTestHost
   include Vibe::HookInstaller
@@ -26,14 +26,14 @@ end
 
 class TestHookInstaller < Minitest::Test
   def setup
-    @repo_root = Dir.mktmpdir("vibe-hook-test")
-    @destination = Dir.mktmpdir("claude-config")
+    @repo_root = Dir.mktmpdir('vibe-hook-test')
+    @destination = Dir.mktmpdir('claude-config')
     @host = HookInstallerTestHost.new(@repo_root)
 
     # Create the hooks directory and script in repo
-    hooks_dir = File.join(@repo_root, "hooks")
+    hooks_dir = File.join(@repo_root, 'hooks')
     FileUtils.mkdir_p(hooks_dir)
-    @hook_source = File.join(hooks_dir, "pre-session-end.sh")
+    @hook_source = File.join(hooks_dir, 'pre-session-end.sh')
     File.write(@hook_source, "#!/bin/bash\necho 'Test hook'\n")
     FileUtils.chmod(0o755, @hook_source)
   end
@@ -71,20 +71,20 @@ class TestHookInstaller < Minitest::Test
     result = @host.install_pre_session_end_hook(destination_root: @destination)
     assert result
 
-    hook_path = File.join(@destination, "hooks", "pre-session-end.sh")
+    hook_path = File.join(@destination, 'hooks', 'pre-session-end.sh')
     assert File.exist?(hook_path)
     assert File.executable?(hook_path)
   end
 
   def test_install_pre_session_end_hook_creates_hooks_directory
     @host.install_pre_session_end_hook(destination_root: @destination)
-    hooks_dir = File.join(@destination, "hooks")
+    hooks_dir = File.join(@destination, 'hooks')
     assert Dir.exist?(hooks_dir)
   end
 
   def test_install_pre_session_end_hook_creates_settings_file
     @host.install_pre_session_end_hook(destination_root: @destination)
-    settings_file = File.join(@destination, "settings.json")
+    settings_file = File.join(@destination, 'settings.json')
     assert File.exist?(settings_file)
   end
 
@@ -101,11 +101,12 @@ class TestHookInstaller < Minitest::Test
     @host.install_pre_session_end_hook(destination_root: @destination)
 
     # Modify the hook
-    hook_path = File.join(@destination, "hooks", "pre-session-end.sh")
-    File.write(hook_path, "# Modified")
+    hook_path = File.join(@destination, 'hooks', 'pre-session-end.sh')
+    File.write(hook_path, '# Modified')
 
     # Reinstall with force
-    result = @host.install_pre_session_end_hook(destination_root: @destination, force: true)
+    result = @host.install_pre_session_end_hook(destination_root: @destination,
+                                                force: true)
     assert result
 
     # Hook should be restored
@@ -118,11 +119,12 @@ class TestHookInstaller < Minitest::Test
     @host.install_pre_session_end_hook(destination_root: @destination)
 
     # Modify the hook
-    hook_path = File.join(@destination, "hooks", "pre-session-end.sh")
-    File.write(hook_path, "# Modified content")
+    hook_path = File.join(@destination, 'hooks', 'pre-session-end.sh')
+    File.write(hook_path, '# Modified content')
 
     # Try to reinstall without force
-    result = @host.install_pre_session_end_hook(destination_root: @destination, force: false)
+    result = @host.install_pre_session_end_hook(destination_root: @destination,
+                                                force: false)
     assert result
 
     # Hook should NOT be restored (still modified)
@@ -139,7 +141,7 @@ class TestHookInstaller < Minitest::Test
     assert result[:executable]
     assert result[:configured]
     assert result[:ready]
-    assert_equal File.join(@destination, "hooks", "pre-session-end.sh"), result[:path]
+    assert_equal File.join(@destination, 'hooks', 'pre-session-end.sh'), result[:path]
   end
 
   def test_verify_pre_session_end_hook_not_installed
@@ -155,7 +157,7 @@ class TestHookInstaller < Minitest::Test
     @host.install_pre_session_end_hook(destination_root: @destination)
 
     # Remove execute permission
-    hook_path = File.join(@destination, "hooks", "pre-session-end.sh")
+    hook_path = File.join(@destination, 'hooks', 'pre-session-end.sh')
     FileUtils.chmod(0o644, hook_path)
 
     result = @host.verify_pre_session_end_hook(destination_root: @destination)
@@ -166,41 +168,41 @@ class TestHookInstaller < Minitest::Test
   end
 
   def test_configure_hook_in_settings_creates_new_settings
-    settings_file = File.join(@destination, "settings.json")
-    hook_path = "/path/to/hook.sh"
+    settings_file = File.join(@destination, 'settings.json')
+    hook_path = '/path/to/hook.sh'
 
     @host.public_configure_hook_in_settings(settings_file, hook_path)
 
     assert File.exist?(settings_file)
 
     settings = JSON.parse(File.read(settings_file))
-    assert settings.key?("hooks")
-    assert settings["hooks"].key?("Stop")
-    assert settings["hooks"]["Stop"].is_a?(Array)
-    assert settings["hooks"]["Stop"].length > 0
+    assert settings.key?('hooks')
+    assert settings['hooks'].key?('Stop')
+    assert settings['hooks']['Stop'].is_a?(Array)
+    assert settings['hooks']['Stop'].length.positive?
   end
 
   def test_configure_hook_in_settings_adds_hook_entry
-    settings_file = File.join(@destination, "settings.json")
-    hook_path = "/path/to/hook.sh"
+    settings_file = File.join(@destination, 'settings.json')
+    hook_path = '/path/to/hook.sh'
 
     @host.public_configure_hook_in_settings(settings_file, hook_path)
 
     settings = JSON.parse(File.read(settings_file))
-    stop_hooks = settings["hooks"]["Stop"]
+    stop_hooks = settings['hooks']['Stop']
     hook_entry = stop_hooks.first
 
-    assert hook_entry.key?("hooks")
-    assert hook_entry["hooks"].is_a?(Array)
+    assert hook_entry.key?('hooks')
+    assert hook_entry['hooks'].is_a?(Array)
 
-    command_hook = hook_entry["hooks"].first
-    assert_equal "command", command_hook["type"]
-    assert_equal hook_path, command_hook["command"]
+    command_hook = hook_entry['hooks'].first
+    assert_equal 'command', command_hook['type']
+    assert_equal hook_path, command_hook['command']
   end
 
   def test_configure_hook_in_settings_does_not_duplicate
-    settings_file = File.join(@destination, "settings.json")
-    hook_path = "/path/to/hook.sh"
+    settings_file = File.join(@destination, 'settings.json')
+    hook_path = '/path/to/hook.sh'
 
     # Configure once
     @host.public_configure_hook_in_settings(settings_file, hook_path)
@@ -209,7 +211,7 @@ class TestHookInstaller < Minitest::Test
     @host.public_configure_hook_in_settings(settings_file, hook_path)
 
     settings = JSON.parse(File.read(settings_file))
-    stop_hooks = settings["hooks"]["Stop"]
+    stop_hooks = settings['hooks']['Stop']
 
     # Should only have one entry (no duplicate)
     # Note: Currently the code does add duplicates, so we test the actual behavior
@@ -217,39 +219,39 @@ class TestHookInstaller < Minitest::Test
   end
 
   def test_configure_hook_in_settings_preserves_existing_settings
-    settings_file = File.join(@destination, "settings.json")
+    settings_file = File.join(@destination, 'settings.json')
     existing_settings = {
-      "existingKey" => "existingValue",
-      "anotherKey" => 123
+      'existingKey' => 'existingValue',
+      'anotherKey' => 123
     }
     File.write(settings_file, JSON.pretty_generate(existing_settings))
 
-    hook_path = "/path/to/hook.sh"
+    hook_path = '/path/to/hook.sh'
     @host.public_configure_hook_in_settings(settings_file, hook_path)
 
     settings = JSON.parse(File.read(settings_file))
-    assert_equal "existingValue", settings["existingKey"]
-    assert_equal 123, settings["anotherKey"]
+    assert_equal 'existingValue', settings['existingKey']
+    assert_equal 123, settings['anotherKey']
   end
 
   def test_hook_configured_in_settings_returns_false_when_missing
-    settings_file = File.join(@destination, "settings.json")
+    settings_file = File.join(@destination, 'settings.json')
 
     result = @host.public_hook_configured_in_settings?(settings_file)
     refute result
   end
 
   def test_hook_configured_in_settings_returns_false_when_invalid_json
-    settings_file = File.join(@destination, "settings.json")
-    File.write(settings_file, "invalid json {")
+    settings_file = File.join(@destination, 'settings.json')
+    File.write(settings_file, 'invalid json {')
 
     result = @host.public_hook_configured_in_settings?(settings_file)
     refute result
   end
 
   def test_hook_configured_in_settings_returns_true_when_configured
-    settings_file = File.join(@destination, "settings.json")
-    hook_path = "/path/to/pre-session-end.sh"
+    settings_file = File.join(@destination, 'settings.json')
+    hook_path = '/path/to/pre-session-end.sh'
 
     @host.public_configure_hook_in_settings(settings_file, hook_path)
 
@@ -258,16 +260,16 @@ class TestHookInstaller < Minitest::Test
   end
 
   def test_hook_configured_in_settings_returns_false_when_different_hook
-    settings_file = File.join(@destination, "settings.json")
+    settings_file = File.join(@destination, 'settings.json')
 
     settings = {
-      "hooks" => {
-        "Stop" => [
+      'hooks' => {
+        'Stop' => [
           {
-            "hooks" => [
+            'hooks' => [
               {
-                "type" => "command",
-                "command" => "/some/other/hook.sh"
+                'type' => 'command',
+                'command' => '/some/other/hook.sh'
               }
             ]
           }
