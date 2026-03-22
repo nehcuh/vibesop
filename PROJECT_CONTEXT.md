@@ -3,17 +3,17 @@
 ## Session Handoff
 
 <!-- handoff:start -->
-### 2026-03-22 14:22
-- **深度评审**: 全面评审 VibeSOP 架构（可移植核心+目标适配器+生成器）、实现质量（22个Ruby模块，289个测试）、技能系统（注册表+适配器+检测器）、文档质量
-- **配置验证**: 确认 OpenCode 配置正确加载（AGENTS.md + behavior-policies.md + safety.md），核心规则生效（ssot-first, verify-before-claim, root-cause-debugging）
-- **功能分析**: vibe switch 包含技能自动检测（SkillDetector）+ 交互式配置入口（SkillAdapter.adapt_interactively）+ 配置持久化（.vibe/skills.yaml）
-- **评审结论**: 生产就绪，架构优秀（4.7/5.0），复杂度有合理的设计考量，铁律文化是核心价值
-- **Next**: 继续 Q2 路线图下一个 Phase（Token 优化或社区最佳实践）
+### 2026-03-22 下午（本次会话）
+- **深度评审 → 优化**: 覆盖率 33.97% → 37.61%（+149 tests，591 → 740 runs），修复 5 个真实 bug
+- **关键 bug 修复**: grader `determine_grade` Symbol/String 类型不匹配（warning 分支从未触发）、CJK token 低估 3 倍（0.5 → 1.5）、skill_manager splat TypeError、trigger_manager 状态注入不可测
+- **OpenCode 验证**: 6 项对齐测试全通过，与 Claude Code 功能对等
+- **文档修复**: 模块数 22→50+、测试数 289/273→740、skills 目录补全 4 项、CHANGELOG 补入 bug 修复
+- **当前状态**: main 分支干净，已推送 origin，工作区无遗留
+- **Next**: Q2 路线图 Phase 2（Token 优化）或 Phase 6（RIPER/Parry 社区最佳实践）
 
 ### 2026-03-22 上午
 - 4项评审改进完成：SessionAnalyzer 格式版本检测、InstinctManager 权重可配置、Grader token 预算、vibe onboard 命令
-- 2 commits, +17 tests, README/CHANGELOG 同步
-- 分支 improve/review-suggestions 待合并
+- improve/review-suggestions 已合并，README/CHANGELOG 已同步
 <!-- handoff:end -->
 
 ### 2026-03-18
