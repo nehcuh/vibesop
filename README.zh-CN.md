@@ -16,7 +16,7 @@ VibeSOP fork 自 [runesleo/claude-code-workflow](https://github.com/runesleo/cla
 |---|---|---|
 | 平台支持 | 仅 Claude Code | Claude Code + OpenCode + 可扩展至未来平台 |
 | 核心规范 | 与 Claude Code 耦合 | 可移植 `core/`（模型、技能、策略、安全） |
-| CLI | 基础 shell 脚本 | 完整 Ruby CLI（`bin/vibe`），8 个命令 |
+| CLI | 基础 shell 脚本 | 完整 Ruby CLI（`bin/vibe`），9 个命令 |
 | 架构 | 单文件配置 | 22 个模块化 Ruby 库 |
 | Windows 支持 | 仅 WSL2 / Git Bash | 原生 cmd.exe 批处理脚本，跨平台检测 |
 | 定制化 | 手动编辑文件 | Overlay 系统（`.vibe/overlay.yaml`） |
@@ -42,6 +42,10 @@ VibeSOP fork 自 [runesleo/claude-code-workflow](https://github.com/runesleo/cla
 
 ## 最新更新 (2026-03)
 
+- **🚀 引导式上手** (`vibe onboard`)：5 步交互式新用户引导 — 部署配置、记录角色、运行 doctor 检查、预览 P0 系统调试技能、展示后续步骤。已安装配置时可使用 `--skip-deploy` 跳过第 1 步。
+- **🛡️ SessionAnalyzer 格式版本检测**：`detect_format()` 支持 v1/v2 格式。未知格式现在会发出警告并返回 `[]`，不再静默产生错误结果。
+- **⚙️ Instinct 置信度权重可配置**：`InstinctManager` 支持 `config: { weights: { ... } }` 参数，`DEFAULT_WEIGHTS` 常量暴露默认的 60/30/10 权重，完全向后兼容。
+- **💰 Grader token 预算**：`pass_at_k` 支持 `:token_budget` 参数，超预算候选标记为 `:skipped`，保持不同大小候选的评估结果可比。
 - **🛠️ Skill Craft 系统**：从自己的会话历史中生成可复用的个人技能
   - `vibe skill-craft` — 交互式会话：分析 → 选择模式 → 生成技能
   - `vibe skill-craft analyze` — 检测重复工具序列、错误恢复流程和工作流

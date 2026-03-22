@@ -10,8 +10,15 @@ module Vibe
   class InstinctManager
     attr_reader :data, :path
 
-    def initialize(storage_path = nil)
+    DEFAULT_WEIGHTS = {
+      success_rate:     0.6,
+      usage_frequency:  0.3,
+      source_diversity: 0.1
+    }.freeze
+
+    def initialize(storage_path = nil, config: {})
       @path = storage_path || default_storage_path
+      @weights = DEFAULT_WEIGHTS.merge(config[:weights] || {})
       @data = load_data
       ensure_storage_directory
     end
@@ -149,20 +156,10 @@ module Vibe
     # @param instinct [Hash] Instinct object
     # @return [Float] Confidence score (0.0-1.0)
     def calculate_confidence(instinct)
-      # Base score: success rate (60% weight)
-      base_score = instinct['success_rate'] * 0.6
-
-      # Usage frequency score (30% weight)
-      # More usage = higher confidence, but capped at 20 uses
-      usage_score = [instinct['usage_count'] / 20.0, 1.0].min * 0.3
-
-      # Source diversity score (10% weight)
-      # Multiple sessions = more reliable
-      diversity_score = [instinct['source_sessions'].size / 5.0, 1.0].min * 0.1
-
-      # Total confidence
-      confidence = base_score + usage_score + diversity_score
-      [confidence, 1.0].min
+      base_score      = instinct['success_rate'] * @weights[:success_rate]
+      usage_score     = [instinct['usage_count'] / 20.0, 1.0].min * @weights[:usage_frequency]
+      diversity_score = [instinct['source_sessions'].size / 5.0, 1.0].min * @weights[:source_diversity]
+      [base_score + usage_score + diversity_score, 1.0].min
     end
 
     # Export instincts to file

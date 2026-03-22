@@ -175,4 +175,52 @@ class TestGrader < Minitest::Test
     assert_equal "fail", result[:grade]
     assert result[:output].length > 0
   end
+
+  # --- pass_at_k token budget ---
+
+  def test_pass_at_k_no_budget_behavior_unchanged
+    candidates = [
+      { code: "exit 0", description: "pass" },
+      { code: "exit 1", description: "fail" }
+    ]
+    result = @grader.pass_at_k(candidates, { type: :unit_test, command: "sh {code_file}", k: 2 })
+
+    assert_equal 2, result[:k]
+    assert_nil result[:token_budget]
+    assert_equal 0, result[:budget_exceeded_count]
+  end
+
+  def test_pass_at_k_token_budget_skips_large_candidates
+    # 1 char / 4 = 0.25 tokens; budget=1 → only skipped if code > 4 chars
+    small_code = "x"       # ~0 tokens, passes budget
+    large_code = "x" * 40 # ~10 tokens, exceeds budget of 5
+    candidates = [
+      { code: small_code, description: "small" },
+      { code: large_code, description: "large" }
+    ]
+    result = @grader.pass_at_k(candidates, {
+      type: :unit_test,
+      command: "sh {code_file}",
+      k: 2,
+      token_budget: 5
+    })
+
+    assert_equal 5, result[:token_budget]
+    assert_equal 1, result[:budget_exceeded_count]
+    skipped = result[:results].select { |r| r[:grade] == :skipped }
+    assert_equal 1, skipped.size
+    assert_equal "exceeds_token_budget", skipped.first[:reason]
+  end
+
+  def test_pass_at_k_budget_exceeded_count_zero_when_all_fit
+    candidates = [{ code: "x", description: "tiny" }]
+    result = @grader.pass_at_k(candidates, {
+      type: :unit_test,
+      command: "sh {code_file}",
+      k: 1,
+      token_budget: 100
+    })
+
+    assert_equal 0, result[:budget_exceeded_count]
+  end
 end

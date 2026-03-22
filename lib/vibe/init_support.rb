@@ -10,6 +10,7 @@ require_relative 'platform_installer'
 require_relative 'rtk_installer'
 require_relative 'integration_manager'
 require_relative 'quickstart_runner'
+require_relative 'onboard_runner'
 require_relative 'superpowers_installer'
 require_relative 'integration_setup'
 require_relative 'integration_recommendations'
@@ -31,6 +32,7 @@ module Vibe
   #   - Vibe::RtkInstaller — RTK installation logic
   #   - Vibe::IntegrationManager — integration detection and management
   #   - Vibe::QuickstartRunner — quickstart setup logic
+  #   - Vibe::OnboardRunner — guided 5-step onboarding
   #   - Vibe::SuperpowersInstaller — Superpowers installation logic
   #   - Vibe::IntegrationSetup — integration setup logic
   #   - Vibe::IntegrationRecommendations — integration recommendations
@@ -44,6 +46,7 @@ module Vibe
     include RtkInstaller
     include IntegrationManager
     include QuickstartRunner
+    include OnboardRunner
     include SuperpowersInstaller
     include IntegrationSetup
     include IntegrationRecommendations

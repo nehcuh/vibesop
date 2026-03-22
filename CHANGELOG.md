@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Guided Onboarding** (`vibe onboard [--skip-deploy]`) — 5-step interactive setup that deploys config, records user role, runs doctor check, previews the P0 systematic-debugging skill, and shows next steps
+- **SessionAnalyzer format versioning** — `detect_format()` with `SUPPORTED_FORMATS` (v1: `### S\d+` headers, v2: ISO-date `## Session YYYY-MM-DD` headers); unknown formats warn and return `[]` instead of silently producing wrong results
+- **Configurable instinct confidence weights** — `InstinctManager` accepts `config: { weights: { success_rate:, usage_frequency:, source_diversity: } }`; `DEFAULT_WEIGHTS` constant exposes the 60/30/10 defaults; fully backward-compatible
+- **Grader token budget** — `pass_at_k` supports `:token_budget` (chars/4 estimate); over-budget candidates are marked `grade: :skipped` with `reason: 'exceeds_token_budget'`; result includes `budget_exceeded_count` field; no-op when unset
+
 - **Skill Craft System** (2026-03-20)
   - `skills/skill-craft/SKILL.md` — craft personal skills from session history
   - Multi-trigger mechanism: project completion, session accumulation, periodic review

@@ -284,4 +284,38 @@ class InstinctManagerTest < Minitest::Test
     assert_includes context, "High confidence"
     refute_includes context, "Low confidence"
   end
+
+  # --- Configurable weights ---
+
+  def test_default_weights_match_constant
+    assert_equal Vibe::InstinctManager::DEFAULT_WEIGHTS, {
+      success_rate: 0.6,
+      usage_frequency: 0.3,
+      source_diversity: 0.1
+    }
+  end
+
+  def test_custom_weights_applied_to_confidence
+    custom_manager = Vibe::InstinctManager.new(
+      @storage_path,
+      config: { weights: { success_rate: 1.0, usage_frequency: 0.0, source_diversity: 0.0 } }
+    )
+    instinct = {
+      "success_rate" => 0.5,
+      "usage_count" => 20,
+      "source_sessions" => %w[s1 s2 s3 s4 s5]
+    }
+    # With all weight on success_rate: confidence = 0.5 * 1.0 = 0.5
+    assert_in_delta 0.5, custom_manager.send(:calculate_confidence, instinct), 0.001
+  end
+
+  def test_default_weights_backward_compatible
+    instinct = {
+      "success_rate" => 1.0,
+      "usage_count" => 20,
+      "source_sessions" => %w[s1 s2 s3 s4 s5]
+    }
+    # default: 1.0*0.6 + 1.0*0.3 + 1.0*0.1 = 1.0
+    assert_in_delta 1.0, @manager.send(:calculate_confidence, instinct), 0.001
+  end
 end
