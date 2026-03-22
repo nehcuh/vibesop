@@ -14,159 +14,17 @@ module Vibe
     def check_and_suggest_integrations(platform)
       @target_platform = platform
       status = integration_status
+      missing, pending = classify_integrations(status)
 
-      missing = []
-      pending = []
-
-      status.each do |name, info|
-        if !info[:installed]
-          missing << name
-        elsif !info[:ready]
-          pending << name
-        end
-      end
-
-      # Always show integration status summary
-      puts
-      puts '📦 Optional Integrations'
-      puts '=' * 50
-
-      # Display status for all integrations
-      status.each do |name, info|
-        label = case name
-                when :superpowers then 'Superpowers'
-                when :rtk then 'RTK'
-                when :gstack then 'gstack'
-                else name.to_s.capitalize
-                end
-        if info[:ready]
-          puts "  ✓ #{label}: Ready"
-        elsif info[:installed]
-          puts "  ⚠ #{label}: Installed but needs configuration"
-        else
-          puts "  ✗ #{label}: Not installed"
-        end
-      end
-
+      print_integration_summary(status)
       return if missing.empty? && pending.empty?
 
       puts
-
       interactive = $stdin.respond_to?(:tty?) && $stdin.tty?
 
-      if missing.include?(:superpowers)
-        puts
-        puts '⚠️  Superpowers Skill Pack not detected'
-        puts '   Superpowers provides advanced workflows like TDD, ' \
-             'debugging, and code review.'
-        puts
-        puts '   Repository: https://github.com/obra/superpowers'
-        puts
-
-        if interactive
-          if ask_yes_no('Would you like to install Superpowers now?')
-            success = install_superpowers_auto(platform)
-            if success
-              puts '   ✓ Superpowers installed successfully!'
-              puts
-              verify_superpowers_install(platform)
-            else
-              puts '   ❌ Installation failed'
-            end
-          end
-        else
-          puts '   (Run in an interactive terminal to install automatically)'
-        end
-      end
-
-      if pending.include?(:superpowers)
-        puts
-        puts '⚠️  Superpowers is cloned but not linked to this platform'
-        puts '   Skills are available at ~/.config/skills/superpowers ' \
-             "but not linked for #{platform}."
-        puts
-
-        if interactive
-          if ask_yes_no('Would you like to link Superpowers skills now?')
-            success = install_superpowers_auto(platform)
-            if success
-              puts '   ✓ Superpowers skills linked successfully!'
-              puts
-              verify_superpowers_install(platform)
-            else
-              puts '   ❌ Linking failed'
-            end
-          end
-        else
-          puts '   (Run in an interactive terminal to link automatically)'
-        end
-      end
-
-      if missing.include?(:rtk)
-        puts
-        puts '⚠️  RTK Token Optimizer not detected'
-        puts '   RTK reduces token consumption by 60-90% on common commands.'
-        puts
-        puts '   To install:'
-        puts '   brew install rtk  # or download from https://github.com/runesleo/rtk'
-        puts
-
-        if interactive
-          should_install_rtk = ask_yes_no(
-            'Would you like to install RTK now? (requires Homebrew)'
-          )
-          if should_install_rtk && install_rtk_interactive
-            status = integration_status
-            pending << :rtk if status[:rtk][:installed] && !status[:rtk][:ready]
-          end
-        else
-          puts '   (Run in an interactive terminal to install automatically)'
-        end
-      end
-
-      if pending.include?(:rtk)
-        rtk_status = status[:rtk] || integration_status[:rtk]
-        if rtk_status[:installed] && !rtk_status[:hook_configured]
-          puts
-          puts '⚠️  RTK is installed but hook not configured'
-          puts '   To enable RTK optimization, run: rtk init --global'
-          puts
-
-          if $stdin.respond_to?(:tty?) && $stdin.tty?
-            configure_rtk_hook if ask_yes_no('Would you like to configure RTK hook now?')
-          else
-            puts '   (Run in an interactive terminal to configure automatically)'
-          end
-        end
-      end
-
-      if missing.include?(:gstack)
-        puts
-        puts '⚠️  gstack Skill Pack not detected'
-        puts '   gstack provides a virtual engineering team: product ' \
-             'thinking, code review,'
-        puts '   browser QA, release automation, and safety guardrails.'
-        puts
-        puts '   Repository: https://github.com/garrytan/gstack'
-        puts
-
-        if interactive
-          if ask_yes_no('Would you like to install gstack now?')
-            success = install_gstack_auto(platform)
-            if success
-              puts
-              verify_gstack_install(platform)
-            else
-              puts '   ❌ Installation failed'
-            end
-          end
-        else
-          puts '   (Run in an interactive terminal to install automatically)'
-          puts '   Manual: git clone https://github.com/garrytan/gstack.git ' \
-               '~/.claude/skills/gstack'
-          puts '           cd ~/.claude/skills/gstack && ./setup'
-        end
-      end
+      handle_superpowers(platform, missing, pending, interactive)
+      handle_rtk(platform, missing, pending, status, interactive)
+      handle_gstack(platform, missing, interactive)
 
       puts
     end
@@ -207,6 +65,148 @@ module Vibe
     end
 
     private
+
+    def classify_integrations(status)
+      missing = []
+      pending = []
+      status.each do |name, info|
+        if !info[:installed]
+          missing << name
+        elsif !info[:ready]
+          pending << name
+        end
+      end
+      [missing, pending]
+    end
+
+    def print_integration_summary(status)
+      puts
+      puts '📦 Optional Integrations'
+      puts '=' * 50
+      status.each do |name, info|
+        label = case name
+                when :superpowers then 'Superpowers'
+                when :rtk then 'RTK'
+                when :gstack then 'gstack'
+                else name.to_s.capitalize
+                end
+        if info[:ready]
+          puts "  ✓ #{label}: Ready"
+        elsif info[:installed]
+          puts "  ⚠ #{label}: Installed but needs configuration"
+        else
+          puts "  ✗ #{label}: Not installed"
+        end
+      end
+    end
+
+    def handle_superpowers(platform, missing, pending, interactive)
+      if missing.include?(:superpowers)
+        puts
+        puts '⚠️  Superpowers Skill Pack not detected'
+        puts '   Superpowers provides advanced workflows like TDD, debugging, and code review.'
+        puts
+        puts '   Repository: https://github.com/obra/superpowers'
+        puts
+        if interactive
+          if ask_yes_no('Would you like to install Superpowers now?')
+            success = install_superpowers_auto(platform)
+            if success
+              puts '   ✓ Superpowers installed successfully!'
+              puts
+              verify_superpowers_install(platform)
+            else
+              puts '   ❌ Installation failed'
+            end
+          end
+        else
+          puts '   (Run in an interactive terminal to install automatically)'
+        end
+      end
+
+      return unless pending.include?(:superpowers)
+
+      puts
+      puts '⚠️  Superpowers is cloned but not linked to this platform'
+      puts "   Skills are available at ~/.config/skills/superpowers but not linked for #{platform}."
+      puts
+      if interactive
+        if ask_yes_no('Would you like to link Superpowers skills now?')
+          success = install_superpowers_auto(platform)
+          if success
+            puts '   ✓ Superpowers skills linked successfully!'
+            puts
+            verify_superpowers_install(platform)
+          else
+            puts '   ❌ Linking failed'
+          end
+        end
+      else
+        puts '   (Run in an interactive terminal to link automatically)'
+      end
+    end
+
+    def handle_rtk(platform, missing, pending, status, interactive)
+      if missing.include?(:rtk)
+        puts
+        puts '⚠️  RTK Token Optimizer not detected'
+        puts '   RTK reduces token consumption by 60-90% on common commands.'
+        puts
+        puts '   To install:'
+        puts '   brew install rtk  # or download from https://github.com/runesleo/rtk'
+        puts
+        if interactive
+          if ask_yes_no('Would you like to install RTK now? (requires Homebrew)') && install_rtk_interactive
+            new_status = integration_status
+            pending << :rtk if new_status[:rtk][:installed] && !new_status[:rtk][:ready]
+          end
+        else
+          puts '   (Run in an interactive terminal to install automatically)'
+        end
+      end
+
+      return unless pending.include?(:rtk)
+
+      rtk_status = status[:rtk] || integration_status[:rtk]
+      return unless rtk_status[:installed] && !rtk_status[:hook_configured]
+
+      puts
+      puts '⚠️  RTK is installed but hook not configured'
+      puts '   To enable RTK optimization, run: rtk init --global'
+      puts
+      if $stdin.respond_to?(:tty?) && $stdin.tty?
+        configure_rtk_hook if ask_yes_no('Would you like to configure RTK hook now?')
+      else
+        puts '   (Run in an interactive terminal to configure automatically)'
+      end
+    end
+
+    def handle_gstack(platform, missing, interactive)
+      return unless missing.include?(:gstack)
+
+      puts
+      puts '⚠️  gstack Skill Pack not detected'
+      puts '   gstack provides a virtual engineering team: product thinking, code review,'
+      puts '   browser QA, release automation, and safety guardrails.'
+      puts
+      puts '   Repository: https://github.com/garrytan/gstack'
+      puts
+      if interactive
+        if ask_yes_no('Would you like to install gstack now?')
+          success = install_gstack_auto(platform)
+          if success
+            puts
+            verify_gstack_install(platform)
+          else
+            puts '   ❌ Installation failed'
+          end
+        end
+      else
+        puts '   (Run in an interactive terminal to install automatically)'
+        puts '   Manual: git clone https://github.com/garrytan/gstack.git ~/.claude/skills/gstack'
+        puts '           cd ~/.claude/skills/gstack && ./setup'
+      end
+    end
 
     def install_superpowers_auto(platform)
       SuperpowersInstaller.install_superpowers(platform)
