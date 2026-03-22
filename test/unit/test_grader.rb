@@ -191,9 +191,9 @@ class TestGrader < Minitest::Test
   end
 
   def test_pass_at_k_token_budget_skips_large_candidates
-    # 1 char / 4 = 0.25 tokens; budget=1 → only skipped if code > 4 chars
-    small_code = "x"       # ~0 tokens, passes budget
-    large_code = "x" * 40 # ~10 tokens, exceeds budget of 5
+    # small passes budget and test, large exceeds budget
+    small_code = "exit 0"   # ~1.5 tokens, passes budget of 5
+    large_code = "x" * 40   # ~10 tokens, exceeds budget of 5
     candidates = [
       { code: small_code, description: "small" },
       { code: large_code, description: "large" }
@@ -210,6 +210,8 @@ class TestGrader < Minitest::Test
     skipped = result[:results].select { |r| r[:grade] == :skipped }
     assert_equal 1, skipped.size
     assert_equal "exceeds_token_budget", skipped.first[:reason]
+    # Skipped candidates should NOT count as failures
+    assert_equal 0, result[:failures]
   end
 
   def test_pass_at_k_budget_exceeded_count_zero_when_all_fit
