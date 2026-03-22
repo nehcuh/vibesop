@@ -3,6 +3,7 @@
 require 'yaml'
 require 'securerandom'
 require 'time'
+require 'fileutils'
 
 module Vibe
   # Manages instinct learning system - automatic pattern extraction from sessions
@@ -376,7 +377,9 @@ module Vibe
     end
 
     def save
-      File.write(@path, YAML.dump(@data))
+      tmp = "#{@path}.tmp.#{Process.pid}"
+      File.write(tmp, YAML.dump(@data))
+      FileUtils.mv(tmp, @path)
     end
   end
 end

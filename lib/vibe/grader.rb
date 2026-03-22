@@ -112,10 +112,13 @@ module Vibe
     #   - :type [Symbol] Grader type
     #   - :command [String] Test command template (use {code_file} placeholder)
     #   - :k [Integer] Number of candidates to evaluate (default: all)
+    #   - :language [String] File extension for temp files, e.g. 'py', 'js'
+    #     (default: 'rb')
     # @return [Hash] pass@k result
     def pass_at_k(candidates, grader_config)
       k = grader_config[:k] || candidates.size
       evaluated = candidates.take(k)
+      @language = grader_config[:language]
 
       results = evaluated.map.with_index do |candidate, index|
         # Write candidate code to temp file

@@ -3,6 +3,7 @@
 require 'yaml'
 require 'time'
 require 'fileutils'
+require 'tempfile'
 
 module Vibe
   # Manages skill-craft triggers
@@ -46,7 +47,9 @@ module Vibe
 
     def save_state
       FileUtils.mkdir_p(File.dirname(@state_file))
-      File.write(@state_file, YAML.dump(@state))
+      tmp = "#{@state_file}.tmp.#{Process.pid}"
+      File.write(tmp, YAML.dump(@state))
+      FileUtils.mv(tmp, @state_file)
     end
 
     # Check if any trigger should fire
