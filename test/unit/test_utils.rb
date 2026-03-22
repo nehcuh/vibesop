@@ -334,7 +334,7 @@ class TestUtils < Minitest::Test
   end
 
   def test_read_yaml_abs_raises_on_missing_file
-    error = assert_raises(Errno::ENOENT) do
+    assert_raises(Errno::ENOENT) do
       @host.read_yaml_abs('/nonexistent/file.yaml')
     end
   end

@@ -98,8 +98,6 @@ class TestCascadeExecutor < Minitest::Test
   # ── run: dependency ordering ──────────────────────────────────────────────────
 
   def test_run_respects_dependency_order
-    order = []
-
     # We can't inject callbacks, so we use file-based sequencing
     tmpfile = Tempfile.new('cascade_order')
     tmpfile.close

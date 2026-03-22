@@ -77,7 +77,7 @@ class TestProgressIndicator < Minitest::Test
   end
 
   def test_finish_without_start_does_nothing
-    output = capture_io { @progress.finish('Should not appear') }
+    capture_io { @progress.finish('Should not appear') }
     # Should not crash
     assert true
   end
@@ -85,7 +85,7 @@ class TestProgressIndicator < Minitest::Test
   def test_double_finish
     @progress.start
     @progress.finish
-    output = capture_io { @progress.finish('Second finish') }
+    capture_io { @progress.finish('Second finish') }
     # Second finish should not produce output
     assert true
   end

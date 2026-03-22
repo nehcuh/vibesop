@@ -19,7 +19,6 @@ class PlatformUtilsTest < Minitest::Test
 
   def test_default_global_destination_windows
     # Mock Windows environment
-    original_config = RbConfig::CONFIG['host_os']
 
     # Test Windows path
     with_mocked_os('mingw') do

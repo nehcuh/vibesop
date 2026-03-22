@@ -342,7 +342,6 @@ class TestSuperpowersInstaller < Minitest::Test
 
   def test_uninstall_superpowers_when_not_installed
     # Point to a dir that doesn't exist — should return gracefully
-    original = Vibe::SuperpowersInstaller::SUPERPOWERS_DEFAULT_INSTALL_DIR
     non_existent = File.join(@test_dir, 'not_here')
 
     Vibe::SuperpowersInstaller.stub_const(:SUPERPOWERS_DEFAULT_INSTALL_DIR,

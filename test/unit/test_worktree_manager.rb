@@ -148,7 +148,7 @@ class TestWorktreeManager < Minitest::Test
   # ── status ───────────────────────────────────────────────────────────────────
 
   def test_status_summary
-    w1 = @manager.create('task a')
+    @manager.create('task a')
     w2 = @manager.create('task b')
     @manager.finish(w2['id'])
 

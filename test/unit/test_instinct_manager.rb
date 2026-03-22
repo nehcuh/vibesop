@@ -99,7 +99,7 @@ class InstinctManagerTest < Minitest::Test
   end
 
   def test_list_filter_by_status
-    i1 = @manager.create(pattern: 'Active', tags: [])
+    @manager.create(pattern: 'Active', tags: [])
     i2 = @manager.create(pattern: 'Archived', tags: [])
     @manager.update(i2['id'], 'status' => 'archived')
 
@@ -237,7 +237,7 @@ class InstinctManagerTest < Minitest::Test
   end
 
   def test_import_skip_strategy
-    created = @manager.create(pattern: 'Existing', tags: [])
+    @manager.create(pattern: 'Existing', tags: [])
 
     export_path = File.join(@tmpdir, 'export.yaml')
     @manager.export(export_path)
@@ -346,7 +346,7 @@ class InstinctManagerTest < Minitest::Test
 
   def test_list_sort_by_usage_count
     i1 = @manager.create(pattern: 'High usage', confidence: 0.5)
-    i2 = @manager.create(pattern: 'Low usage', confidence: 0.5)
+    @manager.create(pattern: 'Low usage', confidence: 0.5)
     @manager.record_usage(i1['id'], true)
     @manager.record_usage(i1['id'], true)
     result = @manager.list(sort_by: :usage_count)
