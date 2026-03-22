@@ -290,4 +290,67 @@ class TestSkillAdapter < Minitest::Test
     assert_kind_of Array, config['skipped_skills']
     assert_kind_of Hash, config['installed_packs']
   end
+
+  # --- adapt_skill: nonexistent skill returns false ---
+
+  def test_adapt_skill_returns_false_for_nonexistent_skill
+    result = @adapter.adapt_skill('no-such-skill-xyz', :suggest)
+    assert_equal false, result
+  end
+
+  # --- adapt_skill: invalid mode returns false ---
+
+  def test_adapt_skill_returns_false_for_invalid_mode
+    result = @adapter.adapt_skill('systematic-debugging', :invalid_mode)
+    assert_equal false, result
+  end
+
+  # --- adapt_skill: skip → suggest removes from skipped list ---
+
+  def test_adapt_skill_suggest_removes_from_skipped_list
+    skill_id = 'systematic-debugging'
+    @adapter.adapt_skill(skill_id, :skip)
+    config = @adapter.send(:load_project_config)
+    assert config['skipped_skills'].any? { |s| s['id'] == skill_id }
+
+    @adapter.adapt_skill(skill_id, :suggest)
+    config = @adapter.send(:load_project_config)
+    refute config['skipped_skills'].any? { |s| s['id'] == skill_id }
+    assert config['adapted_skills'].key?(skill_id)
+  end
+
+  # --- adapt_skill: suggest → skip removes from adapted hash ---
+
+  def test_adapt_skill_skip_removes_from_adapted_hash
+    skill_id = 'systematic-debugging'
+    @adapter.adapt_skill(skill_id, :suggest)
+    assert @adapter.send(:load_project_config)['adapted_skills'].key?(skill_id)
+
+    @adapter.adapt_skill(skill_id, :skip)
+    config = @adapter.send(:load_project_config)
+    refute config['adapted_skills'].key?(skill_id)
+    assert config['skipped_skills'].any? { |s| s['id'] == skill_id }
+  end
+
+  # --- adapt_interactively: empty skills returns early ---
+
+  def test_adapt_interactively_returns_empty_results_for_empty_skills
+    result = @adapter.adapt_interactively([])
+    assert_equal [], result[:adapted]
+    assert_equal [], result[:skipped]
+  end
+
+  # --- recommend_mode: P2 and unknown priority → :suggest ---
+
+  def test_recommend_mode_p2_returns_suggest
+    assert_equal :suggest, @adapter.recommend_mode({ priority: 'P2' })
+  end
+
+  def test_recommend_mode_unknown_priority_returns_suggest
+    assert_equal :suggest, @adapter.recommend_mode({ priority: 'P9' })
+  end
+
+  def test_recommend_mode_nil_priority_returns_suggest
+    assert_equal :suggest, @adapter.recommend_mode({ priority: nil })
+  end
 end

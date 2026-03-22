@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "vibe/errors"
 require "vibe/platform_utils"
 
 class PlatformUtilsTest < Minitest::Test
@@ -49,6 +50,47 @@ class PlatformUtilsTest < Minitest::Test
   def test_platform_label
     assert_equal "Claude Code", platform_label("claude-code")
     assert_equal "OpenCode", platform_label("opencode")
+  end
+
+  def test_platform_label_else_capitalizes_unknown_platform
+    assert_equal "Cursor", platform_label("cursor")
+    assert_equal "Warp", platform_label("warp")
+  end
+
+  def test_normalize_target_strict_raises_on_unknown
+    assert_raises(Vibe::ValidationError) { normalize_target("unknown-tool", strict: true) }
+  end
+
+  def test_normalize_target_non_strict_returns_normalized
+    result = normalize_target("MyTool", strict: false)
+    assert_equal "mytool", result
+  end
+
+  def test_config_entrypoint_claude_code
+    assert_equal "CLAUDE.md", config_entrypoint("claude-code")
+  end
+
+  def test_config_entrypoint_opencode
+    assert_equal "opencode.json", config_entrypoint("opencode")
+  end
+
+  def test_config_entrypoint_else_returns_config_md
+    assert_equal "config.md", config_entrypoint("cursor")
+  end
+
+  def test_platform_command_claude_code_returns_claude
+    assert_equal "claude", platform_command("claude-code")
+  end
+
+  def test_platform_command_else_returns_normalized
+    assert_equal "opencode", platform_command("opencode")
+  end
+
+  def test_default_global_destination_else_branch
+    unless windows?
+      path = default_global_destination("warp")
+      assert_match(/\.warp/, path)
+    end
   end
 
   private

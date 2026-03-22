@@ -208,4 +208,45 @@ class TestConfigDrivenRenderers < Minitest::Test
     refute_includes claude_md, "Vibe workflow for Claude Code"
     refute_includes claude_md, "Non-negotiable rules"
   end
+
+  # --- platform_config_dir: else branch ---
+
+  def test_platform_config_dir_else_returns_generic_path
+    result = @renderer.send(:platform_config_dir, 'cursor')
+    assert_equal '~/.cursor', result
+  end
+
+  def test_platform_config_dir_opencode
+    result = @renderer.send(:platform_config_dir, 'opencode')
+    assert_equal '~/.config/opencode', result
+  end
+
+  # --- platform_configs: invalid YAML raises ConfigurationError ---
+
+  def test_platform_configs_raises_when_platforms_key_missing
+    # Force re-evaluation by clearing the memoized cache
+    @renderer.instance_variable_set(:@platform_configs, nil)
+    bad_yaml = YAML.dump("not_a_platforms_key" => {})
+    File.stub :read, bad_yaml do
+      assert_raises(Vibe::ConfigurationError) { @renderer.platform_configs }
+    end
+  ensure
+    @renderer.instance_variable_set(:@platform_configs, nil)
+  end
+
+  # --- generate_native_config: error branches ---
+
+  def test_generate_native_config_raises_when_builder_missing
+    config = { 'filename' => 'x.json', 'type' => 'json' }  # no 'builder' key
+    assert_raises(ArgumentError) do
+      @renderer.send(:generate_native_config, @build_root, @base_manifest, config, 'global')
+    end
+  end
+
+  def test_generate_native_config_raises_on_unsupported_type
+    config = { 'filename' => 'x.xml', 'builder' => 'build_claude_settings', 'type' => 'xml' }
+    assert_raises(ArgumentError) do
+      @renderer.send(:generate_native_config, @build_root, @base_manifest, config, 'global')
+    end
+  end
 end

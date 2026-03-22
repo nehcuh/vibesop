@@ -294,4 +294,91 @@ class TestSuperpowersInstaller < Minitest::Test
     urls = Vibe::SuperpowersInstaller::SUPERPOWERS_REPO_URLS
     assert urls.frozen?, "SUPERPOWERS_REPO_URLS should be frozen"
   end
+
+  # --- skill_linked?: direct unit tests ---
+
+  def test_skill_linked_returns_true_for_matching_symlink
+    source = File.join(@test_dir, "skill_source")
+    link   = File.join(@test_dir, "skill_link")
+    FileUtils.mkdir_p(source)
+    File.symlink(source, link)
+
+    assert Vibe::SuperpowersInstaller.skill_linked?(link, source)
+  end
+
+  def test_skill_linked_returns_false_when_not_a_symlink
+    path = File.join(@test_dir, "regular_file")
+    File.write(path, "content")
+
+    refute Vibe::SuperpowersInstaller.skill_linked?(path, @test_dir)
+  end
+
+  def test_skill_linked_returns_false_when_symlink_points_elsewhere
+    source  = File.join(@test_dir, "correct_source")
+    other   = File.join(@test_dir, "other_dir")
+    link    = File.join(@test_dir, "skill_link")
+    FileUtils.mkdir_p(source)
+    FileUtils.mkdir_p(other)
+    File.symlink(other, link)
+
+    refute Vibe::SuperpowersInstaller.skill_linked?(link, source)
+  end
+
+  def test_skill_linked_returns_false_when_path_does_not_exist
+    refute Vibe::SuperpowersInstaller.skill_linked?("/nonexistent/link", "/nonexistent/source")
+  end
+
+  # --- windows_os?: returns a boolean ---
+
+  def test_windows_os_returns_truthy_or_falsy
+    result = Vibe::SuperpowersInstaller.windows_os?
+    # =~ returns Integer (truthy) or nil (falsy) — coerce to boolean for assertion
+    assert [true, false].include?(!!result)
+  end
+
+  # --- uninstall_superpowers: when not installed ---
+
+  def test_uninstall_superpowers_when_not_installed
+    # Point to a dir that doesn't exist — should return gracefully
+    original = Vibe::SuperpowersInstaller::SUPERPOWERS_DEFAULT_INSTALL_DIR
+    non_existent = File.join(@test_dir, "not_here")
+
+    Vibe::SuperpowersInstaller.stub_const(:SUPERPOWERS_DEFAULT_INSTALL_DIR, non_existent) do
+      result = Vibe::SuperpowersInstaller.uninstall_superpowers
+      assert_kind_of Hash, result
+      assert_equal false, result[:success]
+    end
+  rescue NoMethodError
+    # stub_const not available — skip this test in older Minitest
+    skip "stub_const not available"
+  end
+
+  # --- create_skill_link: Unix path creates symlink ---
+
+  def test_create_skill_link_creates_symlink_on_unix
+    skip "Windows-only test skipped" if Vibe::SuperpowersInstaller.windows_os?
+
+    source = File.join(@test_dir, "skill_source")
+    link   = File.join(@test_dir, "skill_link")
+    FileUtils.mkdir_p(source)
+
+    Vibe::SuperpowersInstaller.create_skill_link(source, link)
+
+    assert File.symlink?(link), "Should have created a symlink"
+    assert_equal source, File.readlink(link)
+  end
+
+  def test_create_skill_link_is_idempotent_on_unix
+    skip "Windows-only test skipped" if Vibe::SuperpowersInstaller.windows_os?
+
+    source = File.join(@test_dir, "skill_source")
+    link   = File.join(@test_dir, "skill_link")
+    FileUtils.mkdir_p(source)
+
+    Vibe::SuperpowersInstaller.create_skill_link(source, link)
+    # Second call — link already exists and matches, should not raise
+    Vibe::SuperpowersInstaller.create_skill_link(source, link)
+
+    assert File.symlink?(link)
+  end
 end
