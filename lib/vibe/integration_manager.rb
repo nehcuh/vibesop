@@ -26,11 +26,31 @@ module Vibe
         end
       end
 
-      return if missing.empty? && pending.empty?
-
+      # Always show integration status summary
       puts
       puts '📦 Optional Integrations'
       puts '=' * 50
+
+      # Display status for all integrations
+      status.each do |name, info|
+        label = case name
+                when :superpowers then 'Superpowers'
+                when :rtk then 'RTK'
+                when :gstack then 'gstack'
+                else name.to_s.capitalize
+                end
+        if info[:ready]
+          puts "  ✓ #{label}: Ready"
+        elsif info[:installed]
+          puts "  ⚠ #{label}: Installed but needs configuration"
+        else
+          puts "  ✗ #{label}: Not installed"
+        end
+      end
+
+      return if missing.empty? && pending.empty?
+
+      puts
 
       interactive = $stdin.respond_to?(:tty?) && $stdin.tty?
 

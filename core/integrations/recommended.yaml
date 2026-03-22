@@ -20,6 +20,11 @@ categories:
       reason: Advanced workflow skills (TDD, brainstorming, code review, etc.)
       platforms: [claude-code, opencode]
       benefits_summary: 7 additional skills for design, testing, and review workflows
+    - name: gstack
+      priority: P1
+      reason: Virtual engineering team skills (QA, code review, release automation, etc.)
+      platforms: [claude-code]
+      benefits_summary: Browser-based QA, PR review, ship automation, and safety guardrails
 
   # System-level tools that optimize the development experience
   system_tools:

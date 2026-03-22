@@ -121,6 +121,8 @@ module Vibe
         return 'Already installed (binary + hook configured)' if info[:ready]
         return 'Installed, hook not configured' if info[:installed]
         return 'Hook configured, but RTK binary was not found' if info[:hook_configured]
+      when 'gstack'
+        return "Already installed (#{info[:location]})" if info[:ready]
       end
 
       'Not installed'
