@@ -1,6 +1,6 @@
 # Project Claude Code Configuration
 
-Generated from the portable `core/` spec with profile `claude-code-default`.  
+Generated from the portable `core/` spec with profile `claude-code-default`.
 Applied overlay: `none`
 
 Global workflow rules are loaded from `~/.claude/`. This file adds project-specific context only.

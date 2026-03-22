@@ -16,7 +16,7 @@ VibeSOP is a fork of [runesleo/claude-code-workflow](https://github.com/runesleo
 |---|---|---|
 | Platform support | Claude Code only | Claude Code + OpenCode + extensible to future platforms |
 | Core spec | Coupled to Claude Code | Provider-neutral `core/` (models, skills, policies, security) |
-| CLI | Basic shell scripts | Full Ruby CLI (`bin/vibe`) with 8 commands |
+| CLI | Basic shell scripts | Full Ruby CLI (`bin/vibe`) with 9 commands |
 | Architecture | Single-file config | 22 modular Ruby library modules |
 | Windows support | WSL2 / Git Bash only | Native cmd.exe batch scripts, cross-platform detection |
 | Customization | Manual file edits | Overlay system (`.vibe/overlay.yaml`) |
@@ -57,6 +57,10 @@ Claude Code is powerful out of the box, but without structure it becomes a smart
 
 ### Recent Improvements (2026-03)
 
+- **🚀 Guided Onboarding** (`vibe onboard`): 5-step interactive setup for new users — deploys config, records your role, runs doctor check, previews the P0 systematic-debugging skill, and shows next steps. Use `--skip-deploy` if config is already installed.
+- **🛡️ SessionAnalyzer format versioning**: `detect_format()` with v1/v2 support. Unknown session file formats now warn and return `[]` instead of silently producing wrong results.
+- **⚙️ Configurable instinct confidence weights**: `InstinctManager` accepts `config: { weights: { ... } }`. `DEFAULT_WEIGHTS` constant exposes the 60/30/10 defaults. Fully backward-compatible.
+- **💰 Grader token budget**: `pass_at_k` supports `:token_budget` parameter — over-budget candidates are marked `:skipped` with the reason, keeping pass-rate comparisons fair across candidate sizes.
 - **🛠️ Skill Craft System**: Generate personal reusable skills from your own session history
   - `vibe skill-craft` — Interactive session: analyze → select patterns → generate skills
   - `vibe skill-craft analyze` — Detect recurring tool sequences, error-recovery flows, and workflows
@@ -132,7 +136,7 @@ This repo now has two layers of concern:
 **Architecture Highlights**:
 - Configuration-driven platform definitions
 - JSON Schema validation for all configs
-- Comprehensive CLI with 8 commands
+- Comprehensive CLI with 9 commands
 - Project overlay system for customization
 - 273 tests with 100% pass rate
 
@@ -413,6 +417,8 @@ claude                               # 或 opencode
 #### 场景 1：我只用 Claude Code，想快速配好
 
 ```bash
+vibe onboard                         # 5 步引导：配置 + 角色 + 验证 + 技能预览（推荐新用户）
+# 或者只部署配置，不需要引导：
 vibe quickstart                      # 一键配置 ~/.claude
 cd ~/my-project && vibe switch --platform claude-code
 claude                               # 开始编码
@@ -745,6 +751,7 @@ See `docs/task-routing.md` for detailed routing guidelines.
 | `bin/vibe switch <target>` | Apply workflow to current project | `bin/vibe switch opencode` |
 | `bin/vibe init --platform=<tool>` | Install integrations (Superpowers, RTK) | `bin/vibe init --platform=claude-code` |
 | `bin/vibe quickstart` | One-command setup for Claude Code | `bin/vibe quickstart` |
+| `bin/vibe onboard` | Guided 5-step setup for new users (deploy + role + doctor + skill preview) | `bin/vibe onboard` |
 
 ### When to Use What?
 

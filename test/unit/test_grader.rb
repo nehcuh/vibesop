@@ -175,4 +175,75 @@ class TestGrader < Minitest::Test
     assert_equal "fail", result[:grade]
     assert result[:output].length > 0
   end
+
+  # --- pass_at_k token budget ---
+
+  def test_pass_at_k_no_budget_behavior_unchanged
+    candidates = [
+      { code: "exit 0", description: "pass" },
+      { code: "exit 1", description: "fail" }
+    ]
+    result = @grader.pass_at_k(candidates, { type: :unit_test, command: "sh {code_file}", k: 2 })
+
+    assert_equal 2, result[:k]
+    assert_nil result[:token_budget]
+    assert_equal 0, result[:budget_exceeded_count]
+  end
+
+  def test_pass_at_k_token_budget_skips_large_candidates
+    # small passes budget and test, large exceeds budget
+    small_code = "exit 0"   # ~1.5 tokens, passes budget of 5
+    large_code = "x" * 40   # ~10 tokens, exceeds budget of 5
+    candidates = [
+      { code: small_code, description: "small" },
+      { code: large_code, description: "large" }
+    ]
+    result = @grader.pass_at_k(candidates, {
+      type: :unit_test,
+      command: "sh {code_file}",
+      k: 2,
+      token_budget: 5
+    })
+
+    assert_equal 5, result[:token_budget]
+    assert_equal 1, result[:budget_exceeded_count]
+    skipped = result[:results].select { |r| r[:grade] == :skipped }
+    assert_equal 1, skipped.size
+    assert_equal "exceeds_token_budget", skipped.first[:reason]
+    # Skipped candidates should NOT count as failures
+    assert_equal 0, result[:failures]
+    # pass_rate denominator excludes skipped: 1 pass / 1 evaluated = 100%
+    assert_equal 100.0, result[:pass_rate]
+  end
+
+  def test_pass_at_k_all_skipped_pass_rate_is_zero
+    large_code = "x" * 40  # ~10 tokens, exceeds budget of 5
+    candidates = [
+      { code: large_code, description: "large1" },
+      { code: large_code, description: "large2" }
+    ]
+    result = @grader.pass_at_k(candidates, {
+      type: :unit_test,
+      command: "sh {code_file}",
+      k: 2,
+      token_budget: 5
+    })
+
+    assert_equal 2, result[:budget_exceeded_count]
+    assert_equal 0, result[:passes]
+    assert_equal 0, result[:failures]
+    assert_equal 0.0, result[:pass_rate]
+  end
+
+  def test_pass_at_k_budget_exceeded_count_zero_when_all_fit
+    candidates = [{ code: "x", description: "tiny" }]
+    result = @grader.pass_at_k(candidates, {
+      type: :unit_test,
+      command: "sh {code_file}",
+      k: 1,
+      token_budget: 100
+    })
+
+    assert_equal 0, result[:budget_exceeded_count]
+  end
 end

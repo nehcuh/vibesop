@@ -119,8 +119,20 @@ module Vibe
       k = grader_config[:k] || candidates.size
       evaluated = candidates.take(k)
       @language = grader_config[:language]
+      token_budget = grader_config[:token_budget]
+      budget_exceeded = 0
 
       results = evaluated.map.with_index do |candidate, index|
+        # Token budget check (estimate: chars / 4)
+        if token_budget
+          estimated_tokens = candidate[:code].length / 4
+          if estimated_tokens > token_budget
+            budget_exceeded += 1
+            next({ grade: :skipped, reason: 'exceeds_token_budget',
+                   estimated_tokens: estimated_tokens, budget: token_budget })
+          end
+        end
+
         # Write candidate code to temp file
         temp_file = write_temp_candidate(candidate[:code], index)
 
@@ -135,15 +147,19 @@ module Vibe
       end
 
       passes = results.count { |r| r[:grade] == GRADE[:pass] }
-      pass_rate = (passes.to_f / k * 100).round(1)
+      skipped = results.count { |r| r[:grade] == :skipped }
+      evaluated_count = k - skipped
+      pass_rate = evaluated_count.positive? ? (passes.to_f / evaluated_count * 100).round(1) : 0.0
 
       {
         k: k,
         total_candidates: candidates.size,
         evaluated: k,
         passes: passes,
-        failures: k - passes,
+        failures: k - passes - skipped,
         pass_rate: pass_rate,
+        token_budget: token_budget,
+        budget_exceeded_count: budget_exceeded,
         results: results
       }
     end

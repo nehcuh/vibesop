@@ -3,15 +3,11 @@
 ## Session Handoff
 
 <!-- handoff:start -->
-### 2026-03-18 17:52
-- **完成**: 2026 Q2 Roadmap 全部 6 个 Phase（Token优化、验证循环、并行化、工具链检测、社区最佳实践）
-- **分支**: feat/token-optimization (20 commits, 38 files, 6318+ insertions)
-- **测试**: 253 tests, 583 assertions, 100% pass
-- **关键模块**: TokenOptimizer, ModelSelector, BackgroundTaskManager, CheckpointManager, Grader, WorktreeManager, CascadeExecutor, ToolchainDetector, SecurityScanner, TddEnforcer, ContextOptimizer
-- **CLI**: 新增 8 组命令（token, checkpoint, grade, tasks, worktree, cascade, toolchain, scan）
-- **Skills**: riper-workflow (5-phase), using-git-worktrees
-- **技术坑**: Ruby 2.6 兼容性（filter_map/tally 禁用）、TddEnforcer resolver 必须返回 nil、check 方法顺序
-- **下一步**: 用户验证后合并到 main，更新 README Phase 5-6 章节
+### 2026-03-22 (session-end)
+- **分支**: improve/review-suggestions — 4 项改进全部完成，2 commits
+- **完成**: vibe onboard 命令、SessionAnalyzer v1/v2 格式检测、InstinctManager DEFAULT_WEIGHTS + config 参数、Grader :token_budget
+- **测试**: 575 runs, 0 failures（+17 个新测试）；文档 README × 2 + CHANGELOG 已同步
+- **下一步**: `git merge improve/review-suggestions` 或 `gh pr create`，然后继续 Q2 路线图
 <!-- handoff:end -->
 
 ### 2026-03-18

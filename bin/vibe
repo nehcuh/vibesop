@@ -68,6 +68,7 @@ class VibeCLI
       'inspect' => :run_inspect,
       'init' => :run_init_command,
       'quickstart' => :run_quickstart_command,
+      'onboard' => :run_onboard_command,
       'targets' => :run_targets_command,
       'doctor' => :run_doctor_command,
       'skills' => :run_skills_command,
@@ -493,6 +494,7 @@ class VibeCLI
         vibe init --platform PLATFORM [--force|--verify|--suggest]
         vibe apply PLATFORM [--profile PROFILE] [--overlay FILE] [--force]
         vibe quickstart [--force]
+        vibe onboard [--skip-deploy]
         vibe build TARGET [--profile PROFILE] [--output DIR] [--overlay FILE]
         vibe deploy TARGET DESTINATION [--profile PROFILE] [--output DIR] [--overlay FILE] [--force]
         vibe inspect [TARGET] [--overlay FILE] [--json]
@@ -513,6 +515,7 @@ class VibeCLI
         init        Install global configuration for a platform (e.g., ~/.claude, ~/.config/opencode)
         apply       Apply platform configuration to current project directory (alias: switch)
         quickstart  One-command setup for Claude Code in ~/.claude
+        onboard     Guided 5-step setup that walks you through core value
         build       Generate target-specific configuration files
         deploy      Deploy a target into a specific destination (alias: use)
         inspect     Preview resolved profiles and generated state
@@ -699,6 +702,19 @@ class VibeCLI
     parser.parse(argv)
 
     run_quickstart(options)
+  end
+
+  def run_onboard_command(argv)
+    options = { skip_deploy: false }
+    parser = OptionParser.new do |opts|
+      opts.banner = 'Usage: bin/vibe onboard [--skip-deploy]'
+      opts.on('--skip-deploy', 'Skip Step 1 deployment (config already installed)') do
+        options[:skip_deploy] = true
+      end
+    end
+    parser.parse(argv)
+
+    run_onboard(options)
   end
 
   def run_init_command(argv)

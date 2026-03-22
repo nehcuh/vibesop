@@ -9,6 +9,14 @@ module Vibe
   class SessionAnalyzer
     attr_reader :sessions, :patterns, :config
 
+    # Supported session file formats.
+    # v1: "### S1 (14:35)" headers (current Claude Code memory format)
+    # v2: "## Session 2026-03-22" headers (ISO date format, future-compatible)
+    SUPPORTED_FORMATS = {
+      'v1' => /^### S\d+ \(\d{2}:\d{2}/,
+      'v2' => /^## Session \d{4}-\d{2}-\d{2}/
+    }.freeze
+
     def initialize(config = {})
       @config = default_config.merge(config)
       @sessions = []
@@ -31,7 +39,15 @@ module Vibe
       return [] unless File.exist?(path)
 
       content = File.read(path)
-      @sessions = parse_sessions(content)
+      return [] if content.strip.empty?
+
+      format = detect_format(content)
+      if format.nil?
+        warn "session-analyzer: unknown session format in #{path}, skipping analysis"
+        return []
+      end
+
+      @sessions = parse_sessions(content, format)
       @sessions
     rescue Errno::EACCES, Errno::ENOENT => e
       warn "skill-craft: could not read session file (#{e.message})"
@@ -85,7 +101,25 @@ module Vibe
 
     private
 
-    def parse_sessions(content)
+    # Detect the format version of a session file by scanning for header patterns.
+    # @return [String, nil] 'v1', 'v2', or nil if unknown
+    def detect_format(content)
+      SUPPORTED_FORMATS.each do |version, pattern|
+        return version if content.match?(pattern)
+      end
+      nil
+    end
+
+    def parse_sessions(content, format = 'v1')
+      case format
+      when 'v2'
+        parse_sessions_v2(content)
+      else
+        parse_sessions_v1(content)
+      end
+    end
+
+    def parse_sessions_v1(content)
       sessions = []
       current_session = nil
 
@@ -112,6 +146,39 @@ module Vibe
           end
 
           # Extract tags
+          current_session[:tags].concat(extract_tags(line))
+        end
+      end
+
+      sessions << current_session if current_session
+      sessions
+    end
+
+    def parse_sessions_v2(content)
+      sessions = []
+      current_session = nil
+
+      content.split("\n").each do |line|
+        if (m = line.match(/^## Session (\d{4}-\d{2}-\d{2})/))
+          sessions << current_session if current_session
+          current_session = {
+            id: "session-#{sessions.size + 1}",
+            time: m[1],
+            content: '',
+            tool_calls: [],
+            tags: []
+          }
+        elsif current_session
+          current_session[:content] += "#{line}\n"
+
+          if (m = line.match(/(Bash|Edit|Write|Read|Glob|Grep):\s*(.+)/))
+            current_session[:tool_calls] << {
+              tool: m[1],
+              command: m[2].strip,
+              success: !line.include?('→ Failed')
+            }
+          end
+
           current_session[:tags].concat(extract_tags(line))
         end
       end
