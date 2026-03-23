@@ -196,18 +196,21 @@ def build_tool_result(tool_def, binary, available)
   result
 end
 
-# Get full path to a command
+# Get full path to a command using Ruby native PATH lookup (no subprocess)
 # @param cmd [String] Command name
 # @return [String, nil] Full path or nil
 def which_tool(cmd)
-  finder = if RbConfig::CONFIG['host_os'] =~ /mswin|msys|mingw|cygwin/i
-             'where'
-           else
-             'which'
-           end
+  exts = RbConfig::CONFIG['host_os'] =~ /mswin|msys|mingw|cygwin/i
+         ? (ENV['PATHEXT'] || '.exe;.bat;.cmd').split(';')
+         : ['']
 
-  output, status = Open3.capture2(finder, cmd)
-  status.success? ? output.strip.split("\n").first : nil
+  ENV['PATH'].split(File::PATH_SEPARATOR).each do |dir|
+    exts.each do |ext|
+      exe = File.join(dir, "#{cmd}#{ext}")
+      return exe if File.executable?(exe) && File.file?(exe)
+    end
+  end
+  nil
 rescue StandardError
   nil
 end
@@ -486,18 +489,20 @@ platforms:
     # ... existing config ...
     doc_types:
       global: [behavior, safety, task_routing, test_standards, tools]
-      project: [behavior, safety, tools]
+      project: [behavior, safety]   # v1.0: tools is global-only
 
   opencode:
     # ... existing config ...
     doc_types:
       global: [behavior, safety, task_routing, test_standards, tools]
-      project: [behavior, safety, tools]
+      project: [behavior, safety]   # v1.0: tools is global-only
 ```
 
+**Note**: v1.0 only supports global configuration. Tools are system-level (installed per machine, not per project), so project-level detection provides no additional value. Project-level support may be added in v1.1 if there is user demand.
+
 **Acceptance Criteria**:
-- [ ] `tools` added to both platforms
-- [ ] Added to both global and project doc_types
+- [ ] `tools` added to both platforms (global only)
+- [ ] `project` doc_types unchanged (no `tools`)
 - [ ] YAML is valid
 
 ---
@@ -746,6 +751,75 @@ end
 - [ ] Tests pass
 - [ ] Tests cover user interaction flow
 - [ ] Tests don't require user input (mock ask_yes_no)
+
+---
+
+### Task 3.4: Add `vibe tools` Subcommand
+
+**File**: `bin/vibe`
+**Estimated Time**: 2 hours
+**Dependencies**: Task 3.2
+
+**Background**: After `vibe init`, if the user opts out or wants to change their mind, there must be a clear re-entry path. Without this, users are stuck — they can't enable tool detection without re-running `vibe init`.
+
+**Implementation**:
+
+Add to the main command dispatch in `bin/vibe`:
+
+```ruby
+when 'tools'
+  run_tools_command
+```
+
+Add the handler method:
+
+```ruby
+def run_tools_command
+  subcommand = ARGV[1]
+
+  case subcommand
+  when 'enable'
+    enable_modern_cli_tools_for_all
+  when 'disable'
+    disable_modern_cli_tools_for_all
+  when 'refresh'
+    refresh_modern_cli_tools_docs
+    puts "✅ Tool documentation refreshed"
+  when 'status'
+    show_modern_cli_tools_status
+  else
+    puts "Usage: vibe tools <enable|disable|refresh|status>"
+    puts ""
+    puts "  enable   — Generate TOOLS.md for all installed platforms"
+    puts "  disable  — Remove TOOLS.md from all installed platforms"
+    puts "  refresh  — Re-detect tools and update TOOLS.md"
+    puts "  status   — Show current tool detection status"
+    exit 1
+  end
+end
+
+def show_modern_cli_tools_status
+  puts "\n🔧 Modern CLI Tools Status"
+  puts '=' * 40
+  detected = detect_modern_cli_tools
+  detected.each do |tool|
+    icon = tool[:available] ? '✅' : '❌'
+    puts "  #{icon} #{tool[:modern].ljust(10)} (#{tool[:traditional]})"
+  end
+  puts
+  available_count = detected.count { |t| t[:available] }
+  puts "  #{available_count}/#{detected.size} tools available"
+end
+```
+
+Update `bin/vibe` usage/help text to include `tools` command.
+
+**Acceptance Criteria**:
+- [ ] `vibe tools status` shows detected tools
+- [ ] `vibe tools refresh` regenerates TOOLS.md
+- [ ] `vibe tools enable` / `disable` work correctly
+- [ ] `vibe help` shows the `tools` command
+- [ ] Unknown subcommand shows usage and exits 1
 
 ---
 
