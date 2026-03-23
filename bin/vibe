@@ -81,7 +81,8 @@ class VibeCLI
       'cascade' => :run_cascade_command,
       'toolchain' => :run_toolchain_command,
       'scan' => :run_scan_command,
-      'skill-craft' => :run_skill_craft_command
+      'skill-craft' => :run_skill_craft_command,
+      'tools' => :run_tools_command
     }.freeze
   end
 
@@ -359,6 +360,36 @@ class VibeCLI
     end
     puts
 
+    # Check modern CLI tools
+    puts 'Modern CLI Tools:'
+    tools_status = verify_modern_cli_tools
+    if tools_status[:available_count].zero?
+      puts '  ℹ️  No modern CLI tools detected'
+    else
+      puts "  ✅ #{tools_status[:available_count]} tools available:"
+      tools_status[:available_tools].each do |tool|
+        puts "     - #{tool[:modern]} (#{tool[:traditional]})"
+      end
+    end
+
+    # Refresh tool documentation if TOOLS.md exists
+    refreshed = false
+    SUPPORTED_TARGETS.each do |target|
+      destination = default_global_destination(target)
+      next unless Dir.exist?(destination)
+
+      tools_md = File.join(destination, 'TOOLS.md')
+      if File.exist?(tools_md)
+        puts "\n📝 Refreshing TOOLS.md for #{platform_label(target)}..."
+        refresh_modern_cli_tools_docs
+        puts '  ✅ Updated'
+        refreshed = true
+        break
+      end
+    end
+    puts '  (Run `vibe tools enable` to generate TOOLS.md)' if !refreshed && tools_status[:available_count].positive?
+    puts
+
     # Check skill conflicts
     puts 'Skill conflict check:'
     check_skill_conflicts
@@ -510,6 +541,7 @@ class VibeCLI
         vibe cascade <command> <config.yaml>
         vibe scan <subcommand> [args]
         vibe skill-craft [analyze|generate|triggers|status]
+        vibe tools <enable|disable|refresh|status>
 
       Commands:
         init        Install global configuration for a platform (e.g., ~/.claude, ~/.config/opencode)
@@ -532,6 +564,7 @@ class VibeCLI
         toolchain   Toolchain detection (detect, suggest)
         scan        Security scanning and TDD audit (text, file, tdd, ctx)
         skill-craft Personal skill generation from session history
+        tools       Modern CLI tools management (enable, disable, refresh, status)
 
       Typical workflow:
         1. vibe init --platform claude-code       # Install global config to ~/.claude
@@ -800,6 +833,30 @@ class VibeCLI
 
     run_init(platform: platform, force: force, verify_only: verify_only,
              suggest_only: suggest_only, dry_run: dry_run)
+  end
+
+  def run_tools_command(argv)
+    subcommand = argv.first
+
+    case subcommand
+    when 'enable'
+      enable_modern_cli_tools_for_all
+    when 'disable'
+      disable_modern_cli_tools_for_all
+    when 'refresh'
+      refresh_modern_cli_tools_docs
+      puts "✅ Tool documentation refreshed"
+    when 'status'
+      show_modern_cli_tools_status
+    else
+      puts "Usage: vibe tools <enable|disable|refresh|status>"
+      puts ""
+      puts "  enable   — Generate TOOLS.md for all installed platforms"
+      puts "  disable  — Remove TOOLS.md from all installed platforms"
+      puts "  refresh  — Re-detect tools and update TOOLS.md"
+      puts "  status   — Show current tool detection status"
+      exit 1
+    end
   end
 
   def parse_common_options(argv, banner:)

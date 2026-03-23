@@ -46,4 +46,35 @@ class TestPlatformInstaller < Minitest::Test
       assert instance_methods.include?(method), "Module should have #{method} method"
     end
   end
+
+  # --- Modern CLI Tools Integration ---
+
+  def test_module_includes_external_tools
+    assert Vibe::PlatformInstaller.include?(Vibe::ExternalTools)
+  end
+
+  def test_module_has_detect_and_enable_modern_cli_tools
+    instance_methods = Vibe::PlatformInstaller.instance_methods(false)
+    assert instance_methods.include?(:detect_and_enable_modern_cli_tools)
+  end
+
+  def test_module_has_enable_modern_cli_tools_for_all
+    instance_methods = Vibe::PlatformInstaller.instance_methods(false)
+    assert instance_methods.include?(:enable_modern_cli_tools_for_all)
+  end
+
+  def test_module_has_disable_modern_cli_tools_for_all
+    instance_methods = Vibe::PlatformInstaller.instance_methods(false)
+    assert instance_methods.include?(:disable_modern_cli_tools_for_all)
+  end
+
+  def test_module_has_refresh_modern_cli_tools_docs
+    instance_methods = Vibe::PlatformInstaller.instance_methods(false)
+    assert instance_methods.include?(:refresh_modern_cli_tools_docs)
+  end
+
+  def test_module_has_show_modern_cli_tools_status
+    instance_methods = Vibe::PlatformInstaller.instance_methods(false)
+    assert instance_methods.include?(:show_modern_cli_tools_status)
+  end
 end
