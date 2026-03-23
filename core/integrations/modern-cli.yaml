@@ -1,0 +1,90 @@
+schema_version: 1
+name: modern-cli-tools
+type: tool_detection
+description: Modern CLI tools detection and recommendation
+
+tools:
+  - traditional: cat
+    modern: bat
+    category: file_operations
+    detection:
+      binary: bat
+      alternatives: []
+    usage_notes: "Syntax highlighting, line numbers. Use --paging=never for non-interactive output"
+    use_cases: ["Reading code files", "Viewing logs"]
+
+  - traditional: find
+    modern: fd
+    category: file_operations
+    detection:
+      binary: fd
+      alternatives: [fdfind]
+    usage_notes: "Faster, simpler syntax. Respects .gitignore by default"
+    use_cases: ["Finding files by name/pattern", "Recursive file search"]
+
+  - traditional: grep
+    modern: rg
+    category: text_search
+    detection:
+      binary: rg
+      alternatives: [ripgrep]
+    usage_notes: "Respects .gitignore, faster. Use --no-ignore to search all files"
+    use_cases: ["Searching code content", "Pattern matching in files"]
+
+  - traditional: ls
+    modern: eza
+    category: file_operations
+    detection:
+      binary: eza
+      alternatives: [lsd, exa]
+    usage_notes: "Icons, git status, tree view. Use --icons for visual output"
+    use_cases: ["Listing directory contents", "Viewing file metadata"]
+
+  - traditional: du
+    modern: dust
+    category: system_monitoring
+    detection:
+      binary: dust
+      alternatives: []
+    usage_notes: "Visual disk usage. Use -d N to limit depth"
+    use_cases: ["Checking directory sizes", "Finding large files"]
+
+  - traditional: df
+    modern: duf
+    category: system_monitoring
+    detection:
+      binary: duf
+      alternatives: []
+    usage_notes: "Better disk usage visualization"
+    use_cases: ["Checking disk space", "Monitoring storage"]
+
+  - traditional: ps
+    modern: procs
+    category: system_monitoring
+    detection:
+      binary: procs
+      alternatives: []
+    usage_notes: "Better process listing with colors and tree view"
+    use_cases: ["Listing processes", "Finding running programs"]
+
+  - traditional: top
+    modern: btop
+    category: system_monitoring
+    detection:
+      binary: btop
+      alternatives: [bottom, glances, htop]
+    usage_notes: "Interactive system monitor with better UI"
+    use_cases: ["System monitoring", "Resource usage tracking"]
+
+integration:
+  auto_enable: ask_user
+  priority: P2
+
+  targets:
+    claude-code:
+      method: documentation
+      doc_file: TOOLS.md
+
+    opencode:
+      method: documentation
+      doc_file: TOOLS.md
