@@ -579,8 +579,6 @@ module Vibe
     # @return [String] Markdown documentation
     def render_tools_doc(_manifest)
       detected_tools = detect_modern_cli_tools
-      available = detected_tools.select { |t| t[:available] }
-      unavailable = detected_tools.reject { |t| t[:available] }
 
       lines = []
       lines << '# Available CLI Tools'

@@ -163,7 +163,11 @@ module Vibe
 
       puts "📝 Generate tool recommendations for AI?"
       puts "   This will create TOOLS.md and help AI use modern tools automatically."
-      ask_yes_no('[Y/n]', default: true)
+      print '[Y/n] '
+      response = $stdin.gets
+      return false if response.nil?
+
+      response.chomp.downcase != 'n'
     end
 
     # Enable modern CLI tools for all installed platforms
