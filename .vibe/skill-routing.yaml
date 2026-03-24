@@ -1,0 +1,467 @@
+---
+# 场景驱动的技能路由配置
+# 定义不同场景下的技能选择和优先级策略
+schema_version: 1
+
+# ============================================================================
+# 场景路由规则
+# ============================================================================
+routing_rules:
+
+  # ==========================================================================
+  # 调试场景
+  # ==========================================================================
+  - scenario: debugging
+    description: 发现 bug 或错误时的处理流程
+    primary:
+      skill: systematic-debugging
+      source: builtin
+      reason: "P0 mandatory，强制要求先找根因再修复，避免猜测式修复"
+    alternatives:
+      - skill: /investigate
+        source: gstack
+        trigger: "需要自动 freeze 作用域，或在调试时防止意外修改其他文件"
+        priority: P1
+      - skill: /systematic-debugging
+        source: superpowers
+        trigger: "需要更高级的调试工作流，或已有 superpowers 使用习惯"
+        priority: P2
+    conflict_resolution: builtin_first_unless_explicit_override
+    keywords:
+      - "调试"
+      - "bug"
+      - "错误"
+      - "报错"
+      - "卡住了"
+      - "不工作"
+
+  # ==========================================================================
+  # 代码审查场景
+  # ==========================================================================
+  - scenario: code_review
+    description: 代码审查，发现生产环境 bug
+    primary:
+      skill: /review
+      source: gstack
+      reason: "专注于预发布审查，有 SQL 安全、LLM 信任边界检查、自动修复能力"
+    alternatives:
+      - skill: /receiving-code-review
+        source: superpowers
+        trigger: "需要全面的质量检查，或偏好 superpowers 风格"
+        priority: P2
+      - skill: /requesting-code-review
+        source: superpowers
+        trigger: "需要请求他人代码审查的准备"
+        priority: P2
+      - skill: /codex
+        source: gstack
+        trigger: "需要跨模型第二意见，使用 OpenAI Codex CLI 独立审查"
+        priority: P2
+    conflict_resolution: prefer_gstack_for_pre_landing
+    keywords:
+      - "审查"
+      - "review"
+      - "检查代码"
+      - "CR"
+      - "代码审查"
+
+  # ==========================================================================
+  # 产品思考场景
+  # ==========================================================================
+  - scenario: product_thinking
+    description: 新功能想法，探索是否值得构建，或重新定义问题
+    primary:
+      skill: /office-hours
+      source: gstack
+      reason: "YC 风格的六个强制问题，擅长重新框定问题，适合早期产品定义"
+    alternatives:
+      - skill: /brainstorming
+        source: superpowers
+        trigger: "需要更自由的设计细化，或已有设计文档需要完善"
+        priority: P2
+    conflict_resolution: gstack_for_early_superpowers_for_refinement
+    keywords:
+      - "想法"
+      - "产品"
+      - "需求"
+      - "要不要做"
+      - "值得吗"
+      - "头脑风暴"
+      - "探索"
+
+  # ==========================================================================
+  # 规划场景 - 通用
+  # ==========================================================================
+  - scenario: planning
+    description: 复杂多文件变更的规划
+    primary:
+      skill: planning-with-files
+      source: builtin
+      reason: "项目内置的规划技能，使用文件作为持久化工作记忆，适合通用复杂任务"
+    alternatives:
+      - skill: /plan-ceo-review
+        source: gstack
+        trigger: "需要从 CEO/产品策略角度审查规划，挑战范围和野心水平"
+        priority: P1
+      - skill: /plan-eng-review
+        source: gstack
+        trigger: "需要锁定架构、数据流、边界情况、测试计划"
+        priority: P1
+      - skill: /plan-design-review
+        source: gstack
+        trigger: "需要从设计/UX 角度审查，AI slop 检测，0-10 评分"
+        priority: P2
+      - skill: /autoplan
+        source: gstack
+        trigger: "需要完整的自动审查流水线：CEO → 设计 → 工程"
+        priority: P1
+      - skill: /writing-plans
+        source: superpowers
+        trigger: "需要创建详细的设计文档和规格"
+        priority: P2
+      - skill: /executing-plans
+        source: superpowers
+        trigger: "已有计划，需要执行"
+        priority: P2
+    conflict_resolution: builtin_default_gstack_for_specific_angle
+    keywords:
+      - "规划"
+      - "计划"
+      - "方案"
+      - "如何实现"
+      - "复杂任务"
+
+  # ==========================================================================
+  # 重构场景
+  # ==========================================================================
+  - scenario: refactoring
+    description: 代码重构，改善结构和可维护性
+    primary:
+      skill: /refactor
+      source: superpowers
+      reason: "专门的重构技能，有安全检查"
+    alternatives:
+      - skill: /review
+        source: gstack
+        trigger: "重构后需要预发布审查"
+        priority: P2
+    conflict_resolution: prefer_superpowers_for_refactor
+    keywords:
+      - "重构"
+      - "refactor"
+      - "改善结构"
+      - "代码清理"
+
+  # ==========================================================================
+  # TDD 场景
+  # ==========================================================================
+  - scenario: test_driven_development
+    description: 测试驱动开发
+    primary:
+      skill: /test-driven-development
+      source: superpowers
+      reason: "专门的 TDD 强制执行工作流，红绿重构循环"
+    alternatives:
+      - skill: /qa
+        source: gstack
+        trigger: "TDD 完成后需要浏览器级别的端到端测试"
+        priority: P2
+      - skill: /verification-before-completion
+        source: superpowers
+        trigger: "需要验证完成前的检查清单"
+        priority: P2
+    conflict_resolution: superpowers_for_unit_gstack_for_e2e
+    keywords:
+      - "TDD"
+      - "测试驱动"
+      - "先写测试"
+      - "red-green-refactor"
+
+  # ==========================================================================
+  # 架构设计场景
+  # ==========================================================================
+  - scenario: architecture_design
+    description: 系统架构设计和文档
+    primary:
+      skill: /writing-plans
+      source: superpowers
+      reason: "创建详细的设计文档和规格"
+    alternatives:
+      - skill: /plan-eng-review
+        source: gstack
+        trigger: "架构设计后需要工程审查锁定"
+        priority: P2
+    conflict_resolution: prefer_superpowers_for_architecture
+    keywords:
+      - "架构"
+      - "architecture"
+      - "系统设计"
+      - "技术选型"
+
+  # ==========================================================================
+  # 性能优化场景
+  # ==========================================================================
+  - scenario: performance_optimization
+    description: 性能优化和瓶颈分析
+    primary:
+      skill: /benchmark
+      source: gstack
+      reason: "基准测试页面加载时间、Core Web Vitals 和资源大小"
+    alternatives:
+      - skill: /finishing-a-development-branch
+        source: superpowers
+        trigger: "需要完成开发分支的收尾工作"
+        priority: P2
+    keywords:
+      - "性能"
+      - "优化"
+      - "慢"
+      - "瓶颈"
+      - "profiling"
+      - "benchmark"
+
+# ============================================================================
+# gstack 独有场景（无冲突）
+# ============================================================================
+exclusive_skills:
+
+  - scenario: browser_qa
+    description: Web 应用的端到端测试
+    skill: /qa
+    source: gstack
+    reason: "唯一提供真实 Chromium 浏览器测试的技能，包含 bug 修复和回归测试生成"
+    keywords:
+      - "测试网站"
+      - "QA"
+      - "端到端"
+      - "浏览器测试"
+      - "功能测试"
+
+  - scenario: browse_only
+    description: 仅浏览网页，不测试
+    skill: /browse
+    source: gstack
+    reason: "轻量级浏览器交互，~100ms 每命令，适合截图、检查元素"
+    keywords:
+      - "打开网页"
+      - "浏览"
+      - "截图"
+      - "查看页面"
+
+  - scenario: shipping
+    description: 准备发布，创建 PR
+    skill: /ship
+    source: gstack
+    reason: "发布工作流自动化：同步 main、运行测试、审计覆盖率、推送、开 PR"
+    keywords:
+      - "发布"
+      - "ship"
+      - "创建 PR"
+      - "提交代码"
+      - "合并"
+
+  - scenario: document_release
+    description: 发布后更新文档
+    skill: /document-release
+    source: gstack
+    reason: "自动更新所有项目文档以匹配刚发布的代码，捕获陈旧 README"
+    keywords:
+      - "更新文档"
+      - "文档同步"
+      - "发布后"
+
+  - scenario: team_retrospective
+    description: 团队回顾
+    skill: /retro
+    source: gstack
+    reason: "团队感知的每周回顾，包含个人分解、发布连续性、测试健康趋势"
+    keywords:
+      - "回顾"
+      - "retro"
+      - "总结"
+      - "复盘"
+
+  - scenario: safety_critical
+    description: 生产环境操作，潜在破坏性操作
+    skill: /guard
+    source: gstack
+    reason: "最大安全保护：careful + freeze 组合，破坏性命令警告 + 编辑作用域锁定"
+    keywords:
+      - "生产环境"
+      - "危险操作"
+      - "rm -rf"
+      - "安全模式"
+
+  - scenario: edit_scope_lock
+    description: 编辑作用域锁定
+    skill: /freeze
+    source: gstack
+    reason: "限制文件编辑到单个目录，调试时防止意外修改"
+    keywords:
+      - "锁定"
+      - "freeze"
+      - "限制编辑"
+
+  - scenario: design_system_creation
+    description: 从零构建设计系统
+    skill: /design-consultation
+    source: gstack
+    reason: "研究竞品、提出创意风险、生成逼真产品 mockup"
+    keywords:
+      - "设计系统"
+      - "design system"
+      - "UI 设计"
+
+  - scenario: visual_design_audit
+    description: 视觉设计审计并应用修复
+    skill: /design-review
+    source: gstack
+    reason: "与 plan-design-review 相同审计，但实际应用修复，原子提交，前后对比截图"
+    keywords:
+      - "设计审查"
+      - "UI 修复"
+      - "视觉优化"
+
+# ============================================================================
+# superpowers 独有场景（无冲突）
+# ============================================================================
+superpowers_exclusive:
+
+  - scenario: parallel_development
+    description: 并行任务执行
+    skill: /subagent-driven-development
+    source: superpowers
+    reason: "使用多个 agents 并行执行独立任务"
+    keywords:
+      - "并行"
+      - "多任务"
+      - "subagent"
+
+  - scenario: git_worktree
+    description: Git worktree 管理
+    skill: /using-git-worktrees
+    source: superpowers
+    reason: "分支隔离，并行处理多个分支"
+    note: "与 builtin/using-git-worktrees 冲突，优先使用 superpowers 版本"
+    keywords:
+      - "worktree"
+      - "并行分支"
+
+  - scenario: skill_creation
+    description: 创建可复用的 skills
+    skill: /writing-skills
+    source: superpowers
+    reason: "从会话历史中提取模式，生成可复用技能"
+    keywords:
+      - "创建技能"
+      - "skill"
+      - "提取模式"
+
+  - scenario: dispatch_agents
+    description: 分派并行 agents
+    skill: /dispatching-parallel-agents
+    source: superpowers
+    reason: "分派多个并行 agents 执行子任务"
+    keywords:
+      - "分派"
+      - "dispatch"
+
+# ============================================================================
+# 冲突解决策略配置
+# ============================================================================
+conflict_resolution:
+
+  strategies:
+    - name: builtin_first_unless_explicit_override
+      description: 默认使用 builtin，除非用户明确要求其他技能
+      behavior: |
+        1. 触发 systematic-debugging (builtin)
+        2. 如果用户说"用 gstack 调试" → 切换到 /investigate
+        3. 如果用户说"用 superpowers 调试" → 切换到 /systematic-debugging (superpowers)
+
+    - name: prefer_gstack_for_pre_landing
+      description: 预发布审查优先使用 gstack
+      behavior: |
+        1. 默认触发 /review (gstack) — SQL 安全、LLM 边界、自动修复
+        2. 如果用户说"用 superpowers 审查" → 切换到 /receiving-code-review
+
+    - name: gstack_for_early_superpowers_for_refinement
+      description: 早期产品用 gstack，细化设计用 superpowers
+      behavior: |
+        1. 新想法/从零开始 → /office-hours (gstack) — 重新框定问题
+        2. 已有设计文档完善 → /brainstorming (superpowers)
+
+    - name: builtin_default_gstack_for_specific_angle
+      description: 通用规划用 builtin，特定角度用 gstack
+      behavior: |
+        1. 默认使用 planning-with-files (builtin)
+        2. 需要 CEO/产品角度 → /plan-ceo-review (gstack)
+        3. 需要架构角度 → /plan-eng-review (gstack)
+        4. 需要设计角度 → /plan-design-review (gstack)
+        5. 完整自动审查 → /autoplan (gstack)
+        6. 创建设计文档 → /writing-plans (superpowers)
+
+    - name: prefer_superpowers_for_refactor
+      description: 重构优先使用 superpowers
+      behavior: |
+        1. 默认触发 /refactor (superpowers)
+        2. 重构后的审查可用 /review (gstack)
+
+    - name: superpowers_for_unit_gstack_for_e2e
+      description: 单元测试用 superpowers，端到端用 gstack
+      behavior: |
+        1. TDD 开发流程 → /test-driven-development (superpowers)
+        2. 浏览器 QA → /qa (gstack)
+
+    - name: prefer_superpowers_for_architecture
+      description: 架构设计优先使用 superpowers
+      behavior: |
+        1. 系统架构设计 → /writing-plans (superpowers)
+        2. 架构审查 → /plan-eng-review (gstack)
+
+# ============================================================================
+# 用户覆盖配置
+# ============================================================================
+user_override:
+  enabled: true
+  require_explicit_keyword: true
+  keywords:
+    "用 gstack": 切换到 gstack 版本
+    "用 superpowers": 切换到 superpowers 版本
+    "用 builtin": 切换到 builtin 版本
+
+# ============================================================================
+# 自动触发建议配置
+# ============================================================================
+suggestions:
+  # 当检测到以下模式时，建议用户使用特定技能
+  patterns:
+    - pattern: "我要(发布|提交|ship|merge)"
+      suggest: /ship
+      source: gstack
+      message: "检测到发布意图，建议使用 /ship 技能自动化发布流程"
+
+    - pattern: "帮我(测试|QA|检查)网站"
+      suggest: /qa
+      source: gstack
+      message: "检测到浏览器测试需求，建议使用 /qa 技能进行端到端测试"
+
+    - pattern: "这个 bug (很奇怪|不确定原因|不知道为什么)"
+      suggest: systematic-debugging
+      source: builtin
+      message: "建议先使用 systematic-debugging 找根因，再尝试修复"
+
+    - pattern: "我(想|要|准备)做一个(新功能|新想法|feature)"
+      suggest: /office-hours
+      source: gstack
+      message: "新产品想法建议先用 /office-hours 重新框定问题"
+
+    - pattern: "这是一个(复杂|麻烦|很多文件)的(任务|改动|重构)"
+      suggest: planning-with-files
+      source: builtin
+      message: "复杂任务建议先使用 planning-with-files 制定详细计划"
+
+    - pattern: "(打开|查看|浏览)网页"
+      suggest: /browse
+      source: gstack
+      message: "需要使用浏览器？建议用 /browse 技能"

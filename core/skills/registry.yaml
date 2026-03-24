@@ -53,6 +53,122 @@ merge_policy:
   default_external_trigger_mode: suggest
   mandatory_external_security_review: true
 
+# Conflict resolution strategies for overlapping skills
+conflict_resolution:
+  enabled: true
+  source: .vibe/skill-routing.yaml
+
+  strategies:
+    # Debugging: builtin systematic-debugging is P0 mandatory, always primary
+    - scenario: debugging
+      primary: systematic-debugging
+      primary_source: builtin
+      alternatives:
+        - skill: /investigate
+          source: gstack
+          trigger: "需要自动 freeze 作用域"
+        - skill: /systematic-debugging
+          source: superpowers
+          trigger: "需要高级调试工作流"
+      override_keywords:
+        - "用 gstack"
+        - "用 superpowers"
+
+    # Code review: prefer gstack for pre-landing (SQL safety, auto-fixes)
+    - scenario: code_review
+      primary: /review
+      primary_source: gstack
+      alternatives:
+        - skill: /receiving-code-review
+          source: superpowers
+          trigger: "需要全面质量检查"
+        - skill: /codex
+          source: gstack
+          trigger: "需要跨模型审查"
+      override_keywords:
+        - "用 superpowers"
+
+    # Product thinking: gstack for early (reframing), superpowers for refinement
+    - scenario: product_thinking
+      primary: /office-hours
+      primary_source: gstack
+      alternatives:
+        - skill: /brainstorming
+          source: superpowers
+          trigger: "需要设计细化"
+      override_keywords:
+        - "用 superpowers"
+
+    # Planning: builtin default, gstack for specific angles
+    - scenario: planning
+      primary: planning-with-files
+      primary_source: builtin
+      alternatives:
+        - skill: /plan-ceo-review
+          source: gstack
+          trigger: "CEO/产品角度"
+        - skill: /plan-eng-review
+          source: gstack
+          trigger: "架构技术角度"
+        - skill: /plan-design-review
+          source: gstack
+          trigger: "设计/UX 角度"
+        - skill: /autoplan
+          source: gstack
+          trigger: "完整自动审查"
+        - skill: /writing-plans
+          source: superpowers
+          trigger: "创建设计文档"
+      override_keywords:
+        - "用 gstack"
+        - "用 superpowers"
+
+    # Refactoring: prefer superpowers
+    - scenario: refactoring
+      primary: /refactor
+      primary_source: superpowers
+      alternatives:
+        - skill: /review
+          source: gstack
+          trigger: "重构后审查"
+      override_keywords:
+        - "用 gstack"
+
+    # Architecture: prefer superpowers
+    - scenario: architecture
+      primary: /writing-plans
+      primary_source: superpowers
+      alternatives:
+        - skill: /plan-eng-review
+          source: gstack
+          trigger: "架构审查"
+      override_keywords:
+        - "用 gstack"
+
+# Skill detection and routing hints
+routing_hints:
+  # When user mentions these keywords, suggest specific skills
+  suggestions:
+    - keywords: ["发布", "提交", "ship", "merge", "PR"]
+      suggest: gstack/ship
+      message: "检测到发布意图，建议使用 /ship"
+
+    - keywords: ["测试网站", "QA", "端到端", "浏览器测试"]
+      suggest: gstack/qa
+      message: "建议使用 /qa 进行浏览器测试"
+
+    - keywords: ["bug", "错误", "调试", "不工作", "卡住了"]
+      suggest: builtin/systematic-debugging
+      message: "建议先找根因再修复"
+
+    - keywords: ["新功能", "新想法", "feature", "要不要做"]
+      suggest: gstack/office-hours
+      message: "新想法建议先用 /office-hours 重新框定问题"
+
+    - keywords: ["复杂", "很多文件", "麻烦"]
+      suggest: builtin/planning-with-files
+      message: "复杂任务建议先制定详细计划"
+
 external_pack_template:
   namespace_examples:
     - superpowers/tdd
