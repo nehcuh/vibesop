@@ -102,7 +102,7 @@ module Vibe
           'websearch' => 'ask',
           'task' => 'ask',
           'skill' => 'ask',
-          'external_directory' => 'deny'
+          'external_directory' => 'ask'
         }
       }
     end
