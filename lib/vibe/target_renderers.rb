@@ -75,7 +75,8 @@ module Vibe
       <<~MD
         # Vibe workflow for #{target_name}
 
-        Generated from the portable `core/` spec with profile `#{manifest['profile']}`.#{integrations}
+        Generated from the portable `core/` spec with profile `#{manifest['profile']}`.
+        #{integrations}
         Applied overlay: #{overlay_sentence(manifest)}
 
         #{target_entrypoint_intent(target_name)}
