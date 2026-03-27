@@ -94,10 +94,10 @@ class TestVibeInit < Minitest::Test
     File.write(File.join(source_dir, 'test-skill.md'), 'test')
 
     # Create skills directory and symlink pointing into the source
-    skills_dir = File.join(@test_home, '.claude', 'skills')
+    skills_dir = File.join(@test_home, '.config', 'claude', 'skills')
     FileUtils.mkdir_p(skills_dir)
     FileUtils.ln_s(File.join(source_dir, 'test-skill.md'),
-                   File.join(skills_dir, 'test-skill'))
+                   File.join(skills_dir, 'superpowers-test-skill'))
 
     status = detect_superpowers
     assert_equal :platform_skills, status

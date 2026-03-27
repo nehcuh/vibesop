@@ -256,10 +256,10 @@ class TestVibeExternalTools < Minitest::Test
     skill_src   = File.join(source_dir, 'my-skill')
     FileUtils.mkdir_p(skills_dir)
     FileUtils.mkdir_p(skill_src)
-    File.symlink(skill_src, File.join(skills_dir, 'my-skill'))
+    File.symlink(skill_src, File.join(skills_dir, 'superpowers-my-skill'))
 
     result = superpowers_symlinks_in(skills_dir, source_dir)
-    assert_includes result, 'my-skill'
+    assert_includes result, 'superpowers-my-skill'
   end
 
   def test_superpowers_symlinks_in_excludes_symlinks_pointing_elsewhere

@@ -31,11 +31,11 @@ class TestGstackInstaller < Minitest::Test
   end
 
   def test_platform_paths_has_claude_code
-    assert Vibe::GstackInstaller::GSTACK_PLATFORM_PATHS.key?('claude-code')
+    assert Vibe::GstackInstaller::GSTACK_PLATFORM_SYMLINK_PATHS.key?('claude-code')
   end
 
   def test_platform_paths_has_opencode
-    assert Vibe::GstackInstaller::GSTACK_PLATFORM_PATHS.key?('opencode')
+    assert Vibe::GstackInstaller::GSTACK_PLATFORM_SYMLINK_PATHS.key?('opencode')
   end
 
   def test_gstack_markers_present_false_when_empty

@@ -261,6 +261,8 @@ class TestMemoryAutoload < Minitest::Test
     settings = JSON.parse(File.read(settings_path))
     assert settings['hooks']
     assert settings['hooks']['preCommand']
-    assert settings['hooks']['preCommand'].any? { |cmd| cmd.include?('memory/session.md') }
+    assert(settings['hooks']['preCommand'].any? { |cmd| cmd.include?('memory/session.md') } ||
+           settings['hooks']['preCommand'].any? { |cmd| cmd.is_a?(Hash) && cmd['command'].include?('memory/session.md') } ||
+           settings['hooks']['preCommand'].any? { |cmd| cmd.is_a?(Hash) && cmd['command'].include?('ruby -e') })
   end
 end

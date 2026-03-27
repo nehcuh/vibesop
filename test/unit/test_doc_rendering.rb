@@ -25,7 +25,7 @@ class DocRenderingTestHost
   end
 end
 
-class TestDocRendering < Minitest::Test
+class TestDocRenderingTools < Minitest::Test
   def setup
     @repo_root = File.expand_path('../../', __dir__)
     @host = DocRenderingTestHost.new(@repo_root)

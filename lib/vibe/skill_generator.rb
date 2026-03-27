@@ -34,7 +34,7 @@ module Vibe
           # %<title>s
 
           > **Generated from your successful workflows**
-          > Confidence: %<confidence>s | Occurrences: %<occurrences>s | Success Rate: %<success_rate>s%
+          > Confidence: %<confidence>s | Occurrences: %<occurrences>s | Success Rate: %<success_rate>s%%
 
           ## When to Use
 

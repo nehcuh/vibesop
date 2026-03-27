@@ -5,18 +5,20 @@ require 'yaml'
 require 'vibe/utils'
 require 'vibe/overlay_support'
 require 'vibe/doc_rendering'
+require 'vibe/external_tools'
 
-# Test class that includes all required modules
 class DocRenderingTester
   include Vibe::Utils
   include Vibe::OverlaySupport
   include Vibe::DocRendering
+  include Vibe::ExternalTools
 
-  attr_accessor :repo_root, :policies_doc, :tiers_doc, :providers
+  attr_accessor :repo_root, :policies_doc, :tiers_doc, :providers, :target_platform
 
   def initialize(repo_root)
     @repo_root = repo_root
     @yaml_cache = {}
+    @target_platform = 'claude-code'
     # Load required docs for OverlaySupport
     @policies_doc = YAML.safe_load(
       File.read(File.join(repo_root, 'core/policies/behaviors.yaml')), aliases: true
@@ -33,14 +35,57 @@ class DocRenderingTester
                    {}
                  end
   end
+
+  def render_target_summary(manifest)
+    super
+  end
+
+  def render_behavior_doc(manifest)
+    super
+  end
+
+  def render_routing_doc(manifest)
+    super
+  end
+
+  def render_skills_doc(manifest)
+    super
+  end
+
+  def render_general_doc(manifest)
+    super
+  end
+
+  def render_inspect(manifest)
+    super
+  end
+
+  # We need to stub these methods from ExternalTools for testing
+  def integration_status
+    {
+      superpowers: { installed: false, ready: false },
+      rtk: { installed: false, ready: false },
+      gstack: { installed: false, ready: false }
+    }
+  end
+
+  def verify_superpowers
+    { installed: false, ready: false }
+  end
+
+  def verify_rtk(platform = nil)
+    { installed: false, ready: false }
+  end
+
+  def skip_integrations
+    true
+  end
 end
 
 class TestDocRendering < Minitest::Test
   def setup
     @repo_root = File.expand_path('../..', __dir__)
     @renderer = DocRenderingTester.new(@repo_root)
-
-    # Minimal manifest for testing
     @base_manifest = {
       'target' => 'claude-code',
       'profile' => 'claude-code-default',
