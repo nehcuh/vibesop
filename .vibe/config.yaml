@@ -1,0 +1,7 @@
+---
+memory_autoload:
+  enabled: true
+  platforms:
+  - claude-code
+  - opencode
+  configured_at: '2026-03-27T13:14:53+08:00'
