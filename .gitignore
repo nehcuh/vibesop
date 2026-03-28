@@ -47,3 +47,6 @@ settings.json
 /PROJECT_REVIEW.md
 /VIBE_CODING_SOP.md
 .env
+
+# Debug / temporary files
+debug_*.rb
