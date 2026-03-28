@@ -94,17 +94,17 @@ module Vibe
     end
 
     def run_ctx_stats(argv)
-      # Simple demo: estimate tokens for stdin or a file
+      # Simple context stats without ContextOptimizer dependency
       input = if argv.first && File.exist?(argv.first)
                 File.read(argv.shift)
               else
                 $stdin.read
               end
 
-      optimizer = ContextOptimizer.new
-      tokens    = optimizer.estimate_tokens(input)
-      words     = input.split(/\s+/).length
-      chars     = input.length
+      words  = input.split(/\s+/).length
+      chars  = input.length
+      # Rough token estimate: ~4 chars per token for English
+      tokens = (chars / 4.0).ceil
 
       puts 'Context stats:'
       puts "  Characters : #{chars}"

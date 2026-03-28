@@ -108,7 +108,7 @@ class TestSkillAdapterUnit < Minitest::Test
       result = @adapter.adapt_skill('nonexistent-xyz-skill', :suggest)
       assert_equal false, result
     end
-    assert_match(/not found in registry/, err)
+    assert_match(/Skill not found/, err)
   end
 
   def test_adapt_skill_invalid_mode_returns_false

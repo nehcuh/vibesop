@@ -38,13 +38,14 @@ class TestSkillCraftCommands < Minitest::Test
 
   def test_triggers_runs
     out, = capture_io { @host.run_skill_craft_command(['triggers']) }
-    assert_match(/trigger/i, out)
+    # triggers falls through to interactive crafting (no dedicated subcommand)
+    assert_match(/Skill Crafting Session|Crafting|pattern|No patterns found/i, out)
   end
 
   def test_status_runs
     out, = capture_io { @host.run_skill_craft_command(['status']) }
     assert_match(/Skill Craft Status/, out)
-    assert_match(/Sessions since last review/, out)
+    assert_match(/skill-craft analyze/, out)
   end
 
   def test_generate_no_pattern

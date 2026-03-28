@@ -5,7 +5,6 @@ require 'fileutils'
 require 'yaml'
 require 'tmpdir'
 require_relative '../lib/vibe/external_tools'
-require_relative '../lib/vibe/skill_detector'
 
 class TestGstackIntegration < Minitest::Test
   def setup

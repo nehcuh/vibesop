@@ -240,7 +240,7 @@ class VibeCLI
     return if ENV['VIBE_SKIP_SKILL_CHECK']
 
     manager = Vibe::SkillManager.new(@repo_root, Dir.pwd)
-    changes = manager.detector.check_skill_changes
+    changes = manager.check_skill_changes
 
     return if changes[:new_skills].empty?
 
@@ -454,7 +454,7 @@ class VibeCLI
     end
 
     # Check for new skills since last check
-    changes = manager.detector.check_skill_changes
+    changes = manager.check_skill_changes
     if changes[:new_skills].any?
       puts "     🆕 #{changes[:new_skills].length} new skills detected!"
       puts "        Run 'vibe skills check' to adapt them"

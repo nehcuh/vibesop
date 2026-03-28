@@ -5,7 +5,6 @@ require 'tmpdir'
 require 'fileutils'
 require_relative '../lib/vibe/session_analyzer'
 require_relative '../lib/vibe/skill_generator'
-require_relative '../lib/vibe/trigger_manager'
 
 # ────────────────────────────────────────────────────────────
 # SessionAnalyzer
@@ -174,84 +173,5 @@ class TestSkillGenerator < Minitest::Test
     results = @gen.generate_batch(patterns)
     assert_equal 2, results.size
     assert(results.all? { |r| r[:success] })
-  end
-end
-
-# ────────────────────────────────────────────────────────────
-# TriggerManager
-# ────────────────────────────────────────────────────────────
-class TestTriggerManager < Minitest::Test
-  # Subclass to redirect state file to a tmp path
-  def make_manager(config = {})
-    state_file = @state_file
-    Class.new(Vibe::TriggerManager) do
-      define_method(:state_path) { state_file }
-    end.new(config)
-  end
-
-  def setup
-    @tmpdir = Dir.mktmpdir
-    @state_file = File.join(@tmpdir, '.skill-craft-state.yaml')
-    @mgr = make_manager
-  end
-
-  def teardown
-    FileUtils.rm_rf(@tmpdir)
-  end
-
-  def test_initial_state_has_version
-    assert_equal '1.0', @mgr.state['version']
-  end
-
-  def test_initial_state_has_zero_session_count
-    assert_equal 0, @mgr.state['session_count']
-  end
-
-  def test_increment_session_count_increments_count
-    @mgr.increment_session_count
-    assert_equal 1, @mgr.state['session_count']
-  end
-
-  def test_increment_session_count_saves_state
-    @mgr.increment_session_count
-    @mgr.save_state
-    assert File.exist?(@state_file)
-    saved = YAML.safe_load(File.read(@state_file))
-    assert_equal 1, saved['session_count']
-  end
-
-  def test_check_triggers_returns_array
-    result = @mgr.check_triggers
-    assert_kind_of Array, result
-  end
-
-  def test_accumulation_trigger_fires_at_threshold
-    # Set count just at threshold
-    threshold = @mgr.config.dig('triggers', 'accumulation_threshold') || 10
-    @mgr.state['session_count'] = threshold
-    triggers = @mgr.check_triggers
-    types = triggers.map { |t| t[:type] }
-    assert_includes types, :accumulation
-  end
-
-  def test_no_trigger_below_threshold
-    @mgr.state['session_count'] = 1
-    triggers = @mgr.check_triggers
-    types = triggers.map { |t| t[:type] }
-    refute_includes types, :accumulation
-  end
-
-  def test_default_config_has_required_keys
-    config = @mgr.config
-    triggers = config['triggers']
-    assert triggers.key?('accumulation_threshold')
-    assert triggers.key?('periodic_interval')
-    assert triggers.key?('max_prompts_per_day')
-  end
-
-  def test_load_state_handles_missing_file
-    mgr = make_manager
-    # state file hasn't been written yet — should default to 0
-    assert_equal 0, mgr.state['session_count']
   end
 end

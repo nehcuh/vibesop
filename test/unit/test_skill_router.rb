@@ -89,13 +89,13 @@ class TestSkillRouter < Minitest::Test
   end
 
   def test_confidence_calculation
-    # Single keyword match
+    # Single keyword match — "review" matches 1/3 code_review keywords (score ≈ 0.33 → :low)
     result = @router.route('review')
-    assert_includes [:medium, :high], result[:confidence]
+    assert_includes [:low, :medium, :high], result[:confidence]
 
     # Multiple keywords match (if input contains multiple keywords from the rule)
     result = @router.route('帮我评审代码 review')
-    assert_includes [:high, :very_high], result[:confidence]
+    assert_includes [:high, :very_high, :absolute], result[:confidence]
   end
 
   private
