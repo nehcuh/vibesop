@@ -2,6 +2,7 @@
 
 require_relative '../session_analyzer'
 require_relative '../skill_generator'
+require_relative '../defaults'
 
 module Vibe
   # CLI commands for the skill-craft generation system, included in VibeCLI.
@@ -30,8 +31,8 @@ module Vibe
       puts '📊 Analyzing session history...'
 
       analyzer = SessionAnalyzer.new(
-        min_occurrences: options[:min_occurrences] || 3,
-        min_success_rate: options[:min_success_rate] || 0.7
+        min_occurrences: options[:min_occurrences] || Defaults::MIN_OCCURRENCES,
+        min_success_rate: options[:min_success_rate] || Defaults::MIN_SUCCESS_RATE
       )
 
       sessions = analyzer.load_sessions
@@ -146,7 +147,7 @@ module Vibe
     private
 
     def parse_analyze_options(argv)
-      options = { min_occurrences: 3, min_success_rate: 0.7, scan_recent: 20 }
+      options = { min_occurrences: Defaults::MIN_OCCURRENCES, min_success_rate: Defaults::MIN_SUCCESS_RATE, scan_recent: Defaults::SCAN_RECENT_SESSIONS }
 
       argv.each do |arg|
         case arg

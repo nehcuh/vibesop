@@ -4,6 +4,7 @@
 # These methods are included in VibeCLI class
 
 require_relative '../instinct_manager'
+require_relative '../defaults'
 
 module Vibe
   # CLI commands for the instinct learning subsystem, included in VibeCLI.
@@ -138,11 +139,7 @@ module Vibe
 
       instincts.each_with_index do |entry, idx|
         confidence = entry['confidence'].round(2)
-        label = if confidence >= 0.8
-                  'High'
-                else
-                  confidence >= 0.6 ? 'Medium' : 'Low'
-                end
+        label = Defaults.confidence_label(confidence)
         puts "  #{idx + 1}. [#{label}] #{entry['pattern']} (#{confidence})"
         puts "     Uses: #{entry['usage_count']} | " \
              "Success: #{(entry['success_rate'] * 100).round}%"
@@ -176,14 +173,14 @@ module Vibe
       end
 
       # Group by confidence level
-      high = instincts.select { |i| i['confidence'] >= 0.8 }
-      medium = instincts.select { |i| i['confidence'] >= 0.6 && i['confidence'] < 0.8 }
-      low = instincts.select { |i| i['confidence'] < 0.6 }
+      high = instincts.select { |i| i['confidence'] >= Defaults::CONFIDENCE_HIGH }
+      medium = instincts.select { |i| i['confidence'] >= Defaults::CONFIDENCE_MEDIUM && i['confidence'] < Defaults::CONFIDENCE_HIGH }
+      low = instincts.select { |i| i['confidence'] < Defaults::CONFIDENCE_MEDIUM }
 
       puts "Total: #{instincts.size} instincts\n\n"
 
       if high.any?
-        puts 'High Confidence (≥ 0.8):'
+        puts "High Confidence (≥ #{Defaults::CONFIDENCE_HIGH}):"
         high.each_with_index do |instinct, idx|
           print_instinct_summary(instinct, idx + 1)
         end
@@ -191,7 +188,7 @@ module Vibe
       end
 
       if medium.any?
-        puts 'Medium Confidence (0.6-0.8):'
+        puts "Medium Confidence (#{Defaults::CONFIDENCE_MEDIUM}-#{Defaults::CONFIDENCE_HIGH}):"
         medium.each_with_index do |instinct, idx|
           print_instinct_summary(instinct, high.size + idx + 1)
         end
@@ -200,7 +197,7 @@ module Vibe
 
       return unless low.any?
 
-      puts 'Low Confidence (< 0.6):'
+      puts "Low Confidence (< #{Defaults::CONFIDENCE_MEDIUM}):"
       low.each_with_index do |instinct, idx|
         print_instinct_summary(instinct, high.size + medium.size + idx + 1)
       end

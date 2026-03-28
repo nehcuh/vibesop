@@ -4,6 +4,7 @@ require 'yaml'
 require 'time'
 require 'fileutils'
 require_relative 'utils'
+require_relative 'defaults'
 
 module Vibe
   # Automatic memory trigger system - captures errors and patterns
@@ -13,11 +14,11 @@ module Vibe
     attr_reader :memory_path, :config
 
     DEFAULT_CONFIG = {
-      min_occurrences: 2,        # Minimum occurrences to record
+      min_occurrences: Defaults::TRIGGER_MIN_OCCURRENCES,
       auto_record: true,         # Auto-record without confirmation
       categories: %w[pitfall pattern solution],
-      max_entries_per_category: 100,
-      max_cache_age_days: 30,    # Clean up cache entries older than 30 days
+      max_entries_per_category: Defaults::TRIGGER_MAX_ENTRIES,
+      max_cache_age_days: Defaults::TRIGGER_MAX_CACHE_AGE_DAYS,
       max_cache_entries: 1000    # Maximum cache entries
     }.freeze
 

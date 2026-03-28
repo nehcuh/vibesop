@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'set'
+require_relative 'defaults'
 
 module Vibe
   # Advanced semantic matching for skill routing
@@ -67,7 +68,7 @@ module Vibe
         score = word_overlap_score(input_words, candidate_words)
 
         # Character-level similarity for typos
-        if score < 0.5
+        if score < Defaults::SEMANTIC_MIN_SCORE
           char_score = character_similarity(input_downcase, candidate_downcase)
           score = [score, char_score * 0.7].max
         end

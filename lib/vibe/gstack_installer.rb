@@ -5,6 +5,7 @@ require 'open3'
 require 'timeout'
 require 'rbconfig'
 require_relative 'platform_utils'
+require_relative 'defaults'
 
 module Vibe
   # Installer for the gstack skill pack (clones repo and sets up skills directory).
@@ -28,7 +29,7 @@ module Vibe
     }.freeze
     GSTACK_REPO_NAME = 'gstack'
 
-    CLONE_TIMEOUT = 60
+    CLONE_TIMEOUT = Defaults::CLONE_TIMEOUT
     MAX_RETRIES = 3
 
     def self.install_gstack(_platform = nil)

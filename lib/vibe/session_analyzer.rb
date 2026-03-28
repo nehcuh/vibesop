@@ -3,6 +3,7 @@
 require 'yaml'
 require 'json'
 require 'set'
+require_relative 'defaults'
 
 module Vibe
   # Session history analyzer for pattern detection
@@ -25,10 +26,10 @@ module Vibe
 
     def default_config
       {
-        min_occurrences: 3,
-        min_success_rate: 0.7,
-        min_sequence_length: 3,
-        scan_recent_sessions: 20,
+        min_occurrences: Defaults::MIN_OCCURRENCES,
+        min_success_rate: Defaults::MIN_SUCCESS_RATE,
+        min_sequence_length: Defaults::MIN_SEQUENCE_LENGTH,
+        scan_recent_sessions: Defaults::SCAN_RECENT_SESSIONS,
         pattern_types: %i[tool_sequence error_recovery workflow checklist]
       }
     end
