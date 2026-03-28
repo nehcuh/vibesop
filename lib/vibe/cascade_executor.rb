@@ -222,7 +222,7 @@ module Vibe
 
     # Detect cycles via DFS
     def cyclic?
-      state = {}   # :unvisited | :visiting | :visited
+      state = {} # :unvisited | :visiting | :visited
 
       visit = lambda do |id|
         return false if state[id] == :visited

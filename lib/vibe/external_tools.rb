@@ -272,7 +272,7 @@ module Vibe
     # Only check unified storage location - individual skill symlinks are created
     # per-platform with naming format: gstack-{skill} (e.g., gstack-autoplan)
     GSTACK_DETECTION_PATHS = [
-      '~/.config/skills/gstack'      # 统一存储位置（唯一真实位置）
+      '~/.config/skills/gstack' # 统一存储位置（唯一真实位置）
     ].freeze
 
     # Platform-specific paths for skill symlinks

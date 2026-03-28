@@ -67,7 +67,7 @@ module Vibe
       render_generic_project_md('opencode', manifest)
     end
 
-    def render_target_entrypoint_md(target_name, manifest, extra_sections: nil)
+    def render_target_entrypoint_md(target_name, manifest, _extra_sections: nil)
       integrations_ref = render_integrations_reference(target_name)
 
       <<~MD
@@ -127,25 +127,25 @@ module Vibe
       end
     end
 
-    def render_integrations_reference(target_name)
+    def render_integrations_reference(_target_name)
       sp_info = verify_superpowers
       rtk_info = verify_rtk
 
       lines = []
 
       # Superpowers reference
-      if sp_info[:installed]
-        lines << "- **Superpowers**: ✅ Installed (`#{sp_info[:location]}`)"
-      else
-        lines << "- **Superpowers**: ❌ Not installed — `vibe install superpowers` to enable"
-      end
+      lines << if sp_info[:installed]
+                 "- **Superpowers**: ✅ Installed (`#{sp_info[:location]}`)"
+               else
+                 '- **Superpowers**: ❌ Not installed — `vibe install superpowers` to enable'
+               end
 
       # RTK reference
       if rtk_info[:installed]
         hook_note = rtk_info[:hook_configured] ? 'hook ✅' : 'run `rtk init --global`'
         lines << "- **RTK**: ✅ Installed (v#{rtk_info[:version] || 'unknown'}, #{hook_note})"
       else
-        lines << "- **RTK**: ❌ Not installed — `brew install rtk`"
+        lines << '- **RTK**: ❌ Not installed — `brew install rtk`'
       end
 
       lines.join("\n")

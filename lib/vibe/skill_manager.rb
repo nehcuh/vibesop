@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require_relative 'skill_detector'
+require_relative 'skill_discovery'
 require_relative 'skill_adapter'
 
 module Vibe
   # Unified skill management interface
-  # Coordinates detection, adaptation, and configuration
+  # Coordinates discovery, adaptation, and configuration
   #
   # Usage:
   #   manager = SkillManager.new(repo_root, project_root)
@@ -14,12 +14,12 @@ module Vibe
   #   manager.list_skills         # List all skills
   #
   class SkillManager
-    attr_reader :repo_root, :project_root, :detector, :adapter
+    attr_reader :repo_root, :project_root, :discovery, :adapter
 
     def initialize(repo_root, project_root = Dir.pwd)
       @repo_root = repo_root
       @project_root = project_root
-      @detector = SkillDetector.new(repo_root, project_root)
+      @discovery = SkillDiscovery.new(repo_root, project_root)
       @adapter = SkillAdapter.new(repo_root, project_root)
     end
 
@@ -29,7 +29,7 @@ module Vibe
     # @param auto_adapt [Boolean] If true, adapt all as suggest without prompting
     # @return [Hash] Results of adaptation
     def check_and_prompt(auto_adapt: false)
-      changes = detector.check_skill_changes
+      changes = check_skill_changes
 
       if changes[:new_skills].empty? && changes[:new_packs].empty?
         puts '✓ No new skills found.' if verbose?
@@ -54,7 +54,7 @@ module Vibe
     # @param mode [Symbol] Adaptation mode (:suggest, :mandatory, :skip)
     # @return [Boolean] Success status
     def adapt_skill(skill_id, mode)
-      skill = detector.get_skill_info(skill_id)
+      skill = discovery.get_skill_info(skill_id)
 
       unless skill
         puts "❌ Skill not found: #{skill_id}"
@@ -82,7 +82,7 @@ module Vibe
     #
     # @return [Hash] Skills grouped by status
     def list_skills
-      available = detector.list_available_skills
+      available = discovery.list_available_skills
       project = load_project_skills
 
       {
@@ -101,7 +101,7 @@ module Vibe
     # @param skill_id [String] Skill identifier
     # @return [Hash, nil] Skill info with adaptation status
     def skill_info(skill_id)
-      skill = detector.get_skill_info(skill_id)
+      skill = discovery.get_skill_info(skill_id)
       return nil unless skill
 
       project = load_project_skills
@@ -136,6 +136,61 @@ module Vibe
       tmp_path = "#{config_path}.tmp.#{Process.pid}"
       File.write(tmp_path, YAML.dump(config))
       FileUtils.mv(tmp_path, config_path)
+    end
+
+    # Check for skill changes (replaces SkillDetector#check_skill_changes)
+    def check_skill_changes
+      all_skills = discovery.list_available_skills
+      project_skills = load_project_skills
+
+      # Find new skills (not adapted or skipped)
+      adapted_ids = project_skills[:adapted].map { |s| s[:id] }
+      skipped_ids = project_skills[:skipped].map { |s| s[:id] }
+
+      new_skills = all_skills.reject do |skill|
+        adapted_ids.include?(skill[:id]) || skipped_ids.include?(skill[:id])
+      end
+
+      # Check for new packs (simplified, scan ~/.config/skills)
+      new_packs = scan_new_packs
+
+      {
+        new_skills: new_skills,
+        new_packs: new_packs,
+        last_checked: load_last_check_time
+      }
+    end
+
+    # Scan for newly installed packs
+    def scan_new_packs
+      user_skills_dir = File.expand_path('~/.config/skills')
+      return [] unless Dir.exist?(user_skills_dir)
+
+      last_check = load_last_check_time
+
+      Dir.glob(File.join(user_skills_dir, '*')).select do |dir|
+        File.directory?(dir) && File.mtime(dir) > last_check
+      end.map do |dir|
+        {
+          name: File.basename(dir),
+          path: dir,
+          installed_at: File.mtime(dir),
+          version: 'unknown'
+        }
+      end
+    end
+
+    # Load last check timestamp
+    def load_last_check_time
+      config_path = File.join(project_root, '.vibe/skills.yaml')
+      return Time.at(0) unless File.exist?(config_path)
+
+      doc = YAML.safe_load(File.read(config_path), aliases: true) || {}
+      last_checked = doc['last_checked']
+
+      last_checked ? Time.parse(last_checked) : Time.at(0)
+    rescue StandardError
+      Time.at(0)
     end
 
     private

@@ -303,9 +303,8 @@ module Vibe
     private
 
     def default_storage_path
-      # Try to find repo root
-      repo_root = find_repo_root || Dir.pwd
-      File.join(repo_root, 'memory', 'instincts.yaml')
+      # User-level storage for cross-project instinct sharing
+      File.expand_path('~/.config/vibe/instincts.yaml')
     end
 
     def default_structure
@@ -334,7 +333,7 @@ module Vibe
               'Success rate must be between 0 and 1'
       end
       # rubocop:disable Style/GuardClause
-      if (instinct['usage_count']).negative?
+      if instinct['usage_count'].negative?
         raise ArgumentError,
               'Usage count must be non-negative'
       end

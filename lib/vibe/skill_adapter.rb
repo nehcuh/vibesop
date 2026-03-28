@@ -2,7 +2,8 @@
 
 require_relative 'errors'
 require_relative 'utils'
-require_relative 'skill_detector'
+require_relative 'skill_discovery'
+require_relative 'skill_cache'
 require_relative 'progress_indicator'
 
 module Vibe
@@ -19,12 +20,12 @@ module Vibe
 
     PROJECT_SKILLS_CONFIG = '.vibe/skills.yaml'
 
-    attr_reader :repo_root, :project_root, :detector
+    attr_reader :repo_root, :project_root, :discovery
 
     def initialize(repo_root, project_root = Dir.pwd)
       @repo_root = repo_root
       @project_root = project_root
-      @detector = SkillDetector.new(repo_root, project_root)
+      @discovery = SkillDiscovery.new(repo_root, project_root)
     end
 
     # Interactively adapt multiple skills
@@ -66,9 +67,9 @@ module Vibe
     # @param mode [Symbol] Adaptation mode (:suggest, :mandatory, :skip)
     # @return [Boolean] Success status
     def adapt_skill(skill_id, mode)
-      skill = detector.get_skill_info(skill_id)
+      skill = discovery.get_skill_info(skill_id)
       unless skill
-        warn "⚠️  Skill not found in registry: #{skill_id}"
+        warn "⚠️  Skill not found: #{skill_id}"
         return false
       end
 

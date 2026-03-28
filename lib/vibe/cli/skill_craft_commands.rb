@@ -2,7 +2,6 @@
 
 require_relative '../session_analyzer'
 require_relative '../skill_generator'
-require_relative '../trigger_manager'
 
 module Vibe
   # CLI commands for the skill-craft generation system, included in VibeCLI.
@@ -15,8 +14,6 @@ module Vibe
         run_skill_craft_analyze(argv)
       when 'generate'
         run_skill_craft_generate(argv)
-      when 'triggers'
-        run_skill_craft_triggers(argv)
       when 'status'
         run_skill_craft_status(argv)
       when '--help', '-h', 'help'
@@ -88,32 +85,11 @@ module Vibe
       end
     end
 
-    def run_skill_craft_triggers(_argv)
-      puts '🔍 Checking trigger conditions...'
-
-      manager = TriggerManager.new
-      triggers = manager.check_triggers
-
-      if triggers.empty?
-        puts '✅ No triggers fired'
-      else
-        puts "\n#{triggers.size} trigger(s) detected:"
-        triggers.each do |trigger|
-          puts "\n[#{trigger[:type].upcase}]"
-          puts trigger[:message]
-        end
-      end
-    end
-
     def run_skill_craft_status(_argv)
-      manager = TriggerManager.new
-
       puts '📈 Skill Craft Status'
       puts '=' * 40
-      puts "Sessions since last review: #{manager.state['session_count'] || 0}"
-      puts "Last review: #{manager.state['last_review'] || 'Never'}"
-      puts "Accumulation threshold: #{manager.config.dig('triggers',
-                                                         'accumulation_threshold')}"
+      puts 'Skill-craft helps you create personal skills from session patterns.'
+      puts "Run 'vibe skill-craft analyze' to find patterns."
     end
 
     def run_skill_craft_interactive(_argv)
@@ -162,10 +138,6 @@ module Vibe
       results.each do |result|
         puts "  • #{result[:skill_name]} → #{result[:skill_path]}"
       end
-
-      # Step 3: Update state
-      manager = TriggerManager.new
-      manager.record_review
 
       puts "\n✨ Skill crafting complete!"
       puts 'Skills saved to: ~/.config/claude/skills/personal/'
@@ -218,8 +190,7 @@ module Vibe
 
         Commands:
           analyze              Analyze session history for patterns
-          generate              Generate a skill from a pattern
-          triggers              Check trigger conditions
+          generate             Generate a skill from a pattern
           status               Show skill-craft status
 
         Options for analyze:
@@ -235,7 +206,6 @@ module Vibe
           vibe skill-craft                          # Interactive crafting session
           vibe skill-craft analyze                  # Analyze patterns
           vibe skill-craft generate --pattern 1     # Generate skill from pattern #1
-          vibe skill-craft triggers                 # Check triggers
           vibe skill-craft status                   # Show status
       USAGE
     end

@@ -1,6 +1,55 @@
 # Skill Selection Guide
 
-When multiple skills can handle the same task, follow this priority order.
+This guide helps you select the appropriate skill for different tasks. With the Smart Skill Router, most of this happens automatically, but you can always override the selection.
+
+## Smart Skill Router (Auto)
+
+The system now includes a **three-layer intelligent router** that automatically selects the best skill based on your request.
+
+### How It Works
+
+1. **Layer 1: Explicit Override** (highest priority)
+   - You say: "用 gstack 评审代码" → Uses `/review` (gstack)
+   - You say: "用 superpowers 调试" → Uses `/systematic-debugging` (superpowers)
+
+2. **Layer 2: Scenario Matching**
+   - System matches your request to predefined scenarios
+   - Applies conflict resolution strategies
+   - Example: "帮我评审" → matches `code_review` scenario → selects `/review` (gstack)
+
+3. **Layer 3: Semantic Matching**
+   - Compares your request to skill intents
+   - Selects closest semantic match
+
+### Quick Reference Table
+
+| When you say... | Matched Scenario | Primary Skill |
+|-----------------|------------------|---------------|
+| "评审", "review", "检查代码" | `code_review` | `/review` (gstack) |
+| "bug", "错误", "调试", "不工作" | `debugging` | `systematic-debugging` (builtin) |
+| "规划", "计划", "复杂任务" | `planning` | `planning-with-files` (builtin) |
+| "重构", "refactor" | `refactoring` | `/refactor` (superpowers) |
+| "测试网站", "QA", "端到端" | `browser_qa` | `/qa` (gstack) |
+| "发布", "ship", "创建 PR" | `shipping` | `/ship` (gstack) |
+| "新功能", "新想法", "feature" | `product_thinking` | `/office-hours` (gstack) |
+
+### Conflict Resolution
+
+When multiple skill sources have matching skills:
+
+| Scenario | Default Choice | Override |
+|----------|---------------|----------|
+| Debugging | `systematic-debugging` (builtin) | Say "用 gstack" for `/investigate` |
+| Code Review | `/review` (gstack) | Say "用 superpowers" for `/receiving-code-review` |
+| Planning | `planning-with-files` (builtin) | Say "用 gstack" for specific angles |
+| Refactoring | `/refactor` (superpowers) | Say "用 gstack" for post-refactor review |
+| TDD | `/test-driven-development` (superpowers) | Say "用 gstack" for `/qa` (E2E) |
+
+---
+
+## Manual Skill Selection
+
+If you prefer manual selection or need specific functionality, use these guides:
 
 ## Naming Convention
 

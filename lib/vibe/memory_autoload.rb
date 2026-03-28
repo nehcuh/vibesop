@@ -19,7 +19,7 @@ module Vibe
       memory/overview.md
     ].freeze
 
-    CONFIG_KEY = 'memory_autoload'.freeze
+    CONFIG_KEY = 'memory_autoload'
 
     # Check if memory files exist in the given directory
     # @param destination_root [String] Project root to check
@@ -44,7 +44,7 @@ module Vibe
     # @param target [String] Target platform (claude-code, opencode)
     # @param destination_root [String] Project root
     # @return [Hash] User's choices: { enabled: bool, platforms: [] }
-    def prompt_memory_autoload(detection, target, destination_root)
+    def prompt_memory_autoload(detection, _target, destination_root)
       return { enabled: false, platforms: [] } unless detection[:found]
       return { enabled: false, platforms: [] } unless interactive_terminal?
 
@@ -97,7 +97,7 @@ module Vibe
     # @param config [Hash] User's choices from prompt_memory_autoload
     # @param destination_root [String] Project root
     # @param target [String] Current target being applied
-    def configure_memory_autoload(config, destination_root, target)
+    def configure_memory_autoload(config, destination_root, _target)
       return unless config[:enabled]
 
       # Save configuration to .vibe/config.yaml
@@ -231,15 +231,11 @@ module Vibe
 
       # Update opencode.json instructions if it exists
       opencode_json_path = File.join(destination_root, 'opencode.json')
-      if File.exist?(opencode_json_path)
-        update_opencode_json_instructions(opencode_json_path)
-      end
+      update_opencode_json_instructions(opencode_json_path) if File.exist?(opencode_json_path)
 
       # Also check global opencode config
       global_opencode_json = File.join(ENV['HOME'] || Dir.home, '.config', 'opencode', 'opencode.json')
-      if File.exist?(global_opencode_json)
-        update_opencode_json_instructions(global_opencode_json)
-      end
+      update_opencode_json_instructions(global_opencode_json) if File.exist?(global_opencode_json)
 
       puts '   ✓ OpenCode: 已生成 .vibe/opencode/memory-context.md'
     rescue StandardError => e

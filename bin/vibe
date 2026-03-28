@@ -20,10 +20,7 @@ require_relative '../lib/vibe/builder'
 require_relative '../lib/vibe/init_support'
 require_relative '../lib/vibe/cli/skills_commands'
 require_relative '../lib/vibe/cli/instinct_commands'
-require_relative '../lib/vibe/cli/token_commands'
 require_relative '../lib/vibe/cli/checkpoint_commands'
-require_relative '../lib/vibe/cli/grade_commands'
-require_relative '../lib/vibe/cli/task_commands'
 require_relative '../lib/vibe/cli/parallel_commands'
 require_relative '../lib/vibe/cli/toolchain_commands'
 require_relative '../lib/vibe/cli/security_commands'
@@ -31,6 +28,7 @@ require_relative '../lib/vibe/cli/skill_craft_commands'
 require_relative '../lib/vibe/cli/memory_commands'
 require_relative '../lib/vibe/memory_autoload'
 require_relative '../lib/vibe/skill_manager'
+require_relative '../lib/vibe/skill_router_commands'
 
 # Main CLI class for the vibe command-line tool.
 class VibeCLI
@@ -45,16 +43,14 @@ class VibeCLI
   include Vibe::InitSupport
   include Vibe::SkillsCommands
   include Vibe::InstinctCommands
-  include Vibe::TokenCommands
   include Vibe::CheckpointCommands
-  include Vibe::GradeCommands
-  include Vibe::TaskCommands
   include Vibe::ParallelCommands
   include Vibe::ToolchainCommands
   include Vibe::SecurityCommands
   include Vibe::SkillCraftCommands
   include Vibe::MemoryCommands
   include Vibe::MemoryAutoload
+  include Vibe::SkillRouterCommands
 
   attr_accessor :skip_integrations, :skip_memory_autoload
 
@@ -77,17 +73,15 @@ class VibeCLI
       'doctor' => :run_doctor_command,
       'skills' => :run_skills_command,
       'instinct' => :run_instinct_command,
-      'token' => :run_token_command,
       'checkpoint' => :run_checkpoint_command,
-      'grade' => :run_grade_command,
-      'tasks' => :run_tasks_command,
       'worktree' => :run_worktree_command,
       'cascade' => :run_cascade_command,
       'toolchain' => :run_toolchain_command,
       'scan' => :run_scan_command,
       'skill-craft' => :run_skill_craft_command,
       'tools' => :run_tools_command,
-      'memory' => :run_memory_command
+      'memory' => :run_memory_command,
+      'route' => :cmd_route
     }.freeze
   end
 
@@ -545,10 +539,7 @@ class VibeCLI
         vibe doctor
         vibe skills <command>
         vibe instinct <command> [options]
-        vibe token <command> [options]
         vibe checkpoint <command> [options]
-        vibe grade <command> [options]
-        vibe tasks <command> [options]
         vibe worktree <command> [options]
         vibe cascade <command> <config.yaml>
         vibe scan <subcommand> [args]
@@ -567,10 +558,7 @@ class VibeCLI
         doctor      Check environment and integration status
         skills      Manage skills (check, list, adapt, install)
         instinct    Instinct learning system (learn, status, export, import, evolve)
-        token       Token optimization (analyze, optimize, stats)
         checkpoint  Code snapshots (create, list, rollback, compare)
-        grade       Code evaluation (run, pass-at-k, summary)
-        tasks       Background tasks (submit, list, status, cancel)
         worktree    Git worktree management (create, list, finish, remove, cleanup)
         cascade     Dependency-aware parallel task execution (run, plan)
         toolchain   Toolchain detection (detect, suggest)

@@ -191,7 +191,7 @@ module Vibe
       configure_memory_autoload(config, Dir.pwd, 'manual')
 
       puts
-      puts '✅ Memory auto-load enabled for: ' + platforms.join(', ')
+      puts "✅ Memory auto-load enabled for: #{platforms.join(', ')}"
     end
 
     def disable_memory_autoload
@@ -263,13 +263,13 @@ module Vibe
       end
 
       detection = detect_memory_files(Dir.pwd)
-      if detection[:found]
-        puts
-        puts 'Memory files detected:'
-        detection[:files].each do |file|
-          size = File.size(File.join(Dir.pwd, file))
-          puts "  ✓ #{file} (#{format_bytes(size)})"
-        end
+      return unless detection[:found]
+
+      puts
+      puts 'Memory files detected:'
+      detection[:files].each do |file|
+        size = File.size(File.join(Dir.pwd, file))
+        puts "  ✓ #{file} (#{format_bytes(size)})"
       end
     end
 
@@ -296,22 +296,27 @@ module Vibe
         case argv[i]
         when '--problem'
           raise Vibe::ValidationError, '--problem requires a value' if argv[i + 1].nil?
+
           options[:problem] = argv[i + 1]
           i += 2
         when '--solution'
           raise Vibe::ValidationError, '--solution requires a value' if argv[i + 1].nil?
+
           options[:solution] = argv[i + 1]
           i += 2
         when '--scenario'
           raise Vibe::ValidationError, '--scenario requires a value' if argv[i + 1].nil?
+
           options[:scenario] = argv[i + 1]
           i += 2
         when '--command'
           raise Vibe::ValidationError, '--command requires a value' if argv[i + 1].nil?
+
           options[:command] = argv[i + 1]
           i += 2
         when '--files'
           raise Vibe::ValidationError, '--files requires a value' if argv[i + 1].nil?
+
           options[:files] = argv[i + 1]
           i += 2
         else
@@ -342,4 +347,3 @@ module Vibe
     end
   end
 end
-

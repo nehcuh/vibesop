@@ -8,10 +8,15 @@ require_relative '../../lib/vibe/gstack_installer'
 class TestGstackInstaller < Minitest::Test
   def setup
     @tmpdir = Dir.mktmpdir('vibe-gstack-test')
+    # Store original methods to prevent redefinition warnings
+    @original_verify = Vibe::GstackInstaller.method(:verify_installation)
+    @original_clone = Vibe::GstackInstaller.method(:clone_with_retry) if Vibe::GstackInstaller.respond_to?(:clone_with_retry)
   end
 
   def teardown
     FileUtils.rm_rf(@tmpdir) if @tmpdir && File.exist?(@tmpdir)
+    # Restore original methods
+    restore_original_methods
   end
 
   def test_module_exists
@@ -65,38 +70,20 @@ class TestGstackInstaller < Minitest::Test
   end
 
   def test_verify_installation_with_fake_dir
-    original = Vibe::GstackInstaller.method(:verify_installation)
     fake_dir = File.join(@tmpdir, 'gstack')
     FileUtils.mkdir_p(fake_dir)
     %w[SKILL.md VERSION setup].each { |f| File.write(File.join(fake_dir, f), 'content') }
     File.write(File.join(fake_dir, 'VERSION'), '2.0.0')
 
-    Vibe::GstackInstaller.define_singleton_method(:verify_installation) do |_platform|
-      issues = []
-      %w[SKILL.md VERSION setup].each do |marker|
-        issues << "Missing marker file: #{marker}" unless File.exist?(File.join(fake_dir, marker))
-      end
-      version = File.read(File.join(fake_dir, 'VERSION')).strip
-      {
-        success: issues.empty?,
-        location: fake_dir,
-        version: version,
-        skills_count: 0,
-        browse_ready: false,
-        issues: issues
-      }
+    mock_verify_installation(fake_dir) do
+      result = Vibe::GstackInstaller.verify_installation('test-platform')
+      assert result[:success]
+      assert_equal fake_dir, result[:location]
+      assert_equal '2.0.0', result[:version]
     end
-
-    result = Vibe::GstackInstaller.verify_installation('test-platform')
-    assert result[:success]
-    assert_equal fake_dir, result[:location]
-    assert_equal '2.0.0', result[:version]
-  ensure
-    Vibe::GstackInstaller.define_singleton_method(:verify_installation, original)
   end
 
   def test_verify_installation_with_skills
-    original = Vibe::GstackInstaller.method(:verify_installation)
     fake_dir = File.join(@tmpdir, 'gstack')
     FileUtils.mkdir_p(fake_dir)
     %w[SKILL.md VERSION setup].each { |f| File.write(File.join(fake_dir, f), 'content') }
@@ -104,39 +91,23 @@ class TestGstackInstaller < Minitest::Test
     FileUtils.mkdir_p(skill_dir)
     File.write(File.join(skill_dir, 'SKILL.md'), 'skill content')
 
-    Vibe::GstackInstaller.define_singleton_method(:verify_installation) do |_platform|
-      skills_count = Dir.children(fake_dir).count do |entry|
-        File.directory?(File.join(fake_dir, entry)) &&
-          File.exist?(File.join(fake_dir, entry, 'SKILL.md'))
-      end
-      { success: true, location: fake_dir, version: nil, skills_count: skills_count,
-        browse_ready: false, issues: [] }
+    mock_verify_with_skills(fake_dir) do
+      result = Vibe::GstackInstaller.verify_installation('test-platform')
+      assert_equal 1, result[:skills_count]
     end
-
-    result = Vibe::GstackInstaller.verify_installation('test-platform')
-    assert_equal 1, result[:skills_count]
-  ensure
-    Vibe::GstackInstaller.define_singleton_method(:verify_installation, original)
   end
 
   def test_verify_installation_browse_ready
-    original = Vibe::GstackInstaller.method(:verify_installation)
     fake_dir = File.join(@tmpdir, 'gstack')
     browse_dist = File.join(fake_dir, 'browse', 'dist')
     FileUtils.mkdir_p(browse_dist)
     %w[SKILL.md VERSION setup].each { |f| File.write(File.join(fake_dir, f), 'content') }
     File.write(File.join(browse_dist, 'browse'), 'binary')
 
-    Vibe::GstackInstaller.define_singleton_method(:verify_installation) do |_platform|
-      browse_ready = File.exist?(File.join(fake_dir, 'browse', 'dist', 'browse'))
-      { success: true, location: fake_dir, version: nil, skills_count: 0,
-        browse_ready: browse_ready, issues: [] }
+    mock_verify_browse_ready(fake_dir) do
+      result = Vibe::GstackInstaller.verify_installation('test-platform')
+      assert result[:browse_ready]
     end
-
-    result = Vibe::GstackInstaller.verify_installation('test-platform')
-    assert result[:browse_ready]
-  ensure
-    Vibe::GstackInstaller.define_singleton_method(:verify_installation, original)
   end
 
   def test_run_setup_no_script
@@ -149,22 +120,87 @@ class TestGstackInstaller < Minitest::Test
             'https://nonexistent2.example.com/repo.git']
     target = File.join(@tmpdir, 'clone_target')
 
-    # Stub clone_with_retry to always fail
-    Vibe::GstackInstaller.define_singleton_method(:clone_with_retry) { |_, _| false }
-
-    out, = capture_io do
-      success, url = Vibe::GstackInstaller.clone_from_mirrors(urls, target)
-      refute success
-      assert_nil url
+    mock_clone_failure do
+      out, = capture_io do
+        success, url = Vibe::GstackInstaller.clone_from_mirrors(urls, target)
+        refute success
+        assert_nil url
+      end
+      assert_match(/Failed to clone/, out)
     end
-    assert_match(/Failed to clone/, out)
-  ensure
-    Vibe::GstackInstaller.singleton_class.remove_method(:clone_with_retry)
   end
 
   def test_uninstall_gstack_no_dirs
     # Should not raise even if dirs don't exist
     out, = capture_io { Vibe::GstackInstaller.uninstall_gstack }
     assert_match(/uninstalled/, out)
+  end
+
+  private
+
+  def restore_original_methods
+    return unless @original_verify
+
+    Vibe::GstackInstaller.define_singleton_method(:verify_installation, @original_verify)
+  rescue StandardError
+    nil
+  end
+
+  def mock_verify_installation(fake_dir)
+    Vibe::GstackInstaller.define_singleton_method(:verify_installation) do |_platform|
+      issues = []
+      %w[SKILL.md VERSION setup].each do |marker|
+        issues << "Missing marker file: #{marker}" unless File.exist?(File.join(fake_dir, marker))
+      end
+      version = File.read(File.join(fake_dir, 'VERSION')).strip rescue nil
+      {
+        success: issues.empty?,
+        location: fake_dir,
+        version: version,
+        skills_count: 0,
+        browse_ready: false,
+        issues: issues
+      }
+    end
+    yield
+  ensure
+    Vibe::GstackInstaller.define_singleton_method(:verify_installation, @original_verify)
+  end
+
+  def mock_verify_with_skills(fake_dir)
+    Vibe::GstackInstaller.define_singleton_method(:verify_installation) do |_platform|
+      skills_count = Dir.children(fake_dir).count do |entry|
+        File.directory?(File.join(fake_dir, entry)) &&
+          File.exist?(File.join(fake_dir, entry, 'SKILL.md'))
+      end
+      { success: true, location: fake_dir, version: nil, skills_count: skills_count,
+        browse_ready: false, issues: [] }
+    end
+    yield
+  ensure
+    Vibe::GstackInstaller.define_singleton_method(:verify_installation, @original_verify)
+  end
+
+  def mock_verify_browse_ready(fake_dir)
+    Vibe::GstackInstaller.define_singleton_method(:verify_installation) do |_platform|
+      browse_ready = File.exist?(File.join(fake_dir, 'browse', 'dist', 'browse'))
+      { success: true, location: fake_dir, version: nil, skills_count: 0,
+        browse_ready: browse_ready, issues: [] }
+    end
+    yield
+  ensure
+    Vibe::GstackInstaller.define_singleton_method(:verify_installation, @original_verify)
+  end
+
+  def mock_clone_failure
+    original_clone = Vibe::GstackInstaller.method(:clone_with_retry)
+    Vibe::GstackInstaller.define_singleton_method(:clone_with_retry) { |_, _| false }
+    yield
+  ensure
+    if original_clone
+      Vibe::GstackInstaller.define_singleton_method(:clone_with_retry, original_clone)
+    else
+      Vibe::GstackInstaller.singleton_class.remove_method(:clone_with_retry)
+    end
   end
 end

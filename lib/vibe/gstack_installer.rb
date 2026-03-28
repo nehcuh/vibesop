@@ -17,7 +17,7 @@ module Vibe
     ].freeze
 
     GSTACK_PLATFORM_PATHS = {
-      'unified' => '~/.config/skills/gstack'      # 统一存储位置（优先）
+      'unified' => '~/.config/skills/gstack' # 统一存储位置（优先）
     }.freeze
 
     # 各平台软链接配置
@@ -31,7 +31,7 @@ module Vibe
     CLONE_TIMEOUT = 60
     MAX_RETRIES = 3
 
-    def self.install_gstack(platform = nil)
+    def self.install_gstack(_platform = nil)
       # 始终使用统一存储位置，然后通过软链接共享
       target_dir = File.expand_path(GSTACK_PLATFORM_PATHS['unified'])
 
@@ -143,9 +143,7 @@ module Vibe
       issues = []
 
       # 验证统一存储位置
-      unless Dir.exist?(unified_dir)
-        return { success: false, issues: ["gstack not installed at #{unified_dir}"] }
-      end
+      return { success: false, issues: ["gstack not installed at #{unified_dir}"] } unless Dir.exist?(unified_dir)
 
       %w[SKILL.md VERSION setup].each do |marker|
         issues << "Missing marker file: #{marker}" unless File.exist?(File.join(unified_dir, marker))
@@ -202,7 +200,7 @@ module Vibe
 
     def self.uninstall_gstack(_platform = nil)
       unified_dir = File.expand_path(GSTACK_PLATFORM_PATHS['unified'])
-      
+
       # 清理各平台的软链接
       GSTACK_PLATFORM_SYMLINK_PATHS.each do |platform, target_dir|
         target_path = File.expand_path(target_dir)
@@ -224,7 +222,7 @@ module Vibe
         puts "  Removing: #{unified_dir}"
         FileUtils.rm_rf(unified_dir)
       end
-      
+
       puts 'gstack uninstalled.'
     end
 
@@ -290,10 +288,10 @@ module Vibe
 
     # 检查 Bun 是否已安装（v1.0+）
     def self.check_bun_installed
-      _stdout, _stderr, status = Open3.capture3('bun', '--version')
+      stdout, _stderr, status = Open3.capture3('bun', '--version')
       return false unless status.success?
 
-      version = _stdout.strip
+      version = stdout.strip
       return false if version.nil? || version.empty?
 
       # 解析版本号，确保 >= 1.0.0

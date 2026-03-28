@@ -136,7 +136,7 @@ module Vibe
     # Detect modern CLI tools and ask user if they want to enable recommendations
     # @param target [String] Target platform
     # @return [Boolean] Whether tools were enabled
-    def detect_and_enable_modern_cli_tools(target)
+    def detect_and_enable_modern_cli_tools(_target)
       puts "\n🔍 Detecting modern CLI tools..."
 
       detected = detect_modern_cli_tools
@@ -157,12 +157,12 @@ module Vibe
 
       # Ask user if they want to enable
       if available.empty?
-        puts "ℹ️  No modern CLI tools detected. Skipping tool recommendations."
+        puts 'ℹ️  No modern CLI tools detected. Skipping tool recommendations.'
         return false
       end
 
-      puts "📝 Generate tool recommendations for AI?"
-      puts "   This will create tools.md and help AI use modern tools automatically."
+      puts '📝 Generate tool recommendations for AI?'
+      puts '   This will create tools.md and help AI use modern tools automatically.'
       print '[Y/n] '
       response = $stdin.gets
       return false if response.nil?

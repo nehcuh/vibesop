@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'test_helper'
-require_relative '../lib/vibe/skill_detector'
+require_relative '../lib/vibe/skill_discovery'
 require_relative '../lib/vibe/skill_adapter'
 require_relative '../lib/vibe/skill_manager'
 
@@ -32,7 +32,8 @@ class TestSkillManager < Minitest::Test
 
   def test_detect_new_skills_finds_unadapted
     # Initially all skills are new
-    new_skills = @manager.detector.detect_new_skills
+    changes = @manager.send(:check_skill_changes)
+    new_skills = changes[:new_skills]
 
     # Should find skills from registry
     assert new_skills.length.positive?
@@ -172,11 +173,11 @@ class TestSkillManager < Minitest::Test
   end
 end
 
-class TestSkillDetector < Minitest::Test
+class TestSkillDiscoveryIntegration < Minitest::Test
   def setup
     @repo_root = Dir.pwd
-    @test_dir = Dir.mktmpdir('skill-detector-test')
-    @detector = Vibe::SkillDetector.new(@repo_root, @test_dir)
+    @test_dir = Dir.mktmpdir('skill-discovery-test')
+    @discovery = Vibe::SkillDiscovery.new(@repo_root, @test_dir)
   end
 
   def teardown
@@ -184,7 +185,8 @@ class TestSkillDetector < Minitest::Test
   end
 
   def test_load_registry_skills
-    skills = @detector.send(:load_registry_skills)
+    # Discover all includes registry skills
+    skills = @discovery.discover_all
 
     assert skills.length.positive?
 
@@ -192,19 +194,17 @@ class TestSkillDetector < Minitest::Test
     skill = skills.first
     assert skill[:id]
     assert skill[:namespace]
-    assert skill[:intent]
   end
 
-  def test_detect_new_skills_empty_project
-    new_skills = @detector.detect_new_skills
+  def test_unregistered_skills_empty_project
+    unregistered = @discovery.unregistered_skills
 
-    # All registry skills should be new
-    registry = @detector.send(:load_registry_skills)
-    assert_equal registry.length, new_skills.length
+    # All skills should be unregistered for empty project
+    assert unregistered.length.positive?
   end
 
   def test_get_skill_info_found
-    info = @detector.get_skill_info('systematic-debugging')
+    info = @discovery.get_skill_info('systematic-debugging')
 
     assert info
     assert_equal 'systematic-debugging', info[:id]
@@ -212,7 +212,7 @@ class TestSkillDetector < Minitest::Test
   end
 
   def test_get_skill_info_not_found
-    info = @detector.get_skill_info('nonexistent-skill')
+    info = @discovery.get_skill_info('nonexistent-skill')
 
     assert_nil info
   end

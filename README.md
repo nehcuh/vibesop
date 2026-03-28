@@ -2,464 +2,245 @@
 
 **English** | [中文](README.zh-CN.md)
 
-A battle-tested, multi-platform workflow SOP for AI-assisted development — supporting Claude Code, OpenCode, and future platforms with structured configuration, memory management, and consistent development practices.
-
-**Not a tutorial. Not a toy config. A production SOP that actually ships — with a provider-neutral portable core.**
-
-> **📖 New to this project?** Start with [PRINCIPLES.md](PRINCIPLES.md) — mandatory reading for all contributors covering our core philosophy: Production-First, Structure > Prompting, Memory > Intelligence, Verification > Confidence, and Portable > Specific.
-
-## How VibeSOP Differs from the Original
-
-VibeSOP is a fork of [runesleo/claude-code-workflow](https://github.com/runesleo/claude-code-workflow). While the original is a solid Claude Code configuration template, VibeSOP has diverged significantly in scope and architecture:
-
-| | runesleo/claude-code-workflow | VibeSOP |
-|---|---|---|
-| Platform support | Claude Code only | Claude Code + OpenCode + extensible to future platforms |
-| Core spec | Coupled to Claude Code | Provider-neutral `core/` (models, skills, policies, security) |
-| CLI | Basic shell scripts | Full Ruby CLI (`bin/vibe`) with 9 commands |
-| Architecture | Single-file config | 50+ modular Ruby library modules |
-| Windows support | WSL2 / Git Bash only | Native cmd.exe batch scripts, cross-platform detection |
-| Customization | Manual file edits | Overlay system (`.vibe/overlay.yaml`) |
-| Test coverage | None | 740 tests, SimpleCov coverage enforcement |
-| Skill system | Static markdown | Portable skill registry with security audit |
-| Memory system | Single file | 3-tier (session / project-knowledge / overview) |
-| Documentation | English | English + Chinese (`README.zh-CN.md`) |
-
-### Key Architectural Decisions
-
-**Portable core** (`core/`): All model tiers, skill definitions, security policy, and behavior rules live in provider-neutral YAML. Target adapters (Claude Code, OpenCode, etc.) consume this core — so adding a new platform doesn't require rewriting the workflow logic.
-
-**Generator CLI** (`bin/vibe`): Instead of manually copying config files, `vibe generate` builds the correct target files from the portable core + your project overlay. This makes upgrades and platform switches non-destructive.
-
-**Overlay system**: Project-specific deviations go in `.vibe/overlay.yaml` rather than mutating shared defaults. The base workflow stays upgradeable.
-
-## Origin & Fork Status
-
-- **Original Author**: [@runes_leo](https://x.com/runes_leo)
-- **Fork Maintainer**: [@nehcuh](https://github.com/nehcuh)
-
-This fork maintains the original MIT license and credits the original author. The codebase has diverged substantially — if you only need Claude Code support and prefer a simpler setup, the original project may be a better fit.
-
-## Why This Exists
-
-Claude Code is powerful out of the box, but without structure it becomes a smart assistant that starts fresh each session. This template provides a **structured workflow system** that:
-
-- **Prompts structured memory practices**: Records lessons to markdown files so past mistakes are searchable
-- **Organizes context in layers**: Rules (always), docs (reference), memory (working state)
-- **Suggests capability-based routing**: Guidelines for matching task complexity to appropriate models
-- **Enforces verification checkpoints**: Requires explicit test execution before claiming completion
-- **Supports session management**: Structured templates for saving progress when you signal completion
-- **Exposes portable skill guidelines**: Rule-based guidance for when to use specific skills (TDD, code review, etc.)
-
-**Important**: This is a configuration template with prompts and rules — not automation. You and your LLM must actively use the structure.
-
-## What's New
-
-### Recent Improvements (2026-03)
-
-- **🧠 Auto Memory Trigger** (`vibe memory`): Automatically capture and record errors to project knowledge
-  - `vibe memory record` — Manually record errors with problem/solution
-  - `vibe memory stats` — View error statistics and top errors
-  - `vibe memory enable/disable` — Toggle automatic error recording
-  - `vibe memory status` — Check current configuration
-  - Auto-numbering (P001, P002...) and pattern deduplication
-  - Configurable threshold (default: 2 occurrences before recording)
-- **🚀 Guided Onboarding** (`vibe onboard`): 5-step interactive setup for new users — deploys config, records your role, runs doctor check, previews the P0 systematic-debugging skill, and shows next steps. Use `--skip-deploy` if config is already installed.
-- **🛡️ SessionAnalyzer format versioning**: `detect_format()` with v1/v2 support. Unknown session file formats now warn and return `[]` instead of silently producing wrong results.
-- **⚙️ Configurable instinct confidence weights**: `InstinctManager` accepts `config: { weights: { ... } }`. `DEFAULT_WEIGHTS` constant exposes the 60/30/10 defaults. Fully backward-compatible.
-- **💰 Grader token budget**: `pass_at_k` supports `:token_budget` parameter — over-budget candidates are marked `:skipped` with the reason, keeping pass-rate comparisons fair across candidate sizes.
-- **🛠️ Skill Craft System**: Generate personal reusable skills from your own session history
-  - `vibe skill-craft` — Interactive session: analyze → select patterns → generate skills
-  - `vibe skill-craft analyze` — Detect recurring tool sequences, error-recovery flows, and workflows
-  - `vibe skill-craft generate --pattern <id> [--force]` — Generate a skill from a detected pattern
-  - `vibe skill-craft status` — View session count and last review date
-  - Auto-saves to `~/.claude/skills/personal/`
-- **🛠️ Modern CLI Tools Detection**: Automatically detect and recommend modern CLI tools
-  - Detects 8 modern tools: bat, fd, rg, eza, dust, duf, procs, btop
-  - Generates TOOLS.md with usage notes and fallback strategies
-  - Auto-detected during `vibe init` — user can opt in/out
-  - `vibe tools status` — View detected tools
-  - `vibe tools enable/disable` — Toggle TOOLS.md generation
-  - `vibe doctor` refreshes tool documentation automatically
-- **🔧 gstack Integration**: Virtual engineering team as pluggable skill pack
-  - 21 skills across 7 sprint phases (Think → Plan → Build → Review → Test → Ship → Reflect)
-  - Auto-detected during `vibe init`, trigger rules generated in `skill-triggers.md`
-  - Browser QA, cross-model review, release automation, safety guardrails
-  - Complements builtin skills — gstack handles product/review/ship, VibeSOP handles memory/verification/session
-  - Auto-install via `vibe init` or manual: `git clone https://github.com/garrytan/gstack.git ~/.config/skills/gstack`
-- **🔀 Parallelization Enhancement**: Git worktrees + cascade execution
-  - `vibe worktree create/list/finish/remove/cleanup` — isolated task branches
-  - `vibe cascade run/plan <config.yaml>` — dependency-ordered parallel pipelines
-  - Automatic skip of downstream tasks when a dependency fails
-- **✅ Verification Loop Enhancement**: Continuous code quality evaluation
-  - `CheckpointManager` — Code snapshots and rollback system
-    - Create/restore checkpoints with file snapshots
-    - Compare checkpoints for quality assessment
-    - Automatic cleanup of old checkpoints
-  - `Grader` — Multi-type code evaluation
-    - Four grader types: unit_test, integration_test, linter, security
-    - pass@k metric for candidate solution evaluation
-    - Statistics tracking and summary reports
-- **⚡ Token Optimization System**: Reduce token consumption by 30-50%
-  - `TokenOptimizer` — Analyze and optimize prompt content
-    - Token estimation for English/Chinese mixed text
-    - Redundancy detection and removal
-    - Whitespace compression and selective section loading
-  - `ModelSelector` — Intelligent model selection based on task complexity
-    - Automatic complexity evaluation (simple → Haiku, medium → Sonnet, complex → Opus)
-    - Keyword-based scoring with fallback chain
-    - Usage statistics tracking
-  - `BackgroundTaskManager` — Long-running task management
-    - Priority-based queue (low/normal/high/critical)
-    - Task cancellation and automatic cleanup
-    - Thread-safe persistent storage
-- **🧠 Instinct Learning System**: Automatic pattern extraction from sessions
-  - `vibe instinct learn` — Extract or manually create reusable patterns
-  - `vibe instinct status` — View instincts grouped by confidence level
-  - `vibe instinct export/import` — Team sharing with merge strategies
-  - `vibe instinct evolve` — Upgrade high-quality instincts to formal skills
-  - Confidence scoring: success rate (60%) + usage frequency (30%) + source diversity (10%)
-  - Integrated into session-end workflow for automatic learning
-- **🪟 Native Windows Support**: cmd.exe batch scripts for corporate environments
-  - `bin/vibe-install.bat` — Windows installation without admin rights
-  - `hooks/pre-session-end.bat` — Windows hook support
-  - Cross-platform command detection (`which`/`where`)
-  - Symlink-free skill installation on Windows
-- **🎯 Session Management Hook**: Automatically prompts to save progress before `/exit`
-  - ✅ Claude Code: Fully integrated via Stop hook
-  - ⚠️ OpenCode: Use custom commands or semantic triggers (see [docs](docs/session-management-opencode.md))
-- **✨ Improved `vibe targets`**: Now shows all supported platforms with clear status indicators
-- **🔍 Better overlay warnings**: Clear error messages when using incorrect overlay format
-- **🧪 New `--dry-run` mode**: Preview init operations without making changes
-- **📚 Enhanced documentation**: New overlay tutorial and troubleshooting guide
-- **🐛 Bug fixes**: Fixed project-level configuration generation
-
-### Phase 1-7 Direction: Portable Core + Target Adapters + Generator + Project Overlays + Snapshot Testing
-
-This repo now has two layers of concern:
-
-- `core/` — provider-neutral workflow semantics (model tiers, skill registry, safety policy)
-- current runtime files (`rules/`, `docs/`, `memory/`, `skills/`) — the first-class Claude Code target that remains fully usable today
-- `targets/` — adapter mappings for Claude Code (active) and OpenCode (exploratory); other platforms planned
-
-**Current Status**:
-- ✅ **Phase 1-5 Complete**: Portable core, generator, overlays
-- ✅ **Config-Driven Migration**: 2 of 2 active platforms migrated (claude-code, opencode)
-- 🚧 **Phase 6-7 Paused**: Focusing on stability before continuing platform expansion
-
-**Architecture Highlights**:
-- Configuration-driven platform definitions
-- JSON Schema validation for all configs
-- Comprehensive CLI with 9 commands
-- Project overlay system for customization
-- 740 tests with 100% pass rate
-
-## Architecture: Portable Core + Runtime Layers
-
-```text
-Portable core
-  core/models      -> capability tiers + provider profiles
-  core/skills      -> portable skill registry
-  core/security    -> severity policy + signal taxonomy
-  core/policies    -> portable behavior policies
-
-Project overlay
-  .vibe/overlay.yaml or --overlay FILE -> project-specific profile / policy / native config patch
-
-Target adapters
-  targets/*.md     -> Antigravity / Claude Code / Codex CLI / Cursor / OpenCode / VS Code / Warp mapping docs
-
-Current first-class runtime target: Claude Code
-  Layer 0: rules/  (always loaded)
-  Layer 1: docs/   (on demand)
-  Layer 2: memory/ (hot data)
-  skills/, agents/, commands/ remain host-facing assets during transition
-
-Generator
-  bin/vibe         -> build/use portable targets into generated/<target>/
-```
-
-**Why this split?** `core/` keeps the semantics portable, while the existing runtime layers keep Claude Code productive right now. That lets you generalize the workflow without throwing away the current working setup.
-
-## What's Inside
+> **Not a tutorial. Not a toy config. A production SOP that actually ships.**
+>
+> A battle-tested, multi-platform workflow SOP for AI-assisted development with structured configuration, memory management, and consistent development practices.
 
 ```
-vibesop/
-├── CLAUDE.md                     # Entry point — Claude reads this first
-├── README.md                     # You are here
-├── PRINCIPLES.md                 # ⚠️ MANDATORY: Core philosophy & development principles
-│
-├── bin/
-│   ├── vibe                      # Generator CLI (build/use/inspect/overlay-aware targets)
-│   ├── vibe-init                 # Integration initialization wizard
-│   ├── vibe-smoke                # Smoke test for generator target builds + overlays
-│   └── validate-schemas          # JSON schema validation for core/ specs
-│
-├── lib/vibe/                     # Modularized CLI implementation (50+ modules)
-│   ├── utils.rb                  # Common utilities (deep merge, I/O, path handling)
-│   ├── doc_rendering.rb          # Markdown document rendering
-│   ├── overlay_support.rb        # Overlay parsing, discovery, policy merging
-│   ├── native_configs.rb         # Native config builders (settings.json, cli.json, etc.)
-│   ├── path_safety.rb            # Output path safety guards
-│   ├── target_renderers.rb       # 8 target file renderers
-│   ├── builder.rb                # Target build orchestration
-│   ├── init_support.rb           # Integration detection and setup
-│   ├── external_tools.rb         # External tool integration logic
-│   ├── integration_manager.rb    # Integration detection and management
-│   ├── integration_setup.rb      # Integration setup and configuration
-│   ├── integration_verifier.rb   # Integration verification
-│   ├── integration_recommendations.rb # Integration recommendations
-│   ├── platform_utils.rb         # Platform-related utilities
-│   ├── platform_installer.rb     # Platform installation logic
-│   ├── platform_verifier.rb      # Platform verification
-│   ├── rtk_installer.rb          # RTK installation logic
-│   ├── superpowers_installer.rb  # Superpowers installation logic
-│   ├── quickstart_runner.rb      # Quickstart setup logic
-│   ├── user_interaction.rb       # User prompts and interaction
-│   ├── version.rb                # Version information
-│   └── errors.rb                 # Custom error classes with context support
-│
-├── test/                         # Unit test suite (11 test files + benchmarks)
-│   ├── test_vibe_cli.rb
-│   ├── test_vibe_overlay.rb
-│   ├── test_vibe_init.rb
-│   ├── test_vibe_utils_validation.rb
-│   ├── benchmark/                # Performance benchmarks
-│   │   ├── check_coverage.rb     # SimpleCov coverage threshold checker
-│   │   ├── utils_benchmark.rb
-│   │   └── yaml_loading_benchmark.rb
-│   ├── test_vibe_external_tools.rb
-│   ├── test_path_overlap_calculation.rb
-│   ├── test_cli_path_safety_guards.rb
-│   ├── test_vibe_utils.rb
-│   ├── test_recommendations.rb
-│   └── test_yaml_safety.rb
-│
-├── schemas/                      # JSON schemas for core/ validation
-│   ├── providers.schema.json
-│   ├── security.schema.json
-│   └── skills.schema.json
-│
-├── core/                         # Portable SSOT
-│   ├── README.md                 # Portable architecture + migration rules
-│   ├── models/
-│   │   ├── tiers.yaml            # Capability tiers (portable)
-│   │   └── providers.yaml        # Target/provider mappings
-│   ├── skills/
-│   │   └── registry.yaml         # Skill registry + namespace rules
-│   ├── security/
-│   │   └── policy.yaml           # P0/P1/P2 semantics + target actions
-│   ├── policies/
-│   │   ├── behaviors.yaml        # Portable behavior policy schema
-│   │   ├── task-routing.yaml     # Task complexity routing rules
-│   │   └── test-standards.yaml   # Testing coverage requirements
-│   └── integrations/
-│       ├── README.md             # Integration documentation
-│       ├── superpowers.yaml      # Superpowers skill pack metadata
-│       └── rtk.yaml              # RTK token optimizer metadata
-│
-├── targets/                      # Target adapter contracts
-│   ├── README.md                 # Shared adapter rules
-│   ├── claude-code.md            # Active target (production-ready)
-│   ├── opencode.md               # Active target (exploratory)
-│   ├── antigravity.md            # Planned target (documentation)
-│   ├── codex-cli.md              # Planned target (documentation)
-│   ├── cursor.md                 # Planned target (documentation)
-│   ├── kimi-code.md              # Planned target (documentation)
-│   ├── vscode.md                 # Planned target (documentation)
-│   └── warp.md                   # Planned target (documentation)
-│
-├── .vibe/                        # Generated target support files (tracked)
-│   ├── manifest.json             # Target build manifest
-│   ├── target-summary.md         # Quick reference
-│   └── <target>/                 # Per-target generated docs
-│       ├── behavior-policies.md
-│       ├── routing.md
-│       ├── safety.md
-│       ├── skills.md
-│       ├── task-routing.md
-│       └── test-standards.md
-│
-├── generated/                    # Build output (gitignored)
-│   ├── <target>/                 # Materialized target-specific config
-│   └── golden-files/             # Snapshot testing reference files
-│
-├── examples/
-│   ├── node-nvm-overlay.yaml     # Example Node/npm overlay preferring nvm
-│   ├── project-overlay.yaml      # Example regulated/review-heavy overlay
-│   └── python-uv-overlay.yaml    # Example Python overlay preferring uv
-│
-├── rules/                        # Layer 0: Always loaded
-│   ├── behaviors.md              # Core behavior rules (debugging, commits, routing)
-│   ├── skill-triggers.md         # When to auto-invoke which skill
-│   └── memory-flush.md           # Auto-save triggers (never lose progress)
-│
-├── docs/                         # Layer 1: On-demand reference
-│   ├── agents.md                 # Multi-model collaboration framework
-│   ├── behaviors-extended.md     # Extended rules (knowledge base, associations)
-│   ├── behaviors-reference.md    # Detailed operation guides
-│   ├── content-safety.md         # AI hallucination prevention system
-│   ├── project-overlays.md       # Project-level overlay schema + merge rules
-│   ├── scaffolding-checkpoint.md # "Do you really need to self-host?" checklist
-│   ├── task-routing.md           # Model tier routing + target profiles
-│   └── integrations.md           # External tool integration guide
-│
-├── memory/                       # Layer 2: Your working state (3-tier architecture)
-│   ├── session.md                # Hot layer: daily progress + in-flight tasks
-│   ├── project-knowledge.md      # Warm layer: technical pitfalls + patterns
-│   └── overview.md               # Cold layer: goals + projects + infrastructure
-│
-├── skills/                       # Reusable skill definitions
-│   ├── session-end/SKILL.md              # Auto wrap-up: save progress + commit + record
-│   ├── verification-before-completion/SKILL.md  # "Run the test. Read the output. THEN claim."
-│   ├── systematic-debugging/SKILL.md     # 5-phase debugging (recall → root cause → fix)
-│   ├── planning-with-files/SKILL.md      # File-based planning for complex tasks
-│   ├── experience-evolution/SKILL.md     # Auto-accumulate project knowledge
-│   ├── instinct-learning/SKILL.md        # Extract reusable patterns from sessions
-│   ├── riper-workflow/SKILL.md           # Structured 5-phase development workflow
-│   ├── skill-craft/SKILL.md             # Craft personal skills from session history
-│   └── using-git-worktrees/SKILL.md     # Branch isolation using git worktrees
-│
-├── agents/                       # Custom agent definitions
-│   ├── pr-reviewer.md            # Code review agent
-│   ├── security-reviewer.md      # OWASP security scanning agent
-│   └── performance-analyzer.md   # Performance bottleneck analysis agent
-│
-└── commands/                     # Custom slash commands
-    ├── debug.md                  # /debug — Start systematic debugging
-    ├── deploy.md                 # /deploy — Pre-deployment checklist
-    ├── exploration.md            # /exploration — CTO challenge before coding
-    └── review.md                 # /review — Prepare code review
+┌─────────────────────────────────────────────────────────────┐
+│  Portable Core (provider-neutral)                           │
+│  core/  →  models, skills, policies, security               │
+├─────────────────────────────────────────────────────────────┤
+│  Target Adapters                                            │
+│  Claude Code ✅ | OpenCode ✅ | Cursor | VS Code | ...     │
+├─────────────────────────────────────────────────────────────┤
+│  Project Overlay (.vibe/overlay.yaml)                       │
+│  Your custom rules and preferences                          │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## Documentation Map
+---
 
-Documentation is organized by purpose:
+## 🚀 30-Second Quick Start
 
-| Need | Entry Point |
-|------|-------------|
-| **Project overview & quick start** | This README |
-| **⚠️ Core principles (MUST READ)** | [PRINCIPLES.md](PRINCIPLES.md) |
-| **Complete documentation index** | [docs/README.md](docs/README.md) |
-| **Portable core architecture** | [core/README.md](core/README.md) |
-| **Target adapter contracts** | [targets/README.md](targets/README.md) |
-| **Behavior rules (always loaded)** | [rules/behaviors.md](rules/behaviors.md) |
-| **Task routing details** | [docs/task-routing.md](docs/task-routing.md) |
-| **Content safety** | [docs/content-safety.md](docs/content-safety.md) |
-| **Context management** | [docs/context-management.md](docs/context-management.md) |
-| **Multi-model collaboration** | [docs/agents.md](docs/agents.md) |
-| **Testing standards** | [core/policies/test-standards.yaml](core/policies/test-standards.yaml) |
+```bash
+# 1. Clone and install
+git clone https://github.com/nehcuh/vibesop.git && cd vibesop
+bin/vibe-install          # macOS/Linux
+# bin\vibe-install.bat    # Windows
+
+# 2. Set up your AI tool (choose one)
+vibe onboard                        # Recommended: 5-step guided setup
+# OR: vibe quickstart              # One-command setup
+# OR: vibe init --platform claude-code
+
+# 3. Apply to your project
+cd ~/my-project
+vibe switch --platform claude-code
+
+# 4. Start coding
+claude    # AI loads your config automatically
+```
+
+**Verify installation:**
+```bash
+vibe doctor      # Check environment
+vibe --version   # Show version
+```
+
+---
+
+## 📋 Architecture in 60 Seconds
+
+### Three-Layer Runtime
+
+| Layer | What | Loaded | Location |
+|-------|------|--------|----------|
+| **0: Rules** | Core behavior rules | Always | `~/.claude/rules/` |
+| **1: Docs** | Reference guides | On demand | `~/.claude/docs/` |
+| **2: Memory** | Your project state | Session start | `memory/*.md` |
+
+### Key Concepts
+
+- **Portable Core** (`core/`): Provider-neutral workflow semantics. Add a new AI platform by writing an adapter, not rewriting rules.
+- **Overlay System**: Project-specific customizations in `.vibe/overlay.yaml`. Keep your tweaks while upgrading the base.
+- **Smart Skill Routing**: Say "帮我评审代码" → AI automatically selects the best skill from builtin/superpowers/gstack.
+
+> **📖 Philosophy**: Read [PRINCIPLES.md](PRINCIPLES.md) — Production-First, Structure > Prompting, Memory > Intelligence, Verification > Confidence, Portable > Specific.
+
+---
+
+## 🎯 Common Tasks
+
+### Setup
+
+| Task | Command | See Also |
+|------|---------|----------|
+| First-time setup | `vibe onboard` | [Install Guide](#installation) |
+| Add another platform | `vibe init --platform opencode` | [Platform Support](#platform-support) |
+| Apply to project | `vibe switch claude-code` | [Project Setup](#project-setup) |
+| Check status | `vibe doctor` | [Troubleshooting](#troubleshooting) |
+
+### Daily Development
+
+| Task | Command | See Also |
+|------|---------|----------|
+| Record an error | `vibe memory record` | [Memory System](#memory-system) |
+| Learn from session | `vibe instinct learn` | [Instinct Learning](#instinct-learning) |
+| Create checkpoint | `vibe checkpoint create pre-refactor` | [Checkpoints](#code-checkpoints) |
+| Route request to skill | `vibe route "帮我评审代码"` | [Smart Routing](#smart-routing) |
+
+### Skill Management
+
+| Task | Command | See Also |
+|------|---------|----------|
+| Discover new skills | `vibe skills discover` | [Skills Guide](docs/skills-guide.md) |
+| Register skills | `vibe skills register --interactive` | [Skill Registration](#skill-management) |
+| List skills | `vibe skills list` | - |
+| Adapt a skill | `vibe skills adapt superpowers/tdd` | - |
+
+---
+
+## 📚 Documentation Map
+
+### Essential Reading
+
+| Document | Purpose | Read When |
+|----------|---------|-----------|
+| [PRINCIPLES.md](PRINCIPLES.md) | Core philosophy | **Before using** |
+| [Quick Start Guide](#quick-start-detailed) | Step-by-step setup | First-time setup |
+| [Architecture Overview](docs/architecture/README.md) | How it works | Understanding internals |
 
 ### By Task
 
-- **Adding a new target** → See [targets/README.md](targets/README.md) and existing target adapters
-- **Customizing for your project** → See [examples/](examples/) and [docs/project-overlays.md](docs/project-overlays.md)
-- **Understanding capability tiers** → See [core/models/tiers.yaml](core/models/tiers.yaml)
-- **Running tests** → `make validate` or `make generate`
+| Task | Documentation |
+|------|---------------|
+| Customize for your project | [Project Overlays](docs/project-overlays.md), [Overlay Tutorial](docs/overlay-tutorial.md) |
+| Understand skill routing | [Skill Routing](docs/claude/skills/routing.md), [Task Routing](docs/task-routing.md) |
+| Add a new platform | [Target Adapters](targets/README.md) |
+| Integrate external tools | [Integrations](docs/integrations.md) |
+| Troubleshoot issues | [Troubleshooting](docs/troubleshooting.md) |
+
+### Reference
+
+| Topic | Location |
+|-------|----------|
+| All CLI commands | [Full Command Reference](#full-command-reference) below |
+| Model tiers & routing | [Model Configuration](#model-configuration-guide) |
+| Security policies | [Security Policy](core/security/policy.yaml) |
+| Skill registry | [Skill Registry](core/skills/registry.yaml) |
 
 ---
 
-## Known Limitations
+## 🛠️ Installation
 
-Before adopting this workflow, understand these constraints:
+### Requirements
 
-### Platform Support
-- **Active**: Claude Code (fully supported, production-ready)
-- **Exploratory**: OpenCode (basic support, actively developed)
-- **Planned**: Cursor, Warp, VS Code, Kimi Code, Codex CLI, Antigravity (documentation only)
+- **Ruby** >= 2.6.0 (for CLI generator)
+  - macOS: Pre-installed
+  - Linux: `sudo apt install ruby-full`
+  - Windows: [RubyInstaller](https://rubyinstaller.org/)
+- **AI Tool**: Claude Code, OpenCode, or other supported platform
 
-### What This Is (and Isn't)
-- **Not automatic**: This is a configuration template with prompts and rules — not automation
-- **Not magic**: You and your LLM must actively read and follow the rules
-- **Not a database**: "Memory" is markdown files; no search, no automatic retrieval
-- **Not hooks**: No programmatic triggers; everything depends on LLM recognizing prompts
+### Platform-Specific Install
+
+```bash
+# macOS/Linux
+git clone https://github.com/nehcuh/vibesop.git && cd vibesop
+bin/vibe-install
+
+# Windows (cmd.exe - no admin needed)
+git clone https://github.com/nehcuh/vibesop.git && cd vibesop
+bin\vibe-install.bat
+```
+
+See [Windows Installation Guide](docs/windows-installation.md) for details.
+
+---
+
+## 🎨 Core Features
+
+### Smart Skill Routing
+
+```bash
+$ vibe route "帮我评审代码"
+
+📥 输入: 帮我评审代码
+----------------------------------------
+✅ 匹配到技能: /review
+   来源: gstack
+   场景: code_review
+   置信度: high
+
+💡 替代方案:
+   • /receiving-code-review (superpowers) - 全面质量检查
+   • /codex (gstack) - 跨模型审查
+```
+
+The router matches your request against scenarios and selects the best skill from available sources (builtin, superpowers, gstack).
 
 ### Memory System
-- **No auto-save**: Records only when you explicitly say exit phrases ("I'm heading out", "保存一下")
-- **No crash recovery**: If Claude Code crashes, unsaved work is lost
-- **No automatic association**: Past lessons aren't automatically suggested; Claude must read and remember
 
-### Skill System
-- **Not automatic triggering**: Rules describe when skills *should* be used, but LLM must interpret
-- **No enforcement**: "Mandatory" skills are prompts, not programmatic gates
+Three-tier memory architecture:
 
-### Model Routing
-- **Guidelines only**: Capability tiers are semantic hints, not executable configuration
-- **No dynamic switching**: Cannot automatically change models mid-session
+```
+memory/
+├── session.md           # Hot: Daily progress, active tasks
+├── project-knowledge.md # Warm: Technical pitfalls, patterns
+└── overview.md          # Cold: Goals, infrastructure
+```
 
-### External Integrations
-- **Manual setup required**: Superpowers and RTK detection finds tools but requires user confirmation
-- **RTK scope**: Only optimizes command outputs, not overall conversation token usage
+Record errors automatically or manually:
+```bash
+vibe memory enable              # Auto-record
+vibe memory record              # Manual record
+vibe memory stats               # View statistics
+```
+
+### Skill Discovery & Registration
+
+```bash
+# 1. Install new skill pack
+git clone https://github.com/example/skills ~/.config/skills/custom
+
+# 2. Discover and audit
+vibe skills discover
+
+# 3. Register (with security check)
+vibe skills register --interactive
+```
+
+Skills are registered project-level in `.vibe/skill-routing.yaml` — isolated and version-controllable.
 
 ---
 
-## Quick Start
+## 📖 Detailed Guides
 
-### 30 秒安装
+### Quick Start (Detailed)
 
+**Scenario 1: First-time Setup**
 ```bash
-git clone https://github.com/nehcuh/vibesop.git && cd vibesop
-bin/vibe-install          # macOS/Linux
-bin\vibe-install.bat      # Windows (cmd.exe)
-```
+vibe onboard                    # Interactive 5-step setup
+# Or: vibe quickstart          # Non-interactive
 
-### 3 步开始使用
-
-```mermaid
-graph LR
-    A["① vibe init"] --> B["② vibe switch"] --> C["③ 开始编码"]
-    A -.- A1["安装全局配置到 ~/.claude"]
-    B -.- B1["在项目中应用配置"]
-    C -.- C1["AI 工具自动加载配置"]
-
-    style A fill:#e1f5ff
-    style B fill:#fff4e1
-    style C fill:#e8f5e9
-```
-
-```bash
-# ① 安装全局配置（选择你的 AI 工具）
-vibe init --platform claude-code     # Claude Code 用户
-vibe init --platform opencode        # OpenCode 用户
-
-# ② 在项目中应用
+# Verify
 cd ~/my-project
-vibe switch --platform claude-code
-
-# ③ 启动 AI 工具，配置自动生效
-claude                               # 或 opencode
+vibe switch claude-code
+claude
 ```
 
-### 常见场景
-
-#### 场景 1：我只用 Claude Code，想快速配好
-
+**Scenario 2: Multiple Platforms**
 ```bash
-vibe onboard                         # 5 步引导：配置 + 角色 + 验证 + 技能预览（推荐新用户）
-# 或者只部署配置，不需要引导：
-vibe quickstart                      # 一键配置 ~/.claude
-cd ~/my-project && vibe switch --platform claude-code
-claude                               # 开始编码
+vibe init --platform claude-code
+vibe init --platform opencode
+
+cd ~/project-a && vibe switch claude-code
+cd ~/project-b && vibe switch opencode
 ```
 
-#### 场景 2：我想在多个 AI 工具间切换
-
+**Scenario 3: Team Project with Custom Rules**
 ```bash
-vibe init --platform claude-code     # 安装 Claude Code 配置
-vibe init --platform opencode        # 安装 OpenCode 配置
-
-cd ~/my-project
-vibe switch --platform claude-code   # 用 Claude Code
-vibe switch --platform opencode --force  # 切换到 OpenCode
-```
-
-#### 场景 3：我想定制项目配置
-
-```bash
-cd ~/my-project
-vibe switch --platform claude-code
-
-# 创建项目级 overlay（覆盖默认配置）
+# Create overlay
 cat > .vibe/overlay.yaml << 'EOF'
 profile: node-fullstack
 policies:
@@ -467,668 +248,163 @@ policies:
   lint_command: "npm run lint"
 EOF
 
-vibe switch --platform claude-code   # 重新应用（含 overlay）
+# Apply with overlay
+vibe switch claude-code   # Auto-discovers overlay
 ```
 
-#### 场景 4：我想用 Instinct 学习系统积累经验
+### Project Setup
 
-```mermaid
-graph LR
-    A["编码 session"] --> B["vibe instinct learn"]
-    B --> C["提取模式"]
-    C --> D["vibe instinct status"]
-    D --> E["高置信度模式自动建议"]
-    E --> A
-
-    style B fill:#fff4e1
-    style D fill:#e1f5ff
-```
+Apply workflow to existing projects:
 
 ```bash
-# 手动创建一个 instinct
-vibe instinct learn --pattern "修复 Ruby 语法错误前先跑 rubocop" --tags ruby,linting
+cd /path/to/project
+vibe apply claude-code    # Or: vibe switch claude-code
 
-# 查看已学习的模式
-vibe instinct status
-
-# 团队共享
-vibe instinct export team-patterns.yaml --min-confidence 0.8
-vibe instinct import team-patterns.yaml --merge
-```
-
-#### 场景 5：Windows 企业环境（无 PowerShell）
-
-```cmd
-REM 使用 cmd.exe 原生安装
-bin\vibe-install.bat
-
-REM 安装 hooks
-cd hooks
-install.bat
-```
-
-详见 [Windows 安装指南](docs/windows-installation.md)。
-
-### 验证安装
-
-```bash
-vibe doctor                          # 检查环境和集成状态
-vibe targets                         # 查看支持的平台
-vibe --version                       # 查看版本
-```
-
-### 卸载
-
-```bash
-bin/vibe-uninstall                   # 仅移除 vibe 命令
-bin/vibe-uninstall --remove-configs  # 移除 vibe + 平台配置
-bin/vibe-uninstall --remove-all      # 移除所有（含 ~/.vibe）
-bin/vibe-uninstall --dry-run         # 预览将被移除的内容
-```
-
----
-
-## Install Integrations (Optional)
-
-The `init` command focuses on platform configuration. For external tool integrations (Superpowers, RTK), these are detected automatically during installation.
-
-To manually manage integrations, see [docs/integrations.md](docs/integrations.md).
-
-**Available integrations:**
-- **Superpowers** (P1): Advanced skill pack - TDD, brainstorming, code review, debugging
-- **RTK** (P2): Token optimizer - Reduces LLM costs by 60-90%
-
-See [docs/integrations.md](docs/integrations.md) for details.
-
----
-
-## Next Steps
-
-### 1. Customize Your Configuration
-
-Open your tool's config file and personalize:
-
-| Tool | Config File |
-|------|------------|
-| Claude Code | `~/.claude/CLAUDE.md` |
-| OpenCode | `~/.config/opencode/AGENTS.md` |
-| Kimi Code | `~/.config/agents/KIMI.md` |
-| Cursor | `~/.cursor/CURSOR.md` |
-
-Fill in user info, project paths, and preferences.
-
-### 2. Project-Level Customization
-
-Create `.vibe/overlay.yaml` in your project to customize configuration:
-
-```yaml
-schema_version: 1
-name: my-project-overlay
-
-# Override model mapping for this project
-profile:
-  mapping_overrides:
-    critical_reasoner: claude.opus-class
-    workhorse_coder: claude.sonnet-class
-
-# Add custom policies
-policies:
-  append:
-    - id: project-specific-rule
-      category: project_memory
-      enforcement: recommended
-      target_render_group: always_on
-      summary: "Always check PROJECT_CONTEXT.md before database changes"
-```
-
-**Apply with overlay:**
-```bash
-# Automatically discovers .vibe/overlay.yaml
-vibe apply claude-code
-
-# Or explicitly specify
+# With custom overlay
 vibe apply claude-code --overlay ./my-overlay.yaml
 ```
 
-**OpenCode users**: If you encounter permission errors when accessing skill files, see [External Directory Permission](docs/project-overlays.md#opencode-external-directory-permission) for configuration options.
+### Platform Support
 
-**Learn more:**
-- [Overlay Tutorial](docs/overlay-tutorial.md) - Complete guide with examples
-- [Project Overlays](docs/project-overlays.md) - Technical reference and OpenCode permission settings
-- [Troubleshooting](docs/troubleshooting.md) - Common issues and solutions
-
-### 3. Try the Workflow
-
-Start your AI tool and observe:
-- **Task routing**: Watch complexity-based routing suggestions
-- **Systematic debugging**: Root cause investigation prompts
-- **Session management**: Structured templates for saving progress (manual trigger required)
-- **Context preservation**: Guidelines for session handoff (manual execution required)
+| Platform | Status | Command |
+|----------|--------|---------|
+| Claude Code | ✅ Production | `vibe init --platform claude-code` |
+| OpenCode | ✅ Functional | `vibe init --platform opencode` |
+| Cursor | 📝 Planned | - |
+| VS Code | 📝 Planned | - |
+| Warp | 📝 Planned | - |
+| Kimi Code | 📝 Planned | - |
 
 ---
 
-## Model Configuration Guide
+## 🔧 Full Command Reference
 
-This workflow uses a **capability-tier routing system** that separates task complexity from specific model implementations. Understanding how to configure models for your target is essential for optimal performance.
-
-### Understanding Capability Tiers
-
-The workflow defines 5 abstract capability tiers in `core/models/tiers.yaml`:
-
-- **`critical_reasoner`**: Highest-assurance reasoning for critical logic, security, secrets, and architecture
-- **`workhorse_coder`**: Default daily coding tier for most implementation and analysis work
-- **`fast_router`**: Cheap and fast tier for exploration, triage, and low-stakes subprocess work
-- **`independent_verifier`**: Second-model verification tier for cross-checking important conclusions
-- **`cheap_local`**: Local or near-zero-cost tier for offline, high-volume, and low-risk tasks
-
-### How Tier-to-Model Mapping Works
-
-Each target has a **provider profile** in `core/models/providers.yaml` that maps these abstract tiers to concrete model implementations:
-
-```yaml
-claude-code-default:
-  mapping:
-    critical_reasoner: claude.opus-class
-    workhorse_coder: claude.sonnet-class
-    fast_router: claude.haiku-class
-```
-
-**Important**: These mappings are **semantic hints**, not executable configuration. The actual model selection depends on your target tool's capabilities.
-
-### Configuring Models by Target
-
-#### Claude Code (Active - Production Ready)
-
-Claude Code supports dynamic model selection through multiple methods:
-
-**Method 1: Launch with specific model**
-```bash
-# Start with Opus (highest capability)
-claude --model opus
-
-# Start with Sonnet (balanced)
-claude --model sonnet
-
-# Start with Haiku (fastest)
-claude --model haiku
-```
-
-**Method 2: Use Task tool with model parameter**
-```markdown
-When delegating to subagents, Claude can specify the model tier:
-- Task tool with `model: "opus"` for critical reasoning
-- Task tool with `model: "sonnet"` for standard work
-- Task tool with `model: "haiku"` for quick exploration
-```
-
-**Method 3: Configure default in settings**
-Check `~/.claude/settings.json` for default model preferences (if supported by your Claude Code version).
-
-#### Cursor (Planned)
-
-Cursor's model selection is configured through its UI settings:
-
-1. Open Cursor Settings (Cmd/Ctrl + ,)
-2. Navigate to "Models" section
-3. Configure models for each tier:
-   - **Primary model** → maps to `critical_reasoner` and `workhorse_coder`
-   - **Fast model** → maps to `fast_router`
-   - **Review model** → maps to `independent_verifier`
-
-The generated `.cursor/rules/05-vibe-routing.mdc` will reference these as `cursor.primary-frontier-model`, `cursor.default-agent-model`, etc.
-
-#### Codex CLI (Planned)
-
-Codex CLI uses OpenAI models configured via environment or CLI flags:
+### Setup & Configuration
 
 ```bash
-# Set default models via environment
-export CODEX_PRIMARY_MODEL="gpt-4"
-export CODEX_FAST_MODEL="gpt-3.5-turbo"
-
-# Or specify per-invocation
-codex --model gpt-4 "your task"
+vibe init --platform <platform>     # Install global config
+vibe quickstart                      # One-command setup
+vibe onboard                         # Guided 5-step setup
+vibe doctor                          # Check environment
+vibe targets                         # List platforms
 ```
 
-The generated `.vibe/codex-cli/routing.md` maps tiers to `openai.high-reasoning`, `openai.codex-workhorse`, etc.
+### Project Operations
 
-#### Warp (Planned)
-
-Warp's model configuration depends on its AI provider integration:
-
-1. Configure your AI provider in Warp settings
-2. The generated `WARP.md` will reference `warp.primary-frontier-model`, `warp.default-agent-model`, etc.
-3. Warp will use its configured default model for all tiers (model switching within Warp may be limited)
-
-#### OpenCode (Exploratory - Basic Support)
-
-OpenCode is actively supported with basic functionality. Model configuration in `opencode.json`:
-
-```json
-{
-  "models": {
-    "primary": "claude-opus-4",
-    "coder": "claude-sonnet-4",
-    "fast": "claude-haiku-4"
-  }
-}
-```
-
-The generated config maps these to the capability tiers defined in the workflow. Note: OpenCode support is functional but less mature than Claude Code.
-
-#### Antigravity (Planned)
-
-Antigravity's model selection depends on its internal routing and user subscription:
-
-1. Antigravity selects models based on task complexity and configured preferences
-2. The generated `AGENTS.md` will reference `antigravity.primary-frontier-model`, `antigravity.default-agent-model`, etc.
-3. Antigravity natively supports multi-agent workflows, making the routing guidance directly actionable
-
-#### VS Code / Copilot (Planned)
-
-VS Code's AI capabilities come through GitHub Copilot and Copilot Chat:
-
-1. Install GitHub Copilot and Copilot Chat extensions
-2. The generated `.vscode/settings.json` includes workspace-level instructions referencing the workflow docs
-3. Model selection depends on your Copilot subscription tier (Individual, Business, Enterprise)
-4. Copilot does not support automatic per-task model switching — the routing guidance is informational
-
-### Project-Specific Model Overrides
-
-You can override the default tier-to-model mapping for a specific project using overlays:
-
-```yaml
-# .vibe/overlay.yaml
-profile:
-  mapping:
-    critical_reasoner: claude.opus-4-latest
-    workhorse_coder: claude.sonnet-4-latest
-```
-
-Then build with the overlay:
 ```bash
-bin/vibe build claude-code --overlay .vibe/overlay.yaml
+vibe build <target>                  # Generate config from core/
+vibe use <target> <dir>             # Deploy to global config dir
+vibe switch <target>                # Apply to current project
+vibe apply <target>                 # Same as switch
+vibe inspect                         # Show project/target state
 ```
 
-### Cost Optimization Tips
+### Skill Management
 
-1. **Use the right tier**: Don't use `critical_reasoner` (Opus) for simple tasks
-2. **Leverage `fast_router`**: Use Haiku-class models for exploration and quick lookups
-3. **Enable `cheap_local`**: Configure Ollama or similar for commit messages and formatting
-4. **Cross-verify selectively**: Only use `independent_verifier` for truly critical decisions
+```bash
+vibe skills check                    # Check for new skills
+vibe skills list                     # List all skills
+vibe skills discover                 # Discover unregistered skills
+vibe skills register                 # Register skills (interactive/auto)
+vibe skills adapt <id>               # Adapt specific skill
+vibe skills skip <id>                # Skip a skill
+vibe skills docs <id>                # View skill docs
+vibe skills install <pack>           # Install skill pack
+vibe route "<request>"               # Smart skill routing
+```
 
-See `docs/task-routing.md` for detailed routing guidelines.
+### Advanced Features
+
+```bash
+# Instinct Learning
+vibe instinct learn                  # Create from session
+vibe instinct status                 # View patterns
+vibe instinct export <file>          # Export for team
+vibe instinct import <file>          # Import patterns
+
+# Memory Management
+vibe memory record                   # Record error/solution
+vibe memory stats                    # View stats
+vibe memory enable/disable           # Toggle auto-record
+
+# Code Checkpoints
+vibe checkpoint create <name>        # Create snapshot
+vibe checkpoint list                 # List checkpoints
+vibe checkpoint rollback <name>      # Restore snapshot
+
+# Parallel Development
+vibe worktree create <branch>        # Create isolated worktree
+vibe worktree list                   # List worktrees
+vibe cascade run <config.yaml>       # Run parallel pipeline
+
+# Security & Quality
+vibe scan file <file>                # Security scan
+```
 
 ---
 
-## Command Reference
+## 🏗️ Architecture Deep Dive
 
-### Essential Commands
+### Portable Core
 
-| Command | Purpose | Example |
-|---------|---------|---------|
-| `bin/vibe use <target> <dir>` | Generate global config for a tool | `bin/vibe use claude-code ~/.claude` |
-| `bin/vibe switch <target>` | Apply workflow to current project | `bin/vibe switch opencode` |
-| `bin/vibe init --platform=<tool>` | Install integrations (Superpowers, RTK) | `bin/vibe init --platform=claude-code` |
-| `bin/vibe quickstart` | One-command setup for Claude Code | `bin/vibe quickstart` |
-| `bin/vibe onboard` | Guided 5-step setup for new users (deploy + role + doctor + skill preview) | `bin/vibe onboard` |
+The `core/` directory contains provider-neutral workflow semantics:
 
-### When to Use What?
-
-**Setting up a tool for the first time:**
-```bash
-bin/vibe use <tool> <config-dir>
-bin/vibe init --platform=<tool>
+```
+core/
+├── models/
+│   ├── tiers.yaml          # Capability tiers (critical_reasoner, workhorse_coder...)
+│   └── providers.yaml      # Platform mappings
+├── skills/
+│   └── registry.yaml       # Portable skill definitions
+├── security/
+│   └── policy.yaml         # P0/P1/P2 severity semantics
+└── policies/
+    ├── behaviors.yaml      # Behavior policy schema
+    ├── task-routing.yaml   # Task complexity rules
+    └── test-standards.yaml # Testing requirements
 ```
 
-**Adding workflow to a project:**
-```bash
-cd /path/to/project
-bin/vibe apply <platform>
+### Directory Structure
+
+```
+vibesop/
+├── bin/
+│   ├── vibe                # Main CLI
+│   ├── vibe-install        # Install script
+│   └── vibe-smoke          # Smoke tests
+├── lib/vibe/               # 50+ Ruby modules
+│   ├── skill_router.rb     # Smart routing
+│   ├── skill_discovery.rb  # Skill scanning
+│   └── ...
+├── core/                   # Portable SSOT
+├── targets/                # Platform adapters
+├── skills/                 # Builtin skills
+├── rules/                  # Core behavior rules
+├── docs/                   # Reference guides
+├── examples/               # Overlay examples
+└── test/                   # Test suite
 ```
 
-**Checking integration status:**
-```bash
-bin/vibe init --platform=<platform> --verify
-bin/vibe doctor
-```
-
-**Updating workflow:**
-```bash
-git pull
-bin/vibe init --platform <platform> --force  # Regenerate global config
-```
-
-### All Commands
-
-<details>
-<summary>Click to see full command list</summary>
-
-```bash
-# Global setup (run once) - Active platforms only
-bin/vibe init --platform claude-code    # Install to ~/.claude
-bin/vibe init --platform opencode       # Install to ~/.config/opencode
-```
-
-</details>
+See [Architecture Overview](docs/architecture/README.md) for details.
 
 ---
 
-## Build / Use / Inspect Generator
+## 🤝 Contributing & Credits
 
-The repository ships a generator CLI for active platforms:
+### Original vs Fork
 
-```bash
-# Active platforms (fully functional)
-bin/vibe build claude-code
-bin/vibe build opencode
-bin/vibe inspect
-bin/vibe-smoke
-```
+- **Original**: [runesleo/claude-code-workflow](https://github.com/runesleo/claude-code-workflow) by [@runes_leo](https://x.com/runes_leo)
+- **This Fork**: Extended to multi-platform with portable core, 50+ modules, 1400+ tests
 
-By default, each build goes to `generated/<target>/`.
+If you only need Claude Code support and prefer a simpler setup, the original project may be a better fit.
 
-Examples:
+### Integrated Projects
 
-```bash
-# Build a Claude Code config tree
-bin/vibe build claude-code
+- **[Superpowers](https://github.com/obra/superpowers)** - Advanced skill pack (TDD, debugging)
+- **[RTK](https://github.com/rtk-ai/rtk)** - Token optimizer (60-90% savings)
+- **[everything-claude-code](https://github.com/affaan-m/everything-claude-code)** - Inspiration for instinct learning
 
-# Build an OpenCode project config into a custom directory
-bin/vibe build opencode --output /tmp/vibe-opencode
-
-# Apply a generated Claude target into ~/.claude
-bin/vibe use claude-code ~/.claude
-
-# Apply a generated OpenCode target into a project root
-bin/vibe use opencode /path/to/project
-
-# Quick-switch Claude Code into ~/.claude
-bin/vibe switch claude-code
-
-# Inspect current defaults, generated outputs, and repo target state
-bin/vibe inspect
-bin/vibe inspect --json
-
-# Preview a project overlay without applying it
-bin/vibe inspect --overlay examples/project-overlay.yaml
-
-# Build or apply with a project overlay
-bin/vibe build opencode --overlay examples/project-overlay.yaml
-bin/vibe use opencode /path/to/project --overlay /path/to/project/.vibe/overlay.yaml
-
-# Run smoke checks (all targets + overlay builds)
-bin/vibe-smoke
-```
-
-Current generator behavior (active platforms):
-
-- `claude-code` → materializes `CLAUDE.md`, `rules/`, `docs/`, `skills/`, `agents/`, `commands/`, and a generated `settings.json` permission baseline, plus task routing and test standards under `.vibe/claude-code/`
-- `opencode` → materializes `AGENTS.md`, `opencode.json`, and modular behavior / routing / safety / execution instruction files with generated permissions
-- `inspect` → can preview overlay-aware profile resolution and generated target state
-- `use` / `switch` → auto-discover `.vibe/overlay.yaml` in the destination project when present
-
-Planned platforms (documentation only): antigravity, codex-cli, cursor, vscode, warp
-
-**Path Safety**: When using `use` or `switch`, if the default output directory (`generated/<target>/`) would overlap with the destination directory, the tool automatically uses an external staging directory at `~/.vibe-generated/<destination-name>-<hash>/<target>/` to prevent conflicts. This ensures safe operation even when applying configurations to the repository root.
-- overlays → let a consuming repo remap capability tiers, add behavior deltas, patch native target config, and encode stack preferences like `uv` or `nvm` without editing `core/`
-
-`bin/vibe` is intentionally conservative: it only renders the parts that are already modeled in `core/` and documented in `targets/`.
-## Git & tracked files
-
-This repository intentionally separates shared workflow files from disposable staging output:
-
-- Commit the portable spec and checked-in target-facing files: `core/`, `targets/`, `rules/`, `docs/`, `CLAUDE.md`, `WARP.md`, and the tracked `.vibe/` support files that describe the active Warp target.
-- Do not commit staging output or local apply markers: `generated/` and `.vibe-target.json` are intentionally ignored.
-- Treat `.vibe/overlay.yaml` as project policy only when it should be shared. Keep personal or local-only overlays outside the repo, or ignore them in the consuming project's `.gitignore`.
-
-See `docs/git-workflow.md` for the full commit policy, including consuming-repo guidance, `memory/` handling, and secrets/local-state rules.
-
-## Key Concepts
-
-### SSOT (Single Source of Truth)
-
-Every piece of information has ONE canonical location. The SSOT table in CLAUDE.md maps info types to files. Claude is trained to check SSOT before writing, preventing the "same info in 5 places, all outdated" problem.
-
-### Memory System
-
-Structured templates for recording session progress and project knowledge. Memory is **manual**: you must explicitly trigger saves using exit phrases ("I'm heading out", "保存一下") or directly edit markdown files. No automatic capture or crash recovery.
-
-### Verification Before Completion
-
-The most impactful rule: Claude cannot claim work is done without running the verification command and reading the output. Eliminates the #1 AI coding failure mode — "should work now" without actually checking.
-
-### Capability-Tier Task Routing
-
-Route by capability first, then map it to the active provider profile:
-- **critical_reasoner**: Critical logic, security-sensitive, complex reasoning
-- **workhorse_coder**: Daily development, analysis, most coding tasks
-- **fast_router**: Simple queries, subagent tasks, quick lookups
-- **independent_verifier**: Cross-verification, code review, second opinions
-- **cheap_local**: Commit messages, formatting, offline work
-
-### Sunday Rule
-
-System optimization happens on Sundays. On other days, if you try to tweak your workflow instead of shipping, Claude will intercept and remind you to focus on output. Configurable to any cadence you prefer.
-
-### Harness Engineering
-
-This workflow implements [OpenAI's Harness Engineering](https://openai.com/index/harness-engineering/) methodology (Feb 2026) — a systematic approach to managing AI agent workflows through three core dimensions:
-
-- **Context Engineering**: Progressive disclosure keeps CLAUDE.md under 150 lines; deep content lives in `docs/claude/` and is loaded on-demand via explicit `read` commands
-- **Architectural Constraints**: Mechanical enforcement via `scripts/verify-harness.sh` — line count limits, dead link detection, and pre-commit hooks prevent documentation drift
-- **Entropy Management**: `scripts/entropy-scan.sh` implements TTL-based garbage collection for technical debt, preventing accumulation of outdated patterns
-
-The key insight: don't optimize the model, optimize the harness that guides it. Local constraints (pre-commit hooks) > global policies (CI checks) > conventions (documentation).
-
-## Customization Guide
-
-### Portable-first workflow
-
-1. Update the portable SSOT in `core/`
-2. Sync the active Claude-facing files in `rules/`, `docs/`, and `skills/`
-3. Keep the target adapter docs in `targets/` accurate
-4. Use a project overlay (`.vibe/overlay.yaml`) for repo-specific deviations
-5. Prefer example overlays such as `examples/python-uv-overlay.yaml` or `examples/node-nvm-overlay.yaml` for stack-specific defaults
-6. Extend `bin/vibe` only after the portable schema stabilizes
-
-### Adding a new project
-
-1. Add to `memory/overview.md` (Projects Summary section)
-2. Add memory route in CLAUDE.md's "Sub-project Memory Routes"
-3. Create `PROJECT_CONTEXT.md` in the project root
-
-### Adding a new skill
-
-Create `skills/your-skill/SKILL.md` with:
-
-```yaml
----
-name: your-skill
-description: What it does
-allowed-tools:
-  - Read
-  - Write
-  - Bash
----
-
-# Your Skill
-
-[Instructions for Claude when this skill is invoked]
-```
-
-Then register its portable metadata in `core/skills/registry.yaml` before adding trigger rules.
-
-### Adding an external skill pack (e.g. Superpowers)
-
-1. Import the skill files under your preferred layout
-2. Register the namespace and skill metadata in `core/skills/registry.yaml`
-3. Review it against `core/security/policy.yaml`
-4. Only then add trigger rules in `rules/skill-triggers.md`
-
-### Adding a new agent
-
-Create `agents/your-agent.md` with:
-
-```yaml
----
-name: your-agent
-description: What it does
-tools: Read, Grep, Glob, Bash
----
-
-# Your Agent
-
-[Agent personality, review dimensions, output format]
-```
-
-### Adjusting model routing
-
-Edit `core/models/tiers.yaml` and `core/models/providers.yaml` first, then sync `rules/behaviors.md` and `docs/task-routing.md` for the active target.
-
-## Philosophy
-
-This template encodes several principles learned from daily AI-assisted development:
-
-1. **Structure > Prompting**: A well-organized config file beats clever one-off prompts every time.
-2. **Memory > Intelligence**: An AI that remembers your past mistakes is more valuable than a smarter AI that starts fresh each session.
-3. **Verification > Confidence**: The cost of running `npm test` is always less than the cost of shipping a broken build.
-4. **Layered Loading > Flat Config**: Don't dump everything into context. Load rules always, docs on demand, data when needed.
-5. **Auto-save > Manual Save**: If it requires the user to remember, it will be forgotten. Make it automatic.
-
-## Requirements
-
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI (Claude Max or API subscription)
-- Ruby >= 2.6.0 (for `bin/vibe` generator)
-  - **macOS**: Comes pre-installed with the system
-  - **Linux**: `sudo apt install ruby-full` (Debian/Ubuntu) or equivalent
-  - **Windows**: Install via [RubyInstaller](https://rubyinstaller.org/) (Ruby+Devkit recommended), or use Ruby inside WSL 2
-  - **Runtime dependencies**: None (uses only Ruby stdlib)
-  - **Development dependencies**: See `Gemfile` (minitest for testing)
-- Optional: Codex CLI for cross-verification
-- Optional: Ollama for local model fallback
-- Optional: other targets via `targets/` adapter docs
-
-## Windows / WSL Support
-
-This workflow now supports Windows through multiple installation methods:
-
-### Option 1: Native Windows (cmd.exe) - NEW ✨
-
-**Best for**: Corporate environments where PowerShell is restricted.
-
-**Prerequisites**: Ruby >= 2.6.0 must be installed. Get it from [RubyInstaller](https://rubyinstaller.org/) (Ruby+Devkit recommended).
-
-```cmd
-REM Install using native Windows batch scripts
-bin\vibe-install.bat
-
-REM Install hooks (optional)
-cd hooks
-install.bat
-```
-
-**Features**:
-- Works in cmd.exe (DOS) without PowerShell
-- Installs to `%USERPROFILE%\.local\bin`
-- No admin rights required
-- Full hook support with `.bat` scripts
-
-See [Windows Installation Guide](docs/windows-installation.md) for detailed instructions.
-
-### Option 2: WSL 2 (Recommended for full Unix experience)
-
-1. Install WSL 2 with Ubuntu:
-   ```powershell
-   wsl --install
-   ```
-
-2. Inside WSL, install Ruby:
-   ```bash
-   sudo apt update
-   sudo apt install ruby-full
-   ```
-
-3. Clone and use the workflow normally within WSL:
-   ```bash
-   git clone https://github.com/nehcuh/vibesop.git
-   cd vibesop
-   bin/vibe quickstart
-   ```
-
-4. Access your Windows files from WSL at `/mnt/c/Users/YourName/`
-
-### Option 3: Git Bash Fallback (Limited support)
-
-If you cannot use WSL2 but have Git for Windows (which includes Git Bash):
-
-```bash
-# In Git Bash, use the pure Bash fallback script
-./bin/vibe-bash.sh targets           # List available targets
-./bin/vibe-bash.sh build opencode    # Build OpenCode configuration
-./bin/vibe-bash.sh switch opencode   # Apply to current project
-```
-
-The fallback script supports:
-- `build` - Copy pre-generated configurations
-- `switch`/`apply` - Apply configuration to current directory
-- `targets` - List available targets
-- `doctor` - Check environment
-
-**Limitations of Bash fallback:**
-- Cannot generate new configurations from YAML (requires Ruby)
-- Cannot apply overlays or complex merges
-- Works best with pre-generated configs in `generated/`
-
-### Platform Comparison
-
-| Method | cmd.exe Support | Admin Required | Hook Support | Full Features |
-|--------|----------------|----------------|--------------|---------------|
-| Native Windows (.bat) | ✅ Yes | ❌ No | ✅ Yes | ✅ Yes |
-| WSL 2 | N/A (Linux) | ⚠️ Initial setup | ✅ Yes | ✅ Yes |
-| Git Bash | ⚠️ Via bash | ❌ No | ⚠️ Limited | ⚠️ Limited |
-
-**Note:** The native Windows support is production-ready. WSL provides the best Unix-like experience if available.
-
-## Prior Art & Credits
-
-This template draws from:
-- [Manus](https://manus.im/) file-based planning approach
-- OWASP Top 10 for security review patterns
-- Real-world experience from building [x-reader](https://github.com/runesleo/x-reader) (650+ stars) and other open-source projects
-
-## Contributors
-
-- **Original Author**: [@runes_leo](https://x.com/runes_leo) - Initial workflow design and implementation
-- **Fork Maintainer**: [@nehcuh](https://github.com/nehcuh) - Modularization, testing, and Chinese localization
-
-## Acknowledgments
-
-This project builds upon the excellent foundation laid by [@runes_leo](https://x.com/runes_leo)'s original vibesop. The fork aims to enhance maintainability and extend the workflow to serve Chinese-speaking developers while preserving the core philosophy.
-
-### Integrated External Projects
-
-This project integrates and draws inspiration from the following excellent open-source projects:
-
-- **[Superpowers](https://github.com/obra/superpowers)** by [@obra](https://github.com/obra)
-  Advanced skill pack providing design refinement, TDD enforcement, systematic debugging, and more. This project integrates it as an optional enhancement and defines portable skill ID mappings in `core/integrations/superpowers.yaml`.
-
-- **[RTK (Rust Token Killer)](https://github.com/rtk-ai/rtk)**
-  CLI proxy tool that reduces LLM token consumption by 60-90% through intelligent context management. This project provides automatic detection and configuration support.
-
-- **[everything-claude-code](https://github.com/affaan-m/everything-claude-code)** by [@affaan-m](https://github.com/affaan-m)
-  Anthropic Hackathon award-winning project. The Instinct learning system, token optimization strategies, verification loop system, and parallelization approaches in VibeSOP were directly inspired by this project's research.
-
-- **[awesome-claude-code](https://github.com/hesreallyhim/awesome-claude-code)** by [@hesreallyhim](https://github.com/hesreallyhim)
-  Community-curated directory of Claude Code workflows and tools. The RIPER workflow, security scanner (inspired by parry), and TDD Guard in VibeSOP were discovered through and informed by this collection.
-
-Thanks to the authors and contributors of these projects — their work significantly enhances the capabilities of this workflow.
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=runesleo/claude-code-workflow&type=Date)](https://star-history.com/#runesleo/claude-code-workflow&Date)
-
-## License
+### License
 
 MIT — Use it, fork it, make it yours.
 
@@ -1137,5 +413,4 @@ Modified work Copyright (c) 2026 nehcuh
 
 ---
 
-**Original Author**: [@runes_leo](https://x.com/runes_leo) — more AI tools at [leolabs.me](https://leolabs.me) — [Telegram Community](https://t.me/runesgang)
-**Fork Maintainer**: [@nehcuh](https://github.com/nehcuh)
+**Quick Links**: [Principles](PRINCIPLES.md) | [Full Docs](docs/README.md) | [Issues](https://github.com/nehcuh/vibesop/issues) | [Telegram](https://t.me/runesgang)

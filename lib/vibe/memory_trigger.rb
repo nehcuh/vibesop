@@ -115,7 +115,7 @@ module Vibe
       return {} unless File.exist?(cache_path)
 
       cache = YAML.safe_load(File.read(cache_path), permitted_classes: [Time, Symbol],
-                                                     aliases: true) || {}
+                                                    aliases: true) || {}
       cleanup_old_cache(cache)
     rescue StandardError => e
       warn "Failed to load error cache: #{e.message}"
@@ -236,7 +236,7 @@ module Vibe
       entry
     end
 
-    def generate_pattern_entry(number, info)
+    def generate_pattern_entry(_number, info)
       name = info[:name] || info['name']
       description = info[:description] || info['description']
 
@@ -272,9 +272,7 @@ module Vibe
                        end
 
       # If section doesn't exist, create it
-      unless content.include?(section_header)
-        content += "\n\n#{section_header}\n"
-      end
+      content += "\n\n#{section_header}\n" unless content.include?(section_header)
 
       # Insert entry after section header
       content.sub(section_header, "#{section_header}#{entry}")

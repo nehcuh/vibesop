@@ -268,9 +268,9 @@ module Vibe
       puts '=' * 60
       puts
       puts "  ✓ Imported: #{stats[:imported]} new instincts"
-      puts "  ⊘ Skipped: #{stats[:skipped]} duplicates" if (stats[:skipped]).positive?
-      puts "  🔀 Merged: #{stats[:merged]} instincts" if (stats[:merged]).positive?
-      puts "  ⚠ Errors: #{stats[:errors]}" if (stats[:errors]).positive?
+      puts "  ⊘ Skipped: #{stats[:skipped]} duplicates" if stats[:skipped].positive?
+      puts "  🔀 Merged: #{stats[:merged]} instincts" if stats[:merged].positive?
+      puts "  ⚠ Errors: #{stats[:errors]}" if stats[:errors].positive?
       puts
     rescue StandardError => e
       puts "\n✗ Import failed: #{e.message}"

@@ -2,7 +2,6 @@
 
 require_relative '../security_scanner'
 require_relative '../tdd_enforcer'
-require_relative '../context_optimizer'
 
 module Vibe
   # CLI commands for security scanning and TDD enforcement, included in VibeCLI.
@@ -14,7 +13,6 @@ module Vibe
       when 'text'   then run_scan_text(argv)
       when 'file'   then run_scan_file(argv)
       when 'tdd'    then run_tdd_audit(argv)
-      when 'ctx'    then run_ctx_stats(argv)
       when nil, 'help', '--help', '-h' then puts security_usage
       else
         raise Vibe::ValidationError,
