@@ -113,6 +113,7 @@ module Vibe
       #
       # @param uri [URI] Request URI
       # @param request_body [Hash] Request body
+      # @param retry_count [Integer] Current retry attempt
       # @return [String] Response text
       def response_with_retry(uri, request_body, retry_count = 0)
         Timeout.timeout(@timeout) do
@@ -125,8 +126,7 @@ module Vibe
             retry_after = handle_rate_limit(response, retry_count)
             if retry_after && retry_count < MAX_RETRIES
               sleep(retry_after)
-              retry_count += 1
-              retry
+              return response_with_retry(uri, request_body, retry_count + 1)
             else
               raise "Rate limit exceeded after #{MAX_RETRIES} retries"
             end
@@ -134,8 +134,7 @@ module Vibe
             delay = handle_server_error(response, retry_count)
             if delay && retry_count < MAX_RETRIES
               sleep(delay)
-              retry_count += 1
-              retry
+              return response_with_retry(uri, request_body, retry_count + 1)
             else
               raise "Server error: #{response.code} after #{MAX_RETRIES} retries"
             end
@@ -149,8 +148,7 @@ module Vibe
         log_retry("Timeout after #{@timeout}s", retry_count)
         if retry_count < MAX_RETRIES
           sleep(calculate_backoff(retry_count))
-          retry_count += 1
-          retry
+          response_with_retry(uri, request_body, retry_count + 1)
         else
           raise Timeout::Error, "Request timeout after #{MAX_RETRIES} retries"
         end

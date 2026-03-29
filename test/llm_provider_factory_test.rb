@@ -47,7 +47,7 @@ class LLMProviderFactoryTest < Minitest::Test
 
     provider = Vibe::LLMProvider::Factory.create_from_env
 
-    assert_equal 'Anthropic', provider.class.name.gsub('Vibe::LLMProvider::', '')
+    assert_equal 'AnthropicProvider', provider.class.name.gsub('Vibe::LLMProvider::', '')
     assert provider.configured?
   end
 
@@ -58,7 +58,7 @@ class LLMProviderFactoryTest < Minitest::Test
 
     provider = Vibe::LLMProvider::Factory.create_from_env
 
-    assert_equal 'OpenAI', provider.class.name.gsub('Vibe::LLMProvider::', '')
+    assert_equal 'OpenAIProvider', provider.class.name.gsub('Vibe::LLMProvider::', '')
     assert provider.configured?
   end
 
@@ -71,7 +71,7 @@ class LLMProviderFactoryTest < Minitest::Test
       Vibe::LLMProvider::Factory.create_from_env
     end
 
-    assert_match(/No API key found/, error.message
+    assert_match(/No API key found/, error.message)
   end
 
   # Test 6: Factory.with_fallback works
@@ -81,7 +81,7 @@ class LLMProviderFactoryTest < Minitest::Test
 
     provider = Vibe::LLMProvider::Factory.create_with_fallback(%w[anthropic openai])
 
-    assert_equal 'OpenAI', provider.class.name.gsub('Vibe::LLMProvider::', '')
+    assert_equal 'OpenAIProvider', provider.class.name.gsub('Vibe::LLMProvider::', '')
     assert provider.configured?
   end
 

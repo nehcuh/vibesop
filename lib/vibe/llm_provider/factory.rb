@@ -40,13 +40,13 @@ module Vibe
         def create_from_env(preferred_provider = nil)
           # If preferred provider is specified, try it first
           if preferred_provider
-            provider = create_provider(preferred_provider)
+            provider = create(provider: preferred_provider)
             return provider if provider&.configured?
           end
 
           # Auto-detect: try Anthropic first, then OpenAI
           %w[anthropic openai].each do |provider_name|
-            provider = create_provider(provider_name)
+            provider = create(provider: provider_name)
             return provider if provider&.configured?
           end
 

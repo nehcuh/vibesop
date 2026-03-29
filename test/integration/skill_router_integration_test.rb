@@ -46,14 +46,15 @@ class SkillRouterIntegrationTest < Minitest::Test
       cache_dir: Dir.mktmpdir,
       memory_cache_max_size: 100
     )
-    @llm_client = MockLLMClient.new
+    @llm_provider = MockLLMProvider.new
+    @llm_client = MockLLMClient.new  # For backward compatibility
 
-    # Create real AI Triage Layer with mock LLM client
+    # Create real AI Triage Layer with mock LLM provider
     @ai_triage_layer = Vibe::SkillRouter::AITriageLayer.new(
       @registry,
       @preferences,
       cache: @cache,
-      llm_client: @llm_client
+      llm_provider: @llm_provider
     )
 
     # Create router with all 5 layers
@@ -75,7 +76,7 @@ class SkillRouterIntegrationTest < Minitest::Test
     context = { file_type: 'js', error_count: 5 }
 
     # Mock LLM response
-    @llm_client.mock_response = JSON.generate({
+    @llm_provider.mock_response = JSON.generate({
       'skill' => 'gstack/investigate',
       'confidence' => 0.92,
       'reasoning' => '生产环境紧急问题适合系统性调试',
@@ -104,7 +105,7 @@ class SkillRouterIntegrationTest < Minitest::Test
     context = {}
 
     # Mock LLM to return low confidence (trigger fallback)
-    @llm_client.mock_response = JSON.generate({
+    @llm_provider.mock_response = JSON.generate({
       'skill' => nil,
       'confidence' => 0.5,
       'reasoning' => 'Not confident about this request'
@@ -124,19 +125,19 @@ class SkillRouterIntegrationTest < Minitest::Test
     context = { file_type: 'rb' }
 
     # First call - should hit AI
-    @llm_client.mock_response = JSON.generate({
+    @llm_provider.mock_response = JSON.generate({
       'skill' => 'systematic-debugging',
       'confidence' => 0.85,
       'reasoning' => 'Debugging request with high confidence'
     })
 
     result1 = @router.route(input, context)
-    first_llm_count = @llm_client.call_count
+    first_llm_count = @llm_provider.call_count
     assert_equal 1, first_llm_count
 
     # Second call - should hit cache (no additional LLM call)
     result2 = @router.route(input, context)
-    assert_equal first_llm_count, @llm_client.call_count # No additional LLM calls
+    assert_equal first_llm_count, @llm_provider.call_count # No additional LLM calls
 
     assert_equal result1[:skill], result2[:skill]
   end
@@ -153,13 +154,13 @@ class SkillRouterIntegrationTest < Minitest::Test
 
     requests.each_with_index do |req, index|
       if req[:layer] == :layer_0_ai
-        @llm_client.mock_response = JSON.generate({
+        @llm_provider.mock_response = JSON.generate({
           'skill' => 'systematic-debugging',
           'confidence' => 0.8,
           'reasoning' => 'AI analysis'
         })
       else
-        @llm_client.mock_response = JSON.generate({
+        @llm_provider.mock_response = JSON.generate({
           'skill' => nil,
           'confidence' => 0.5,
           'reasoning' => 'No match'
@@ -205,7 +206,7 @@ class SkillRouterIntegrationTest < Minitest::Test
     # Simulate 3 consecutive failures
     3.times do |i|
       # Make LLM return nil (no skill match) to trigger failure
-      @llm_client.mock_response = JSON.generate({
+      @llm_provider.mock_response = JSON.generate({
         'skill' => nil,
         'confidence' => 0.0,
         'reasoning' => 'No suitable skill found'
@@ -230,8 +231,8 @@ class SkillRouterIntegrationTest < Minitest::Test
 
   private
 
-  # Mock LLM Client for testing
-  class MockLLMClient
+  # Mock LLM Provider for testing
+  class MockLLMProvider
     attr_accessor :mock_response, :raise_error, :call_count
 
     def initialize
@@ -257,11 +258,25 @@ class SkillRouterIntegrationTest < Minitest::Test
       true
     end
 
+    def provider_name
+      'Mock'
+    end
+
+    def supported_models
+      %w[mock-model]
+    end
+
     def stats
       {
         configured: true,
-        call_count: @call_count
+        call_count: @call_count,
+        provider_name: 'Mock'
       }
     end
+  end
+
+  # Mock LLM Client for backward compatibility testing
+  class MockLLMClient < MockLLMProvider
+    # Same interface, just different class name
   end
 end
