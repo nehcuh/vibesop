@@ -3,6 +3,7 @@
 require_relative '../defaults'
 require_relative '../llm_client'
 require_relative '../cache_manager'
+require_relative '../llm_provider/factory'
 
 module Vibe
   class SkillRouter
@@ -30,17 +31,33 @@ module Vibe
     class AITriageLayer
       include Defaults
 
-      attr_reader :registry, :preferences, :cache, :llm_client, :enabled
+      attr_reader :registry, :preferences, :cache, :llm_client, :llm_provider, :enabled
 
-      def initialize(registry, preferences, cache: nil, llm_client: nil)
+      def initialize(registry, preferences, cache: nil, llm_client: nil, llm_provider: nil)
         @registry = registry
         @preferences = preferences
         @cache = cache || CacheManager.new
-        @llm_client = llm_client || LLMClient.new
+
+        # Support both old (llm_client) and new (llm_provider) interfaces
+        if llm_provider
+          @llm_provider = llm_provider
+          @llm_client = nil # Deprecated, use llm_provider instead
+        else
+          # For backward compatibility, create provider from LLMClient or auto-detect
+          @llm_client = llm_client # Keep for backward compatibility
+          @llm_provider = create_provider_from_config
+        end
 
         # Configuration from environment or defaults
         @enabled = ENV.fetch('VIBE_AI_TRIAGE_ENABLED', 'true') == 'true'
-        @triage_model = ENV.fetch('VIBE_TRIAGE_MODEL', 'claude-haiku-4-5-20251001')
+
+        # Auto-detect if we should disable AI triage based on provider availability
+        if @enabled && !@llm_provider&.configured?
+          @enabled = false
+          @disabled_reason = "No LLM provider configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY."
+        end
+
+        @triage_model = detect_triage_model
         @cache_ttl = Integer(ENV.fetch('VIBE_TRIAGE_CACHE_TTL', '86400')) # 24 hours
         @confidence_threshold = Float(ENV.fetch('VIBE_TRIAGE_CONFIDENCE', '0.7'))
         @timeout = Integer(ENV.fetch('VIBE_TRIAGE_TIMEOUT', '5')) # seconds
@@ -129,9 +146,14 @@ module Vibe
       # Get statistics about AI triage performance
       def stats
         cache_stats = @cache.stats
+        provider_stats = @llm_provider&.stats || {}
+
         {
           enabled: @enabled,
+          disabled_reason: @disabled_reason,
           model: @triage_model,
+          provider: provider_stats[:provider_name] || 'unknown',
+          provider_configured: provider_stats[:configured] || false,
           circuit_state: circuit_open? ? :open : :closed,
           failure_count: @failure_count,
           cache_stats: cache_stats
@@ -183,16 +205,29 @@ module Vibe
         nil
       end
 
-      # Step 3: AI semantic analysis using Haiku
+      # Step 3: AI semantic analysis using configured provider
       def ai_semantic_analysis(input, context)
         prompt = build_triage_prompt(input, context)
 
-        response = @llm_client.call(
-          model: @triage_model,
-          prompt: prompt,
-          max_tokens: 300,
-          temperature: 0.3 # Low temperature for consistent results
-        )
+        # Use new provider interface if available, otherwise fall back to old llm_client
+        response = if @llm_provider
+                    @llm_provider.call(
+                      model: @triage_model,
+                      prompt: prompt,
+                      max_tokens: 300,
+                      temperature: 0.3
+                    )
+                  elsif @llm_client
+                    # Backward compatibility
+                    @llm_client.call(
+                      model: @triage_model,
+                      prompt: prompt,
+                      max_tokens: 300,
+                      temperature: 0.3
+                    )
+                  else
+                    raise "No LLM client or provider configured"
+                  end
 
         parse_ai_response(response)
       end
@@ -569,6 +604,48 @@ module Vibe
       # Execute block with timeout
       def call_with_timeout(&block)
         Timeout.timeout(@timeout, &block)
+      end
+
+      # Create LLM provider from configuration
+      #
+      # @return [LLMProvider::Base] Provider instance
+      def create_provider_from_config
+        # Try to detect from OpenCode config first
+        opencode_provider = LLMProvider::Factory.detect_opencode_provider
+
+        if opencode_provider
+          # Use provider specified in OpenCode config
+          LLMProvider::Factory.create(provider: opencode_provider)
+        else
+          # Auto-detect from environment variables
+          # Prefer Anthropic for AI routing, fallback to OpenAI
+          LLMProvider::Factory.create_from_env('anthropic')
+        end
+      rescue ArgumentError => e
+        # If no provider available, create an unconfigured AnthropicProvider
+        # This allows the system to initialize but AI triage will be disabled
+        require_relative '../llm_provider/anthropic'
+        LLMProvider::AnthropicProvider.new(
+          api_key: nil,
+          base_url: 'https://api.anthropic.com'
+        )
+      end
+
+      # Detect which triage model to use based on provider
+      #
+      # @return [String] Model identifier
+      def detect_triage_model
+        env_model = ENV.fetch('VIBE_TRIAGE_MODEL', nil)
+        return env_model if env_model
+
+        # Auto-detect based on provider
+        if @llm_provider&.provider_name == 'OpenAI'
+          # Use GPT-4o-mini for OpenAI (fast and cost-effective)
+          'gpt-4o-mini'
+        else
+          # Default to Claude Haiku for Anthropic
+          'claude-haiku-4-5-20251001'
+        end
       end
 
       # Log error (placeholder - can be extended)
