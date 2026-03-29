@@ -2,6 +2,9 @@
 
 require 'yaml'
 require_relative 'semantic_matcher'
+require_relative 'llm_client'                         # NEW
+require_relative 'cache_manager'                      # NEW
+require_relative 'skill_router/ai_triage_layer'       # NEW
 require_relative 'skill_router/explicit_layer'
 require_relative 'skill_router/scenario_layer'
 require_relative 'skill_router/semantic_layer'
@@ -33,13 +36,39 @@ module Vibe
       @registry = load_registry
       @preferences = load_preferences
 
+      # Initialize routing statistics
+      @stats = {
+        total_routes: 0,
+        layer_distribution: {
+          layer_0_ai: 0,
+          layer_1_explicit: 0,
+          layer_2_scenario: 0,
+          layer_3_semantic: 0,
+          layer_4_fuzzy: 0,
+          no_match: 0
+        }
+      }
+
       @explicit_layer  = ExplicitLayer.new(@routing_config)
       @scenario_layer  = ScenarioLayer.new(@routing_config, @preferences)
       @semantic_layer  = SemanticLayer.new(@registry, @preferences)
       @fuzzy_layer     = FuzzyLayer.new(@registry, @preferences)
+
+      # NEW: Initialize AI Triage infrastructure
+      @cache = Vibe::CacheManager.new(
+        cache_dir: File.join(@project_root, '.vibe', 'cache'),
+        memory_cache_max_size: 500
+      )
+      @llm_client = Vibe::LLMClient.new
+      @ai_triage_layer = Vibe::SkillRouter::AITriageLayer.new(
+        @registry,
+        @preferences,
+        cache: @cache,
+        llm_client: @llm_client
+      )
     end
 
-    # Enhanced routing with four layers
+    # Enhanced routing with FIVE layers (Layer 0 added)
     # @param user_input [String] User's request
     # @param context [Hash] Additional context:
     #   - current_task: current active task
@@ -49,24 +78,45 @@ module Vibe
     # @return [Hash] Routing result with skill info and confidence
     def route(user_input, context = {})
       input_normalized = normalize_input(user_input)
+      @stats[:total_routes] += 1
+
+      # Layer 0: AI-Powered Semantic Triage (NEW)
+      ai_result = @ai_triage_layer.route(input_normalized, context)
+      if ai_result && ai_result[:matched]
+        record_layer_usage(:layer_0_ai)
+        return enrich_result(ai_result, context)
+      end
 
       # Layer 1: Check for explicit override
       override = @explicit_layer.check_explicit_override(input_normalized)
-      return enrich_result(override, context) if override
+      if override
+        record_layer_usage(:layer_1_explicit)
+        return enrich_result(override, context)
+      end
 
       # Layer 2: Match scenarios from routing config
       scenario = @scenario_layer.match_scenario(input_normalized, context)
-      return enrich_result(scenario, context) if scenario
+      if scenario
+        record_layer_usage(:layer_2_scenario)
+        return enrich_result(scenario, context)
+      end
 
       # Layer 3: Enhanced semantic matching
       semantic = @semantic_layer.enhanced_semantic_match(input_normalized, context)
-      return enrich_result(semantic, context) if semantic
+      if semantic
+        record_layer_usage(:layer_3_semantic)
+        return enrich_result(semantic, context)
+      end
 
       # Layer 4: Fuzzy fallback + user preferences
       fallback = @fuzzy_layer.fuzzy_fallback_match(input_normalized, context)
-      return enrich_result(fallback, context) if fallback
+      if fallback
+        record_layer_usage(:layer_4_fuzzy)
+        return enrich_result(fallback, context)
+      end
 
       # No match found - provide helpful suggestions
+      @stats[:layer_distribution][:no_match] += 1
       {
         matched: false,
         skill: nil,
@@ -156,6 +206,44 @@ module Vibe
       end
 
       skill_scores.sort_by { |_, v| -v[:score] }.first(5).to_h
+    end
+
+    # NEW: Get comprehensive router statistics
+    # @return [Hash] Statistics about routing performance and distribution
+    def stats
+      {
+        ai_triage: @ai_triage_layer.stats,
+        cache: @cache.stats,
+        llm_client: @llm_client.stats,
+        routing: {
+          total_routes: @stats[:total_routes],
+          layer_distribution: @stats[:layer_distribution]
+        }
+      }
+    end
+
+    # NEW: Reset AI triage circuit breaker (for testing/recovery)
+    def reset_circuit_breaker
+      @ai_triage_layer.reset_circuit_breaker
+    end
+
+    # NEW: Enable/disable AI triage dynamically
+    def enable_ai_triage
+      @ai_triage_layer.enable if @ai_triage_layer.respond_to?(:enable)
+    end
+
+    def disable_ai_triage
+      @ai_triage_layer.disable if @ai_triage_layer.respond_to?(:disable)
+    end
+
+    # NEW: Clear AI triage cache
+    def clear_ai_cache
+      @cache.clear
+    end
+
+    # NEW: Check if AI triage is enabled
+    def ai_triage_enabled?
+      @ai_triage_layer.enabled?
     end
 
     private
@@ -291,6 +379,13 @@ module Vibe
       end
 
       suggestions.uniq.first(3)
+    end
+
+    private
+
+    # NEW: Record which layer handled a request
+    def record_layer_usage(layer)
+      @stats[:layer_distribution][layer] += 1 if @stats[:layer_distribution][layer]
     end
   end
 end
