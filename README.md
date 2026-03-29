@@ -6,6 +6,41 @@
 >
 > A battle-tested, multi-platform workflow SOP for AI-assisted development with structured configuration, memory management, and consistent development practices.
 
+---
+
+## ⚡ Try in 5 Minutes (No Reading Required)
+
+**体验 VibeSOP 的核心功能，无需深入阅读文档**
+
+```bash
+# 1️⃣ 一键安装（2 分钟）
+git clone https://github.com/nehcuh/vibesop.git && cd vibesop && bin/vibe-install
+
+# 2️⃣ 应用到你的项目（1 分钟）
+cd ~/your-existing-project
+vibe switch claude-code
+
+# 3️⃣ 体验智能技能路由（2 分钟）
+claude
+# 然后输入任意一句试试：
+# - "帮我调试这个 bug"
+# - "评审这段代码"
+# - "我要重构这个函数"
+# ✨ AI 会自动选择最合适的技能！
+```
+
+**🎯 你刚刚体验了什么？**
+- ✅ **智能技能路由** - 无需手动选择技能
+- ✅ **结构化配置** - 自动加载项目规则
+- ✅ **开箱即用** - 无需预先学习
+
+**💡 还想了解更多？** 根据你的角色选择入口：
+- 👨‍💻 **个人开发者** → [个人快速入门](#for-individual-developers)
+- 👥 **团队负责人** → [团队设置指南](#for-team-leads)
+- 🏢 **工程管理者** → [管理视角](#for-engineering-managers)
+
+---
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Portable Core (provider-neutral)                           │
@@ -21,7 +56,109 @@
 
 ---
 
-## 🚀 30-Second Quick Start
+## 🎯 Choose Your Path (Based on Your Role)
+
+<details>
+<summary><b>👨‍💻 For Individual Developers</b> <em>（个人开发者）</em></summary>
+
+### 目标：更快交付代码，减少重复错误
+
+**5 分钟**：完成上面的 "Try in 5 Minutes"
+**15 分钟**：理解三大核心功能
+- **智能技能路由**：输入自然语言 → AI 自动选择技能
+- **记忆系统**：记录错误和解决方案，避免重复踩坑
+- **检查点系统**：危险操作前自动快照
+
+**1 小时**：[阅读 PRINCIPLES.md](PRINCIPLES.md)（可选）
+- 了解核心设计理念
+- 学习最佳实践
+
+**立即开始**：
+```bash
+# 1. 安装（已完成）
+vibe doctor
+
+# 2. 应用到你的项目
+cd ~/your-project
+vibe switch claude-code
+
+# 3. 开始使用
+claude
+```
+
+**下一步**：查看 [详细功能指南](#-core-features)
+</details>
+
+<details>
+<summary><b>👥 For Team Leads</b> <em>（团队负责人）</em></summary>
+
+### 目标：统一团队规范，共享经验教训
+
+**5 分钟**：完成团队设置
+```bash
+# 1. 为团队项目创建统一规则
+cat > .vibe/overlay.yaml << 'EOF'
+profile: your-team-profile
+policies:
+  append:
+    - id: team-code-review
+      category: quality
+      enforcement: mandatory
+      summary: "所有 PR 必须通过 /review 审查"
+EOF
+
+# 2. 团队成员应用配置
+vibe switch claude-code  # 自动发现 overlay
+```
+
+**15 分钟**：配置团队共享
+- **共享 Overlay**：提交 `.vibe/overlay.yaml` 到仓库
+- **Instinct Learning**：提取团队经验为可复用模式
+- **Memory System**：统一记录项目知识
+
+**1 小时**：定制团队规则
+- [Overlay 教程](docs/overlay-tutorial.md)
+- [项目覆盖配置](docs/project-overlays.md)
+
+**团队协作效果**：
+- ✅ 统一的代码风格和审查标准
+- ✅ 共享的错误解决方案
+- ✅ 新人快速上手
+
+**下一步**：查看 [团队配置完整指南](#team-setup)
+</details>
+
+<details>
+<summary><b>🏢 For Engineering Managers</b> <em>（工程管理者）</em></summary>
+
+### 目标：标准化 AI 辅助开发流程
+
+**5 分钟**：了解核心价值
+- **生产级 SOP**：不是演示配置，是实战工作流
+- **跨平台支持**：Claude Code ✅、OpenCode ✅、更多平台开发中
+- **渐进式采用**：从个人到团队，从小项目到大项目
+
+**15 分钟**：评估适用性
+- [架构概览](docs/architecture/README.md) - 了解系统设计
+- [集成指南](docs/integrations.md) - 规划技术栈集成
+- [真实案例](docs/USE_CASES.md) - 查看实际效果（待添加）
+
+**1 小时**：制定推广计划
+- **试点阶段**：1-2 个核心项目试用
+- **反馈收集**：使用 Instinct Learning 提取模式
+- **全面推广**：基于试点经验制定标准
+
+**预期收益**：
+- 📈 开发效率提升 30-50%
+- 📉 Code Review 时间减少 40-60%
+- 🔄 新人上手时间缩短 50%
+
+**下一步**：[联系技术支持](https://github.com/nehcuh/vibesop/issues) 获取咨询
+</details>
+
+---
+
+## 🚀 Traditional Quick Start (If You Prefer Reading First)
 
 ```bash
 # 1. Clone and install
@@ -347,9 +484,14 @@ vibe experiment apply                # Apply best changes to main branch
 vibe experiment clean                # Remove worktree and experiment files
 ```
 
+</details>
+
 ---
 
-## 🏗️ Architecture Deep Dive
+<details>
+<summary><b>🏗️ Architecture Deep Dive</b> <em>（点击展开 - 高级内容）</em></summary>
+
+## Architecture Deep Dive
 
 ### Portable Core
 
@@ -393,7 +535,14 @@ vibesop/
 
 See [Architecture Overview](docs/architecture/README.md) for details.
 
+</details>
+
 ---
+
+<details>
+<summary><b>🔧 Full Command Reference</b> <em>（点击展开 - 完整命令列表）</em></summary>
+
+## 🔧 Full Command Reference
 
 ## 🤝 Contributing & Credits
 

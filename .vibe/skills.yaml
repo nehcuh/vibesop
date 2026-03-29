@@ -181,6 +181,10 @@ adapted_skills:
     mode: suggest
     adapted_at: '2026-03-29T00:45:05+0800'
     adapted_by: user_choice
+  autonomous-experiment:
+    mode: suggest
+    adapted_at: '2026-03-29T18:53:09+0800'
+    adapted_by: user_choice
 skipped_skills: []
 installed_packs: {}
-last_checked: '2026-03-29T00:45:05+0800'
+last_checked: '2026-03-29T18:53:09+0800'
