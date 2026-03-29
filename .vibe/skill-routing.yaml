@@ -60,10 +60,12 @@ routing_rules:
     conflict_resolution: prefer_gstack_for_pre_landing
     keywords:
       - "审查"
+      - "评审"
       - "review"
       - "检查代码"
       - "CR"
       - "代码审查"
+      - "评审代码"
 
   # ==========================================================================
   # 产品思考场景

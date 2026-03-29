@@ -231,7 +231,7 @@ module Vibe
 
       {
         adapted: doc['adapted_skills']&.map do |id, info|
-          { id: id, **(info.is_a?(Hash) ? info : {}) }
+          { id: id, **(info.is_a?(Hash) ? info.transform_keys(&:to_sym) : {}) }
         end || [],
         skipped: doc['skipped_skills'] || []
       }

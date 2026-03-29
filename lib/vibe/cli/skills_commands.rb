@@ -53,7 +53,7 @@ module Vibe
         return
       end
 
-      changes = manager.detector.check_skill_changes
+      changes = manager.check_skill_changes
 
       if changes[:new_skills].empty? && changes[:new_packs].empty?
         puts "\n✓ No new skills found."
