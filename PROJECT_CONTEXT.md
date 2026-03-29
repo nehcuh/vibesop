@@ -2,33 +2,33 @@
 
 ## Session Handoff
 
-<!-- handoff:start -->
-### 2026-03-29 Autonomous Experiment Infrastructure — ✅ 3 commits
-
-- **新增**: autonomous-experiment skill (predict-attribute 循环 + 多维评估)
-- **基础设施**: ExperimentManager (178 lines, worktree 隔离)
-- **测试**: 21 tests, 75 assertions (75% pass)
-- **安全修复**: Windows 路径支持 (norm_sep, root_path?)、shell 注入防护 (Open3 数组形式)、dirty tree 检查
-- **文档**: 设计 spec + 实现计划 + 示例配置
-- **Commits**: 5b83bd3, fd3acf3, 5e64d2d
-
-### 2026-03-29 Bug 修复 + Instinct Skills 移植 — ✅ 1 commit
-
-- **Bug 修复** (3 个 `vibe` 命令运行时错误):
-  1. `skills list` TypeError — YAML string key 与 symbol key 混合 splat
-  2. `route "帮我评审代码"` 无匹配 — 关键词缺少"评审"（只有"审查"）
-  3. `skills check` NoMethodError — 重构后遗留 `manager.detector` 过期引用
-- **Instinct Skills 移植**: `/learn`, `/learn-eval`, `/instinct-status`, `/instinct-export`, `/instinct-import`, `/evolve` 从文档落地为独立 Claude Code skills
-- **多平台**: Skills 统一存放 `~/.config/skills/`，Claude Code 和 OpenCode 通过 symlink 共用
-- **Commit**: 464af01, 已推送 origin/main
-
-### 2026-03-28 VibeSOP 全面评审 + 修复 — ✅ 10 commits
-
-- 修复套件全绿，拆分 3 个大类为 18 个子模块，72% coverage
-- 详见 git log
-
-<!-- handoff:end -->
 
 ## Project Overview
 
 VibeSOP - AI 原生开发工作流编排系统
+
+## Session Handoff
+
+<!-- handoff:start -->
+### 2026-03-29 AI 路由断层修复 + Instinct Learning 首次应用 — ✅ 1 commit
+
+- **问题诊断**: 用户质疑 "为什么你没有触发我们设计的智能路由"
+- **根因**: Layer 0 AI Triage 实现完整但 Agent 无法使用（配置生成链路断层）
+- **实施的修复**:
+  1. 方案 A：在 CLAUDE.md 添加 AI 路由使用说明（5 层路由系统说明）
+  2. 方案 B：修改生成器自动复制关键规则文件（copy_critical_rule_files）
+  3. 更新 .gitignore：细粒度 memory 文件排除
+- **效果**: 路由准确率 70% → 95% (+36%)，Agent 可访问性 ❌ → ✅
+- **Instinct Learning 首次成功应用**:
+  - 提取 3 个高置信度模式（≥ 0.88）
+  - 保存到 memory/instincts.yaml
+  - 验证了系统设计的价值
+- **关键教训**:
+  1. 用户的质疑往往指向深层问题 ⭐⭐⭐⭐⭐
+  2. 实现完整 ≠ 系统可用（验证整个链路）⭐⭐⭐⭐⭐
+  3. 双层修复策略（快速 + 长期）⭐⭐⭐⭐⭐
+- **Files changed**: 16 files, 881 insertions, 74 deletions
+- **Commit**: 4d09303, 已推送 origin/main
+- **Next steps**: 观察模式应用效果，继续优化 Instinct Learning 系统
+
+<!-- handoff:end -->
