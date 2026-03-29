@@ -161,14 +161,6 @@ routing_hints:
       suggest: builtin/systematic-debugging
       message: "建议先找根因再修复"
 
-    - keywords: ["实验", "优化", "迭代", "autonomous", "experiment", "循环优化"]
-      suggest: builtin/autonomous-experiment
-      message: "建议使用自主实验循环进行优化"
-
-    - keywords: ["新功能", "新想法", "feature", "要不要做"]
-      suggest: gstack/office-hours
-      message: "新想法建议先用 /office-hours 重新框定问题"
-
     - keywords: ["复杂", "很多文件", "麻烦"]
       suggest: builtin/planning-with-files
       message: "复杂任务建议先制定详细计划"
@@ -176,6 +168,10 @@ routing_hints:
     - keywords: ["实验", "优化", "迭代", "autonomous", "experiment", "循环优化", "自主实验"]
       suggest: builtin/autonomous-experiment
       message: "建议使用自主实验循环进行优化"
+
+    - keywords: ["新功能", "新想法", "feature", "要不要做"]
+      suggest: gstack/office-hours
+      message: "新想法建议先用 /office-hours 重新框定问题"
 
 external_pack_template:
   namespace_examples:

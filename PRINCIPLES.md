@@ -1,7 +1,7 @@
-# Vibe 项目核心原则 (Core Principles)
+# VibeSOP 核心原则 (Core Principles)
 
-**版本**: 1.0  
-**最后更新**: 2026-03-12  
+**版本**: 2.0  
+**最后更新**: 2026-03-29  
 **状态**: 必须遵守 (Mandatory)
 
 > **任何开发工作开始前，必须阅读并理解本文档。**  
@@ -11,32 +11,55 @@
 
 ## 🎯 项目愿景 (Vision)
 
-### 核心宣言
+### 一句话定义
 
-**"A battle-tested workflow foundation for Claude Code and OpenCode — providing structured configuration, memory management, and consistent development practices."**
+**VibeSOP 是一套 AI 辅助开发的标准工作流（SOP）——个人用它积累知识、加速开发，团队用它统一规范、沉淀经验。**
 
-**不是教程，不是玩具配置，而是一个真正用于生产的、经过实战检验的工作流基础框架。**
+### 双场景价值
 
-### 愿景的三层内涵
+| 场景 | 核心价值 | 关键能力 |
+|------|---------|---------|
+| **个人开发者** | 知识沉淀 + 快速开发 | Instinct learning、memory system、skill routing |
+| **团队协作** | 统一配置 + 经验共享 | Overlay system、SSOT、skill registry、experience export/import |
 
-#### 1. 解决核心痛点
-- Claude Code 开箱即用但缺乏结构 → **每次会话都从零开始**
-- AI 助手无法记住过去的教训 → **重复犯同样的错误**
-- 缺乏系统化的最佳实践 → **每个人都要重新摸索**
+### 我们不是什么
 
-#### 2. 建立结构化工作流
-```
-Layer 0: rules/     (始终加载) - 核心行为规则
-Layer 1: docs/      (按需加载) - 参考资料
-Layer 2: memory/    (热数据)   - 工作进度和上下文
-```
+- **不是** AI 工具本身——VibeSOP 是工作流层，运行在 AI 工具之上
+- **不是** 配置模板集——VibeSOP 是可执行的框架，有 skill routing、memory、learning
+- **不是** 只服务于 Claude Code——Portable Core + Target Adapter 架构确保跨平台
 
-#### 3. 实现跨平台可移植性
+### 三个核心痛点（我们解决什么）
+
+1. **每次会话从零开始** → 结构化配置 + 分层加载，AI 不再失忆
+2. **重复犯同样的错误** → Memory + Instinct 系统，让教训只犯一次
+3. **每个人都要重新摸索** → Skill 生态 + 智能路由，最佳实践开箱即用
+
+### 架构支撑
+
 ```
 core/     → 平台无关的语义层（能力层级、技能注册表、安全策略）
 targets/  → 平台适配器（Claude Code、OpenCode、Cursor 等）
 bin/vibe  → 生成器，将可移植规范物化为平台特定配置
 ```
+
+```
+Layer 0: rules/     (始终加载) - 核心行为规则
+Layer 1: docs/      (按需加载) - 参考资料
+Layer 2: memory/    (热数据)   - 工作进度和上下文
+Layer 3: instincts/ (跨项目)  - 个人/团队积累的可复用模式
+```
+
+### 整合过滤器（Integration Filter）
+
+**每个外部理念整合前，必须通过以下检验：**
+
+| 检验项 | 问题 | 通过标准 |
+|--------|------|---------|
+| 个人知识沉淀 | 它帮助个人积累可复用的知识和经验吗？ | 至少服务一个场景 |
+| 团队经验共享 | 它帮助团队统一规范或共享经验吗？ | 或者显著提升效率 |
+| 开发效率提升 | 它让 AI 辅助开发更快、更准、更稳吗？ | 有可衡量的改进 |
+| 与架构一致 | 它符合 Portable Core + Target Adapter 模式吗？ | 不引入平台锁定 |
+| 非缝合判断 | 它是有机整合，还是机械照搬？ | 能用 VibeSOP 自己的语言重述 |
 
 ---
 
@@ -317,15 +340,10 @@ bin/vibe  → 生成器，将可移植规范物化为平台特定配置
 | 版本 | 日期 | 变更 | 作者 |
 |------|------|------|------|
 | 1.0 | 2026-03-12 | 初始版本 | @huchen |
+| 2.0 | 2026-03-29 | 明确项目愿景定位，新增双场景价值、整合过滤器、"我们不是什么" | @huchen |
 
 ---
 
 **记住：这些原则不是建议，是要求。**
 
-**任何偏离这些原则的开发都需要充分的理由和团队讨论。**
-
-**我们的目标是：构建一个真正生产就绪、经过实战检验的工作流基础框架。**
-
----
-
-*"Not a tutorial. Not a toy config. A production workflow that actually ships."*
+**任何偏离这些原则的开发都必须通过整合过滤器检验。**

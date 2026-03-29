@@ -37,11 +37,7 @@ module Vibe
       files.each do |file_path|
         next unless File.exist?(file_path)
 
-        relative_path = if file_path.start_with?('/')
-                          file_path
-                        else
-                          File.expand_path(file_path)
-                        end
+        relative_path = File.expand_path(file_path)
         snapshot_path = File.join(snapshot_dir, File.basename(file_path))
         FileUtils.cp(relative_path, snapshot_path)
 

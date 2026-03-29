@@ -1,0 +1,30 @@
+# Example overlay config for autonomous-experiment skill
+# Place in project root as experiment.yaml, or pass path via: vibe experiment start <path>
+
+domain: prompt-optimization
+
+objective:
+  description: "Optimize system prompt for code review quality"
+  evaluator:
+    type: agent_judge
+    rubric:
+      - id: correctness
+        weight: 0.4
+        description: "Does the review catch real bugs?"
+      - id: clarity
+        weight: 0.3
+        description: "Is feedback clear and actionable?"
+      - id: conciseness
+        weight: 0.3
+        description: "Is the review focused without noise?"
+
+scope:
+  modifiable:
+    - "skills/code-review/SKILL.md"
+  readonly:
+    - "test/**"
+    - "lib/**"
+
+constraints:
+  max_iterations: 10
+  stale_threshold: 3

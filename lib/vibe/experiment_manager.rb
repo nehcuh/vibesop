@@ -2,45 +2,24 @@
 
 require 'yaml'
 require 'fileutils'
-require 'securerandom'
-require 'time'
 require 'shellwords'
+require 'time'
+require 'open3'
 
 module Vibe
   class ExperimentManager
     class ExperimentError < StandardError; end
     class ExperimentNotFoundError < ExperimentError; end
 
-    attr_reader :config_path, :results_path, :beliefs_path, :worktree_path, :tag
+    attr_reader :config_path, :results_path, :beliefs_path, :worktree_path, :tag, :config
 
     def initialize(config_path)
       @config_path = config_path
-      @config = load_config
+      @config = parse_config
       @results_path = File.join(File.dirname(config_path), '.experiment', 'results.tsv')
       @beliefs_path = File.join(File.dirname(config_path), '.experiment', 'beliefs.md')
       @worktree_path = File.join(File.dirname(config_path), '.experiment', 'worktree')
       @tag = derive_tag
-    end
-
-    def config
-      @config
-    end
-
-    def load_config
-      raise ExperimentNotFoundError, "Config not found: #{@config_path}" unless File.exist?(@config_path)
-
-      parsed = YAML.safe_load(File.read(@config_path))
-      unless parsed.is_a?(Hash) && parsed['domain']
-        raise ExperimentError,
-              "experiment.yaml must have 'domain' key with 'objective' + 'scope' + 'evaluator' + 'constraints' fields"
-      end
-
-      parsed
-    end
-
-    def derive_tag
-      domain = @config['domain'].to_s.downcase.gsub(/[^a-z0-9]+/, '-')
-      "#{domain}-#{Time.now.strftime('%Y%m%d%H%M%S')}"
     end
 
     def start
@@ -52,10 +31,8 @@ module Vibe
 
       File.write(@beliefs_path, generate_initial_beliefs)
 
-      FileUtils.mkdir_p(@worktree_path)
-
       worktree_branch = "experiment/#{@tag}"
-      out, status = Open3.capture2e("git worktree add #{@worktree_path} -b #{worktree_branch} 2>&1")
+      out, status = Open3.capture2e('git', 'worktree', 'add', @worktree_path, '-b', worktree_branch)
       unless status.success?
         FileUtils.rm_rf(@worktree_path)
         raise ExperimentError, "Failed to create worktree: #{out}"
@@ -68,7 +45,7 @@ module Vibe
       compound = calculate_compound(scores)
       row = [sha] + rubric_ids.map { |id| format('%.1f', scores[id].to_f) } +
             [format('%.1f', compound), status, description]
-      File.open(@results_path, 'a') { |f| f.puts(row.join("\t") + "\n") }
+      File.open(@results_path, 'a') { |f| f.puts(row.join("\t")) }
     end
 
     def update_beliefs(content)
@@ -82,15 +59,13 @@ module Vibe
     def current_best
       return nil unless File.exist?(@results_path)
 
-      lines = File.readlines(@results_path).drop(1).reject(&:strip.empty?)
+      lines = File.readlines(@results_path).drop(1).reject { |l| l.strip.empty? }
       return nil if lines.empty?
 
       best_line = lines.max_by do |l|
         parts = l.strip.split("\t")
         parts[-3].to_f
       end
-
-      return nil unless best_line
 
       parts = best_line.strip.split("\t")
       { commit: parts[0], score: parts[-3].to_f }
@@ -99,7 +74,7 @@ module Vibe
     def count_iterations
       return 0 unless File.exist?(@results_path)
 
-      File.readlines(@results_path).drop(1).reject(&:strip.empty?).size
+      File.readlines(@results_path).drop(1).reject { |l| l.strip.empty? }.size
     end
 
     def finish
@@ -121,9 +96,14 @@ module Vibe
     end
 
     def clean
-      FileUtils.rm_rf(@worktree_path) if Dir.exist?(@worktree_path)
-      FileUtils.rm_f(@results_path)
-      FileUtils.rm_f(@beliefs_path)
+      if Dir.exist?(@worktree_path)
+        unless system('git', 'worktree', 'remove', '--force', @worktree_path)
+          raise ExperimentError, "Failed to remove worktree at #{@worktree_path}. Remove manually: git worktree remove --force #{@worktree_path}"
+        end
+      end
+      if @tag
+        system('git', 'branch', '-D', "experiment/#{@tag}")
+      end
       FileUtils.rm_rf(File.dirname(@results_path))
     end
 
@@ -146,7 +126,22 @@ module Vibe
 
     private
 
-    require 'open3'
+    def parse_config
+      raise ExperimentNotFoundError, "Config not found: #{@config_path}" unless File.exist?(@config_path)
+
+      parsed = YAML.safe_load(File.read(@config_path))
+      unless parsed.is_a?(Hash) && parsed['domain'] && parsed['objective']
+        raise ExperimentError,
+              "experiment.yaml must have 'domain' and 'objective' keys"
+      end
+
+      parsed
+    end
+
+    def derive_tag
+      domain = @config['domain'].to_s.downcase.gsub(/[^a-z0-9]+/, '-')
+      "#{domain}-#{Time.now.strftime('%Y%m%d%H%M%S')}"
+    end
 
     def generate_initial_beliefs
       <<~BELIEFS

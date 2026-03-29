@@ -7,6 +7,7 @@ require 'optparse'
 require 'time'
 require 'digest'
 require 'yaml'
+require 'open3'
 require_relative '../lib/vibe/errors'
 require_relative '../lib/vibe/utils'
 require_relative '../lib/vibe/version'
@@ -27,9 +28,9 @@ require_relative '../lib/vibe/cli/security_commands'
 require_relative '../lib/vibe/cli/skill_craft_commands'
 require_relative '../lib/vibe/cli/memory_commands'
 require_relative '../lib/vibe/memory_autoload'
-require_relative '../lib/vibe/experiment_manager'
-
+require_relative '../lib/vibe/skill_manager'
 require_relative '../lib/vibe/skill_router_commands'
+require_relative '../lib/vibe/experiment_manager'
 
 # Main CLI class for the vibe command-line tool.
 class VibeCLI
@@ -80,11 +81,10 @@ class VibeCLI
       'toolchain' => :run_toolchain_command,
       'scan' => :run_scan_command,
       'skill-craft' => :run_skill_craft_command,
-      'experiment' => :run_experiment,
-
       'tools' => :run_tools_command,
       'memory' => :run_memory_command,
-      'route' => :cmd_route
+      'route' => :cmd_route,
+      'experiment' => :run_experiment
     }.freeze
   end
 
@@ -548,6 +548,7 @@ class VibeCLI
         vibe scan <subcommand> [args]
         vibe skill-craft [analyze|generate|triggers|status]
         vibe tools <enable|disable|refresh|status>
+        vibe experiment <start|results|apply|clean> [config_path]
 
       Commands:
         init        Install global configuration for a platform (e.g., ~/.claude, ~/.config/opencode)
@@ -568,6 +569,7 @@ class VibeCLI
         scan        Security scanning and TDD audit (text, file, tdd, ctx)
         skill-craft Personal skill generation from session history
         tools       Modern CLI tools management (enable, disable, refresh, status)
+        experiment  Autonomous experiment loop (start, results, apply, clean)
 
       Typical workflow:
         1. vibe init --platform claude-code       # Install global config to ~/.claude
@@ -866,47 +868,7 @@ class VibeCLI
              suggest_only: suggest_only, dry_run: dry_run)
   end
 
-  def run_experiment(argv)
-    subcommand = argv.shift
-
-    when %w[help --help -h].include?(subcommand)
-      puts "Usage: vibe experiment <start|results|apply|clean>"
-      puts "  start    Start an experiment loop"
-      puts "  results  View experiment results"
-      puts "  apply   Apply best changes to main branch"
-      puts "  clean   Remove worktree and experiment files"
-      exit
-    end
-
-    case subcommand
-    when 'start'
-      run_experiment_start(remaining)
-    when 'results'
-      run_experiment_results(remaining)
-    when 'apply'
-      run_experiment_apply(remaining)
-    when 'clean'
-      run_experiment_clean(remaining)
-    else
-      raise Vibe::ValidationError, "Unknown experiment subcommand: #{subcommand}"
-    end
-  end
-
-  def run_experiment_start(argv)
-    config_path = argv.shift || '.vibe/experiment.yaml'
-    config_path = File.expand_path(config_path || '.vibe/experiment.yaml') if argv.empty?
-      config_path = File.join(Dir.pwd, '.vibe', 'experiment.yaml')
-    end
-    manager = Vibe::ExperimentManager.new(config_path)
-    info = manager.start
-    puts "Experiment started: #{info[:tag]}"
-    puts "  Branch: #{info[:branch]}"
-    puts "  Results: #{manager.results_path}"
-    puts "  Beliefs: #{manager.beliefs_path}"
-    puts "\nAgent should now read experiment.yaml and begin the loop."
-  end
-
-end
+  def run_tools_command(argv)
     subcommand = argv.first
 
     case subcommand
@@ -1025,6 +987,99 @@ end
 
   def normalize_target(value, strict: true)
     super(value, strict: strict)
+  end
+
+  def run_experiment(argv)
+    subcommand = argv.shift
+    remaining = argv
+
+    if %w[help --help -h].include?(subcommand)
+      puts <<~TEXT
+        Usage: vibe experiment <start|results|apply|clean> [config_path]
+
+        Subcommands:
+          start    Start an experiment loop (default config: .vibe/experiment.yaml)
+          results  View experiment results and best iteration
+          apply    Apply best changes to main branch
+          clean    Remove worktree and experiment files
+
+        Options:
+          config_path  Path to experiment.yaml (default: .vibe/experiment.yaml)
+      TEXT
+      exit
+    end
+
+    case subcommand
+    when 'start'
+      config_path = File.expand_path(remaining.shift || '.vibe/experiment.yaml')
+      manager = Vibe::ExperimentManager.new(config_path)
+      info = manager.start
+      puts "Experiment started: #{info[:tag]}"
+      puts "  Branch: #{info[:branch]}"
+      puts "  Results: #{manager.results_path}"
+      puts "  Beliefs: #{manager.beliefs_path}"
+      puts "\nAgent should now read experiment.yaml and begin the loop."
+    when 'results'
+      config_path = File.expand_path(remaining.shift || '.vibe/experiment.yaml')
+      manager = Vibe::ExperimentManager.new(config_path)
+      best = manager.current_best
+      total = manager.count_iterations
+      if best
+        puts "Best: commit=#{best[:commit]} score=#{best[:score]}"
+        puts "Total iterations: #{total}"
+      else
+        puts "No iterations completed yet"
+      end
+    when 'apply'
+      config_path = File.expand_path(remaining.shift || '.vibe/experiment.yaml')
+      manager = Vibe::ExperimentManager.new(config_path)
+      best = manager.current_best
+      unless best
+        puts "No successful iteration found"
+        return
+      end
+
+      # Safety: check working tree is clean
+      dirty = `git status --porcelain`.strip
+      unless dirty.empty?
+        raise Vibe::ValidationError,
+              "Working tree has uncommitted changes. Stash or commit before applying experiment results."
+      end
+
+      # Remember current branch to restore on failure
+      original_branch = `git branch --show-current`.strip
+
+      # Switch to main first so dry-run and real merge share the same context
+      checkout_out, checkout_status = Open3.capture2e('git', 'checkout', 'main')
+      unless checkout_status.success?
+        raise Vibe::ValidationError, "Cannot checkout main:\n#{checkout_out}"
+      end
+
+      # Dry-run merge on main
+      dry_out, dry_status = Open3.capture2e('git', 'merge', '--no-commit', '--no-ff', best[:commit])
+      if File.exist?('.git/MERGE_HEAD')
+        system('git', 'merge', '--abort')
+      end
+      unless dry_status.success?
+        system('git', 'checkout', original_branch) unless original_branch.empty?
+        raise Vibe::ValidationError, "Merge would conflict on main:\n#{dry_out}"
+      end
+
+      puts "Applying commit #{best[:commit]} (score: #{best[:score]}) to main branch..."
+      merge_out, merge_status = Open3.capture2e('git', 'merge', best[:commit], '--no-edit')
+      unless merge_status.success?
+        warn "Merge failed:\n#{merge_out}"
+        raise Vibe::ValidationError, "Merge failed. Resolve conflicts manually or run 'vibe experiment clean'."
+      end
+      puts "Applied successfully"
+    when 'clean'
+      config_path = File.expand_path(remaining.shift || '.vibe/experiment.yaml')
+      manager = Vibe::ExperimentManager.new(config_path)
+      manager.clean
+      puts "Experiment files cleaned up"
+    else
+      raise Vibe::ValidationError, "Unknown experiment subcommand: #{subcommand}"
+    end
   end
 end
 if __FILE__ == $PROGRAM_NAME
