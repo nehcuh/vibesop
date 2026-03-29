@@ -339,6 +339,12 @@ vibe cascade run <config.yaml>       # Run parallel pipeline
 
 # Security & Quality
 vibe scan file <file>                # Security scan
+
+# Autonomous Experiment
+vibe experiment start <config>       # Start experiment loop
+vibe experiment results              # View results and best iteration
+vibe experiment apply                # Apply best changes to main branch
+vibe experiment clean                # Remove worktree and experiment files
 ```
 
 ---

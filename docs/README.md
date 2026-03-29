@@ -63,6 +63,7 @@
 - [systematic-debugging](../skills/systematic-debugging/SKILL.md) - 系统调试
 - [planning-with-files](../skills/planning-with-files/SKILL.md) - 文件规划
 - [experience-evolution](../skills/experience-evolution/SKILL.md) - 经验进化
+- [autonomous-experiment](../skills/autonomous-experiment/SKILL.md) - 自主实验循环
 
 ## 示例配置
 
@@ -108,6 +109,6 @@ bin/vibe init              # 初始化项目
 
 ## 维护
 
-- **最后更新**: 2026-03-07
+- **最后更新**: 2026-03-29
 - **维护者**: [@nehcuh](https://github.com/nehcuh)
 - **许可证**: MIT
