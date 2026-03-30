@@ -435,3 +435,21 @@ cat config/platforms.yaml
 - **Commit**: 4d09303 "fix(ai-routing): resolve AI Triage layer configuration gap"
 - **Next steps**: 观察模式应用效果，继续优化 Instinct Learning 系统
 
+
+---
+
+**本次会话追加** (2026-03-30 下午):
+- **文档完善**:
+  - docs/api-reference-skill-routing.md: 完整 API 文档
+  - docs/architecture-diagrams.md: Mermaid 架构图
+  - docs/usage-examples.md: 实用代码示例
+  - README 中英文版本更新文档链接
+- **Phase 6 安全测试**:
+  - test/unit/test_parry_scanner.rb: 9 用例，37 断言
+  - 覆盖 prompt injection, system leak, data extraction, command injection
+- **新增 Commits**:
+  - 50e1947: docs(api): API reference, diagrams, examples
+  - e54877d: docs(readme): add API documentation links  
+  - ff10cc9: docs(session): update S14
+  - 74c936d: test(security): add Parry scanner tests
+- **最终测试结果**: 1573 runs (+9), 4100 assertions (+37), 0 failures
