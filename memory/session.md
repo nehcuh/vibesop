@@ -352,7 +352,7 @@ cat config/platforms.yaml
 2. 更新 `memory/session.md`
 3. 导出高置信度模式供团队使用
 
-### S14 (2026-03-30) [多候选技能选择 + 偏好学习系统]
+### S14 (2026-03-30) [多候选技能选择 + 偏好学习系统 + CLI 集成 + 文档完善]
 - **继续任务**: 完成意外中断的智能路由优化功能
 - **实现的核心功能**:
   1. CandidateSelector: 多候选技能决策逻辑
@@ -367,16 +367,35 @@ cat config/platforms.yaml
   3. ParallelExecutor: 并行执行与结果聚合
      - 5 种聚合策略：consensus, majority, first_success, all, merged
      - 超时处理和错误恢复
+- **CLI 集成**:
+  - display_user_choice: 显示多个候选技能
+  - display_parallel_result: 显示并行执行结果
+  - route-validate: 配置验证命令
+  - route-select: 手动选择技能命令
+- **文档完善**:
+  - docs/api-reference-skill-routing.md: 完整 API 文档
+  - docs/architecture-diagrams.md: Mermaid 架构图
+  - docs/usage-examples.md: 实用代码示例
+  - README 链接更新
 - **配置文件**: core/policies/skill-selection.yaml（跨平台复用）
 - **修复的问题**:
   - skill_router.rb 语法错误（重复代码块）
   - preference_analyzer 键类型不匹配（字符串 vs 符号）
   - preference_learner 加载历史后的键类型问题
   - 测试中的时间跨度要求处理
-- **CLI 集成**:
-  - display_user_choice: 显示多个候选技能
-  - display_parallel_result: 显示并行执行结果
-  - route-validate: 配置验证命令
+- **测试结果**: 1564 runs, 4063 assertions, 0 failures, 0 errors, 10 skips
+- **Coverage**: 71.02% line, 51.38% branch
+- **Commits**:
+  - 88d3002: feat(skill-router): multi-candidate selection
+  - ad2c2db: feat(cli): integrate routing display
+  - c9a2a90: feat(cli): add validate/select commands
+  - 3c189fb: feat(core): platform paths + preference manager
+  - 252dcb5: docs(memory): overview + ecosystem research
+  - 074eea2: docs(session): update S14
+  - 50e1947: docs(api): API reference, diagrams, examples
+  - e54877d: docs(readme): add API documentation links
+- **Next steps**: 观察模式应用效果，继续优化 Instinct Learning 系统
+- **Recorded**: yes - 多候选技能选择系统 + CLI 集成 + 文档完善
   - route-select: 手动选择技能命令
 - **测试结果**: 1564 runs, 4063 assertions, 0 failures, 0 errors, 10 skips
 - **Coverage**: 71.95% line, 51.0% branch
