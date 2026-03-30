@@ -150,11 +150,64 @@ instincts:
       - "P017: Tier B - Updated target_renderers.rb generator"
       - "Verification: All tests passed"
 
+  # =================================================================
+  # Pattern: Ruby Dual-Mode Module Methods
+  # =================================================================
+  - id: "instinct-006-ruby-dual-mode-methods"
+    pattern: "Use extend self instead of module_function for dual-mode module methods"
+    description: |
+      When creating utility modules that need both:
+      - Instance method usage: include Utils; deep_merge(a, b)
+      - Module method usage: Utils.deep_merge(a, b)
+
+      DON'T use module_function - it makes original methods private
+      DO use extend self - keeps methods public in both contexts
+
+      Also note: With extend self, reference top-level constants with :: prefix
+      Example: ::YAML.load_file, ::JSON.parse (not YAML, JSON)
+    confidence: 0.90
+    source_sessions: ["2026-03-30-refactor"]
+    usage_count: 1
+    success_rate: 1.0
+    last_used: "2026-03-30"
+    tags: ["ruby", "modules", "api-design", "refactoring"]
+    status: "active"
+    evidence:
+      - "P018: module_function made methods private after include"
+      - "P018: Fix: Changed to extend self in Utils module"
+      - "P018: Added ::YAML, ::JSON for top-level constant references"
+      - "Result: test_utils.rb 51 runs, 71 assertions, 0 failures"
+
+  # =================================================================
+  # Pattern: Bash Hook Non-Interactive Detection
+  # =================================================================
+  - id: "instinct-007-bash-hook-tty-detection"
+    pattern: "Always check for tty in interactive hooks to avoid non-interactive failures"
+    description: |
+      When writing bash hooks that may run in non-interactive contexts:
+      - Add at the top: if [ ! -t 0 ]; then exit 0; fi
+      - This prevents read commands from failing when stdin is not a tty
+      - Common in Claude Code hooks, CI/CD scripts, automation tools
+
+      Error symptom: "Failed with non-blocking status code: No stderr output"
+    confidence: 0.95
+    source_sessions: ["2026-03-30-hook-fix"]
+    usage_count: 1
+    success_rate: 1.0
+    last_used: "2026-03-30"
+    tags: ["bash", "hooks", "cli", "automation"]
+    status: "active"
+    evidence:
+      - "P019: pre-session-end.sh hook failed on every session end"
+      - "P019: Root cause: read -p failed with no stdin in Claude Code"
+      - "P019: Fix: Added [ ! -t 0 ] check at top of script"
+      - "Result: Clean session exits, no error messages"
+
 # Metadata
 metadata:
-  total_instincts: 5
-  high_confidence: 5
-  last_update: "2026-03-30T12:00:00Z"
+  total_instincts: 7
+  high_confidence: 7
+  last_update: "2026-03-30T16:00:00Z"
   active_patterns:
     - diagnosis
     - ai-routing
@@ -162,3 +215,6 @@ metadata:
     - system-design
     - architecture
     - workflow
+    - ruby
+    - bash
+    - hooks
