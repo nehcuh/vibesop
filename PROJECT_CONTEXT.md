@@ -3,28 +3,15 @@
 ## Session Handoff
 
 <!-- handoff:start -->
-### 2026-03-30 评审意见优化 + 提交到远程
+### 2026-03-30 Windows Git Bash 兼容性修复
 
-**本次会话主要成果**:
+**问题**: Claude Code 在 Windows 上内部使用 Git Bash 执行命令，但 `vibe-install.bat` 只创建 `vibe.bat`，bash 无法执行。
 
-#### 1. ADR 状态更新 ✅
-- **adr-001-renderer-refactor.md**: `Proposed` → `Implemented ✅ (2026-03-29)`
-- **adr-002-overlay-improvements.md**: `Proposed` → `Implemented ✅ (2026-03-29)`
-- **adr-003-template-system.md**: `Proposed` → `Implemented ✅ (2026-03-29)`
+**修复**: 更新 `bin/vibe-install.bat` 同时创建两个 wrapper：
+- `vibe.bat` - cmd.exe/PowerShell
+- `vibe` (无扩展名) - Git Bash，包含 Windows 路径转换 (C:\path -> /c/path)
 
-#### 2. AI 路由准确率基准测试框架 ✅
-- **文件**: `test/benchmark/ai_routing_accuracy_test.rb` (50 个测试用例)
-- **覆盖类别**: debugging, code_review, planning, testing, documentation, security, performance, refactoring, deployment, learning
-- **功能**: AI vs 算法路由对比、分类别分析、JSON 结果导出
-
-#### 3. 文档同步检查清单机制 ✅
-- **文件**: `docs/documentation-sync-checklist.md`
-- **包含**: 代码变更映射表、行数验证脚本、ADR 状态检查、自动化方案、CI/CD 集成模板
-
-#### 4. 改进记录更新 ✅
-- **IMPROVEMENTS_COMPLETED.md**: 添加第 8-9 节，记录本次优化
-
-**项目评分提升**: 7.9/10 → **8.5/10**
+**提交**: `ecba713` - fix(windows): add Git Bash wrapper for Claude Code compatibility
 
 ---
 
@@ -39,41 +26,14 @@
   - ✅ 代码优化: 727 行（vs 旧架构 1149 行，减少 37%）
   - ✅ 双平台支持: claude-code + opencode 完全实现
   - ✅ 成本透明: $0.11/月计算合理
-  - ⚠️ 文档滞后: 架构文档描述旧实现
-  - ⚠️ 准确率未验证: 95% 声明已实现但无基准测试
 
-### 2. 文档更新 ✅
-- **docs/architecture/current-architecture-analysis.md**:
-  - 添加醒目的"架构演进通知"
-  - 对比旧架构 vs 新架构（1149 行 → 727 行）
-  - 验证重构结果（减少 37% 代码，重复率 60% → <10%）
-- **docs/architecture/ai-powered-skill-routing.md**:
-  - 状态更新: 设计阶段 → ✅ 已完成实现
-  - 添加实现验证和性能指标
-
-### 3. AI 路由验证 ✅
-- **test/verify_ai_routing_implementation.rb**:
-  - 验证结果: 24 检查，21 通过 (87.5%)
-  - 所有核心文件存在且正确实现
-  - 环境检测和平台配置正常
-- **test/benchmark/ai_routing_benchmark.rb**:
-  - 性能基准测试框架
-  - 准确率对比、延迟分布、缓存有效性、成本估算
-
-### 4. 生成的报告 ✅
-- PROJECT_REVIEW_REPORT.md (12.6KB)
-- PROJECT_REVIEW_REPORT_UPDATED.md (14.2KB)
-- IMPROVEMENTS_COMPLETED.md (7.3KB)
-
-### 关键教训 (P021)
+### 2. 关键教训 (P021)
 1. **评估测试用例数量，而非测试文件数量** - 10 个文件包含 1609 个测试
 2. **检查实际代码，而非仅依赖文档** - 文档可能滞后
 3. **文档滞后于代码演进** - 需要建立同步机制
-4. **配置驱动架构优于硬编码** - 新增平台成本减少 83%
 
 ### 待观察项
 - 运行性能基准测试验证 95% 准确率声明
 - 观察环境检测在生产环境的表现
-- 用户对"用户选择模式"的反馈
 
 <!-- handoff:end -->
