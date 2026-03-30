@@ -30,6 +30,91 @@ module Vibe
       0
     end
 
+    # Validate skill routing configuration
+    def cmd_route_validate(argv)
+      puts '🔍 验证技能路由配置...'
+      puts
+
+      errors = []
+      warnings = []
+
+      # Check selection policy file
+      policy_file = File.join(Dir.pwd, 'core/policies/skill-selection.yaml')
+      unless File.exist?(policy_file)
+        errors << '缺少配置文件: core/policies/skill-selection.yaml'
+      else
+        require 'yaml'
+        policy = YAML.load_file(policy_file)
+
+        # Validate structure
+        unless policy['candidate_selection']
+          errors << '缺少 candidate_selection 配置'
+        end
+
+        unless policy['preference_learning']
+          errors << '缺少 preference_learning 配置'
+        end
+
+        unless policy['parallel_execution']
+          errors << '缺少 parallel_execution 配置'
+        end
+
+        # Validate values
+        if policy['candidate_selection']
+          threshold = policy['candidate_selection']['auto_select_threshold']
+          unless threshold.is_a?(Numeric) && threshold >= 0 && threshold <= 1
+            errors << "auto_select_threshold 必须在 0-1 之间，当前: #{threshold}"
+          end
+        end
+
+        # Check weights sum to ~1
+        if policy['preference_learning'] && policy['preference_learning']['dimensions']
+          weights = policy['preference_learning']['dimensions'].values.map { |d| d['weight'] }.compact
+          sum = weights.sum
+          unless (sum - 1.0).abs < 0.1
+            warnings << "维度权重总和约为 #{sum.round(2)}，建议为 1.0"
+          end
+        end
+      end
+
+      # Check router components
+      begin
+        require_relative 'skill_router/candidate_selector'
+        require_relative 'skill_router/parallel_executor'
+        require_relative 'preference_dimension_analyzer'
+        puts '✅ 所有路由组件可用'
+      rescue LoadError => e
+        errors << "缺少路由组件: #{e.message}"
+      end
+
+      # Display results
+      if errors.empty? && warnings.empty?
+        puts
+        puts '🎉 配置验证通过！'
+        puts
+        puts '配置摘要:'
+        puts "  • 最大候选数: #{policy['candidate_selection']['max_candidates']}"
+        puts "  • 自动选择阈值: #{policy['candidate_selection']['auto_select_threshold']}"
+        puts "  • 偏好学习: #{policy['preference_learning']['enabled'] ? '启用' : '禁用'}"
+        puts "  • 并行执行: #{policy['parallel_execution']['enabled'] ? '启用' : '禁用'}"
+        return 0
+      end
+
+      if warnings.any?
+        puts '⚠️  警告:'
+        warnings.each { |w| puts "   • #{w}" }
+        puts
+      end
+
+      if errors.any?
+        puts '❌ 错误:'
+        errors.each { |e| puts "   • #{e}" }
+        return 1
+      end
+
+      0
+    end
+
     # Select a specific skill (for use after multi-candidate routing)
     def cmd_route_select(argv)
       if argv.empty?

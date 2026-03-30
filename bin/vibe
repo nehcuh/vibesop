@@ -84,6 +84,8 @@ class VibeCLI
       'tools' => :run_tools_command,
       'memory' => :run_memory_command,
       'route' => :cmd_route,
+      'route-select' => :cmd_route_select,
+      'route-validate' => :cmd_route_validate,
       'experiment' => :run_experiment
     }.freeze
   end
