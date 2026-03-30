@@ -470,3 +470,18 @@ cat config/platforms.yaml
 - Parry 安全扫描: hooks/parry-scan.rb + 测试
 - TDD Guard: lib/vibe/tdd_enforcer.rb
 - Worktree Manager: lib/vibe/worktree_manager.rb
+
+---
+
+### S15 (2026-03-30) [代码重构 + 安全扫描补全]
+- **Phase 1-5 检查**: 确认所有 Phase 1-6 均已完成
+- **代码重复修复**: 删除 deep_merge 重复实现，统一使用 Vibe::Utils.deep_merge
+- **配置加载重构**: 创建 ConfigLoader 模块，统一 YAML 加载逻辑
+  - 支持原子性写入、错误处理、默认值
+  - 更新 preference_manager, preference_learner, preference_dimension_analyzer, skill_router_commands
+- **Parry Scanner 补全**: 添加 XSS (12 模式) 和 path_traversal (9 模式) 检测
+- **Utils 模块改进**: 使用 extend self 支持双模式调用 (实例/模块)
+- **架构审查**: 分析大文件，确认当前结构合理
+- **测试状态**: 关键测试全部通过
+- **Commit**: e165f82 "refactor: code deduplication + config loading + parry scanner"
+- **Recorded**: yes - 代码重构 + 安全扫描补全
