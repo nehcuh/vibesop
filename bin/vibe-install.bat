@@ -61,10 +61,10 @@ if not exist "%INSTALL_DIR%" (
     echo Created install directory: %INSTALL_DIR%
 )
 
-REM Create wrapper batch script
+REM Create wrapper batch script for cmd.exe/PowerShell
 set "WRAPPER_PATH=%INSTALL_DIR%\vibe.bat"
 echo @echo off > "%WRAPPER_PATH%"
-echo REM Vibe wrapper for Windows >> "%WRAPPER_PATH%"
+echo REM Vibe wrapper for Windows (cmd.exe/PowerShell) >> "%WRAPPER_PATH%"
 echo setlocal >> "%WRAPPER_PATH%"
 echo. >> "%WRAPPER_PATH%"
 echo set "CONFIG_FILE=%%USERPROFILE%%\.vibe\config.json" >> "%WRAPPER_PATH%"
@@ -87,7 +87,36 @@ echo     exit /b 1 >> "%WRAPPER_PATH%"
 echo ) >> "%WRAPPER_PATH%"
 echo. >> "%WRAPPER_PATH%"
 echo ruby "%%REPO_ROOT%%\bin\vibe" %%* >> "%WRAPPER_PATH%"
-echo Installed vibe wrapper to %WRAPPER_PATH%
+echo Installed cmd.exe wrapper to %WRAPPER_PATH%
+
+REM Create wrapper script for Git Bash/MSYS2 (for Claude Code internal use)
+set "BASH_WRAPPER=%INSTALL_DIR%\vibe"
+echo #!/bin/bash> "%BASH_WRAPPER%"
+echo # Vibe wrapper for Git Bash on Windows>> "%BASH_WRAPPER%"
+echo.>> "%BASH_WRAPPER%"
+echo # Get config file path>> "%BASH_WRAPPER%"
+echo CONFIG_FILE="$USERPROFILE/.vibe/config.json">> "%BASH_WRAPPER%"
+echo.>> "%BASH_WRAPPER%"
+echo if [ ! -f "$CONFIG_FILE" ]; then>> "%BASH_WRAPPER%"
+echo     echo "Error: Vibe not properly installed. Run vibe-install.bat from the repository.">> "%BASH_WRAPPER%"
+echo     exit 1>> "%BASH_WRAPPER%"
+echo fi>> "%BASH_WRAPPER%"
+echo.>> "%BASH_WRAPPER%"
+echo # Extract repo_root from JSON>> "%BASH_WRAPPER%"
+echo REPO_ROOT=$(grep -o '"repo_root"[[:space:]]*:[[:space:]]*"[^"]*"' "$CONFIG_FILE" ^| sed 's/.*"repo_root"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')>> "%BASH_WRAPPER%"
+echo.>> "%BASH_WRAPPER%"
+echo # Convert Windows path to Git Bash format>> "%BASH_WRAPPER%"
+echo # C:\path\to\repo -^> /c/path/to/repo>> "%BASH_WRAPPER%"
+echo REPO_ROOT=$(echo "$REPO_ROOT" ^| sed 's/\\/\//g' ^| sed 's/^C:/\/c/' ^| sed 's/^D:/\/d/' ^| sed 's/^E:/\/e/')>> "%BASH_WRAPPER%"
+echo.>> "%BASH_WRAPPER%"
+echo if [ ! -f "$REPO_ROOT/bin/vibe" ]; then>> "%BASH_WRAPPER%"
+echo     echo "Error: Vibe repository not found at $REPO_ROOT">> "%BASH_WRAPPER%"
+echo     exit 1>> "%BASH_WRAPPER%"
+echo fi>> "%BASH_WRAPPER%"
+echo.>> "%BASH_WRAPPER%"
+echo # Run the Ruby script with all arguments>> "%BASH_WRAPPER%"
+echo ruby "$REPO_ROOT/bin/vibe" "$@">> "%BASH_WRAPPER%"
+echo Created Git Bash wrapper at %BASH_WRAPPER%
 
 echo.
 echo ========================================
