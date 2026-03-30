@@ -373,12 +373,20 @@ cat config/platforms.yaml
   - preference_analyzer 键类型不匹配（字符串 vs 符号）
   - preference_learner 加载历史后的键类型问题
   - 测试中的时间跨度要求处理
+- **CLI 集成**:
+  - display_user_choice: 显示多个候选技能
+  - display_parallel_result: 显示并行执行结果
+  - route-validate: 配置验证命令
+  - route-select: 手动选择技能命令
 - **测试结果**: 1564 runs, 4063 assertions, 0 failures, 0 errors, 10 skips
-- **Coverage**: 71.97% line, 51.48% branch
-- **Files changed**: 10 files, 2893 insertions, 22 deletions
-- **Commit**: 88d3002 "feat(skill-router): implement multi-candidate selection with preference learning"
-- **Next steps**: 集成到 CLI 命令，验证端到端流程
-- **Recorded**: yes - 多候选技能选择系统完整实现
+- **Coverage**: 71.95% line, 51.0% branch
+- **Commits**:
+  - 88d3002: feat(skill-router): implement multi-candidate selection
+  - ad2c2db: feat(cli): integrate multi-candidate routing display
+  - c9a2a90: feat(cli): add route-validate and route-select commands
+  - 575beb5: docs(session): record S14
+- **Next steps**: 实际使用场景验证，收集用户反馈
+- **Recorded**: yes - 多候选技能选择系统 + CLI 集成完成
 
 ---
 
