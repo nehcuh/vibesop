@@ -21,6 +21,8 @@ module Vibe
         run_skills_check(argv)
       when 'list'
         run_skills_list(argv)
+      when 'use'
+        run_skills_use(argv)
       when 'adapt'
         run_skills_adapt(argv)
       when 'skip'
@@ -387,6 +389,7 @@ module Vibe
         Subcommands:
           check              Check for new skills and adapt them
           list               List all skills and their status
+          use <id>           Directly use a skill (bypass AI routing)
           adapt <id>         Adapt a specific skill
           skip <id>          Skip a skill (mark as not applicable)
           docs <id>          Show skill documentation
@@ -476,6 +479,103 @@ module Vibe
       options[:interactive] = true unless options[:auto]
 
       options
+    end
+
+    # vibe skills use <skill-id> - Directly use a skill
+    def run_skills_use(argv)
+      if argv.empty?
+        puts 'Usage: vibe skills use <skill-id>'
+        puts
+        puts 'Examples:'
+        puts '  vibe skills use riper-workflow'
+        puts '  vibe skills use gstack/office-hours'
+        puts '  vibe skills use superpowers/tdd'
+        puts
+        puts 'This command loads and displays a skill for direct use,'
+        puts 'bypassing the AI routing recommendation.'
+        return 1
+      end
+
+      skill_id = argv.first
+
+      # Determine skill file path
+      skill_file = determine_skill_file(skill_id)
+
+      # Display skill information
+      puts "🎯 Loading skill: #{skill_id}"
+      puts "=" * 50
+      puts
+
+      if skill_file && File.exist?(skill_file)
+        # Read skill intent from file
+        intent = extract_skill_intent(skill_file)
+        puts "📋 #{intent || 'Development skill'}"
+        puts
+        puts "📄 Skill file: #{skill_file}"
+        puts
+        puts "=" * 50
+        puts
+        puts '💡 Next steps:'
+        puts "   1. Read the skill: read #{skill_file}"
+        puts '   2. Follow the steps defined in the skill'
+        puts '   3. Run any verification commands specified'
+      else
+        puts '⚠️  Skill file not found on disk.'
+        puts '   This may be an external skill or needs to be registered.'
+        puts
+        puts 'Try: vibe skills discover'
+      end
+
+      0
+    end
+
+    # Extract skill intent from SKILL.md file
+    def extract_skill_intent(skill_file)
+      return nil unless File.exist?(skill_file)
+
+      content = File.read(skill_file)
+
+      # Look for intent in frontmatter or first heading
+      if content =~ /^intent:\s*(.+)$/i
+        $1.strip
+      elsif content =~ /^#\s*(.+)$/m
+        $1.strip
+      else
+        nil
+      end
+    rescue StandardError
+      nil
+    end
+
+    # Determine the file path for a skill
+    def determine_skill_file(skill_id)
+      # Check builtin skills first
+      builtin_path = File.join(@repo_root, 'skills', skill_id, 'SKILL.md')
+      return builtin_path if File.exist?(builtin_path)
+
+      # Check project-local skills
+      project_path = File.join(Dir.pwd, 'skills', skill_id, 'SKILL.md')
+      return project_path if File.exist?(project_path)
+
+      # Check external skill packs
+      if skill_id.include?('/')
+        parts = skill_id.split('/')
+        pack = parts[0]
+        name = parts[1] || parts[0]
+
+        # Check common external skill locations
+        external_paths = [
+          File.expand_path("~/.config/skills/#{pack}/skills/#{name}/SKILL.md"),
+          File.expand_path("~/.config/skills/#{pack}/#{name}.md"),
+          File.expand_path("~/.claude/skills/#{pack}/skills/#{name}/SKILL.md")
+        ]
+
+        external_paths.each do |path|
+          return path if File.exist?(path)
+        end
+      end
+
+      nil
     end
 
     def time_ago(timestamp)

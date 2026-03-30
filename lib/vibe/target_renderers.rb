@@ -81,9 +81,10 @@ module Vibe
 
         ## 🚀 AI-Powered Skill Routing
 
-        **When uncertain which skill to use, leverage AI-powered routing:**
+        **⚠️ MANDATORY: ALWAYS call vibe route before starting ANY non-trivial task**
+        This is NOT optional — routing ensures the correct skill is loaded for the task.
 
-        ### MANDATORY Workflow (必须遵循)
+        ### MANDATORY Workflow (必须遵循 - 无条件执行)
 
         **Step 1**: 调用路由获取推荐
         \`\`\`bash

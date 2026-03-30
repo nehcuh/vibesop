@@ -51,6 +51,24 @@ module Vibe
         # Configuration from environment or defaults
         @enabled = ENV.fetch('VIBE_AI_TRIAGE_ENABLED', 'true') == 'true'
 
+        # 🔧 Smart environment detection
+        # When running inside Claude Code, we have two options:
+        # 1. Use the built-in fast model (Haiku) via Agent tool
+        # 2. Fall back to algorithm-based routing (Layer 1-4)
+        #
+        # Current implementation: Option 2 (fallback) to avoid API overhead
+        # User can override with VIBE_AI_TRIAGE_ENABLED=true in Claude Code settings
+        if running_in_claude_code?
+          # Check if user explicitly enabled AI triage in Claude Code
+          explicitly_enabled = ENV.key?('VIBE_AI_TRIAGE_ENABLED')
+
+          if !explicitly_enabled
+            @enabled = false
+            @disabled_reason = "Running inside Claude Code - using built-in reasoning. " \
+                               "Set VIBE_AI_TRIAGE_ENABLED=true in settings.json to enable external AI triage."
+          end
+        end
+
         # Auto-detect if we should disable AI triage based on provider availability
         if @enabled && !@llm_provider&.configured?
           @enabled = false
@@ -133,6 +151,40 @@ module Vibe
         @enabled
       end
 
+      # Detect if we're running inside Claude Code
+      #
+      # Checks for Claude Code environment variables:
+      # - CLAUDECODE=1
+      # - CLAUDE_CODE_ENTRYPOINT=cli
+      # - CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+      #
+      # @return [Boolean] true if running inside Claude Code
+      def running_in_claude_code?
+        ENV['CLAUDECODE'] == '1' ||
+          ENV['CLAUDE_CODE_ENTRYPOINT'] == 'cli' ||
+          ENV.key?('CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC')
+      end
+
+      # Detect if we're running inside OpenCode
+      #
+      # @return [Boolean] true if running inside OpenCode
+      def running_in_opencode?
+        ENV['OPENCODE'] == '1' || File.exist?('.vibe/opencode/config.json')
+      end
+
+      # Get the current runtime environment
+      #
+      # @return [Symbol] :claude_code, :opencode, or :standalone
+      def runtime_environment
+        if running_in_claude_code?
+          :claude_code
+        elsif running_in_opencode?
+          :opencode
+        else
+          :standalone
+        end
+      end
+
       # Enable AI triage
       def enable
         @enabled = true
@@ -155,6 +207,7 @@ module Vibe
         {
           enabled: @enabled,
           disabled_reason: @disabled_reason,
+          runtime_environment: runtime_environment,
           model: @triage_model,
           provider: is_local ? 'Local' : (provider_stats[:provider_name] || 'unknown'),
           provider_configured: provider_stats[:configured] || false,
@@ -267,14 +320,16 @@ module Vibe
 
           返回JSON格式（仅JSON，不要其他内容）：
           {
-            "skill": "技能ID",
+            "skill": "技能ID 或 null",
             "confidence": 0.0-1.0,
             "reasoning": "简短原因（1句话）"
           }
 
-          注意：
-          - confidence >= #{@confidence_threshold} 才推荐技能
-          - 如果没有合适的技能，confidence设为0
+          匹配规则：
+          - 优先选择与用户请求最相关的技能
+          - confidence >= #{@confidence_threshold} 时推荐最佳匹配
+          - 如果没有直接相关的技能，返回 {"skill": null, "confidence": 0}
+          - null 表示"没有明显匹配"，但用户仍可选择使用任何技能
         PROMPT
       end
 
@@ -299,16 +354,18 @@ module Vibe
             "intent": "调试|审查|重构|测试|文档|性能优化|安全审查|其他",
             "urgency": "紧急|正常|低优先级",
             "complexity": "简单|中等|复杂",
-            "skill": "技能ID",
+            "skill": "技能ID 或 null",
             "confidence": 0.0-1.0,
             "reasoning": "选择这个技能的原因（1-2句话）"
           }
           ```
 
-          ## 注意事项
+          ## 匹配规则
+          - 优先选择与用户请求最相关的技能
+          - confidence >= #{@confidence_threshold} 时推荐最佳匹配
+          - 如果没有明显匹配，skill 为 null，confidence 为 0
+          - null 只表示"没有明显匹配"，用户仍可选择使用任何技能
           - 只返回JSON，不要其他内容
-          - confidence >= #{@confidence_threshold} 才推荐技能
-          - 如果没有合适的技能，设confidence为0
         PROMPT
       end
 
@@ -361,7 +418,12 @@ module Vibe
           parsed = JSON.parse(json_str)
 
           # Validate required fields
-          return nil unless parsed['skill'] && parsed['confidence']
+          return nil unless parsed['confidence']
+
+          # Check for explicit null skill (AI determined request is irrelevant)
+          if parsed['skill'].nil? || parsed['skill'] == 'null'
+            return nil
+          end
 
           # Validate confidence threshold
           return nil unless parsed['confidence'].is_a?(Numeric) &&

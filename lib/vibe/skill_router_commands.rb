@@ -14,11 +14,13 @@ module Vibe
       if argv.empty?
         puts 'Usage: vibe route "<user request>"'
         puts '       vibe route --interactive'
+        puts '       vibe route --stats'
         puts
         puts 'Examples:'
         puts '  vibe route "帮我评审代码"'
         puts '  vibe route "这个 bug 很奇怪"'
         puts '  vibe route "准备发布新版本"'
+        puts '  vibe route --stats'
         return 1
       end
 
@@ -26,8 +28,74 @@ module Vibe
         return interactive_route
       end
 
+      if argv.first == '--stats'
+        return display_route_stats
+      end
+
       user_input = argv.join(' ')
       route_and_display(user_input)
+      0
+    end
+
+    # Display route statistics
+    def display_route_stats
+      router = Vibe::SkillRouter.new
+      stats = router.stats
+
+      puts '📊 Skill Routing Statistics'
+      puts '=' * 50
+      puts
+
+      # AI Triage Layer Stats
+      ai_stats = stats[:ai_triage]
+      puts '🤖 AI Triage Layer:'
+      puts "   Status: #{ai_stats[:enabled] ? '✅ Enabled' : '❌ Disabled'}"
+      if ai_stats[:disabled_reason]
+        puts "   Reason: #{ai_stats[:disabled_reason]}"
+      end
+      puts "   Environment: #{ai_stats[:runtime_environment] || :unknown}"
+      if ai_stats[:enabled]
+        puts "   Model: #{ai_stats[:model] || 'unknown'}"
+        puts "   Provider: #{ai_stats[:provider] || 'unknown'}"
+        puts "   Circuit: #{ai_stats[:circuit_state] == :open ? '🔴 Open' : '🟢 Closed'}"
+      end
+      puts
+
+      # Cache Stats
+      cache_stats = ai_stats[:cache_stats]
+      puts '💾 Cache Layer:'
+      puts "   Memory hits: #{cache_stats[:memory_hits] || 0}"
+      puts "   File hits: #{cache_stats[:file_hits] || 0}"
+      puts "   Misses: #{cache_stats[:misses] || 0}"
+      puts "   Hit rate: #{cache_stats[:hit_rate] || 0}%"
+      puts
+
+      # Routing Stats
+      routing_stats = stats[:routing]
+      puts '🔀 Overall Routing:'
+      puts "   Total routes: #{routing_stats[:total_routes] || 0}"
+      puts "   Layer distribution:"
+      routing_stats[:layer_distribution]&.each do |layer, count|
+        next if count.zero?
+        emoji = case layer
+                when :layer_0_ai then '🤖'
+                when :layer_1_explicit then '🎯'
+                when :layer_2_scenario then '📋'
+                when :layer_3_semantic then '🔍'
+                when :layer_4_fuzzy then '🔀'
+                when :no_match then '❓'
+                else '•'
+                end
+        puts "     #{emoji} #{layer}: #{count}"
+      end
+      puts
+
+      # Environment info
+      puts '🖥️  Runtime Environment:'
+      puts "   Claude Code: #{ENV['CLAUDECODE'] == '1' ? '✅ Yes' : '❌ No'}"
+      puts "   OpenCode: #{File.exist?('.vibe/opencode/config.json') ? '✅ Yes' : '❌ No'}"
+      puts "   Local Model: #{ai_stats[:is_local_model] ? '✅ Yes' : '❌ No'}"
+
       0
     end
 
@@ -325,19 +393,53 @@ module Vibe
     end
 
     def display_no_match(result)
-      puts '🤷 未找到匹配的技能'
+      puts '🤷 未找到直接匹配的技能'
       puts "   原因: #{result[:reason]}"
+      puts
+      puts '💡 你仍然可以选择使用某个技能：'
 
-      if result[:suggestions]&.any?
-        puts
-        puts '💡 你可能想试试:'
-        result[:suggestions].each { |s| puts "   • #{s}" }
-      end
+      # Show top skills that could still be useful
+      show_alternative_skills(result)
 
       puts
+      puts '💭 用户选择模式：'
+      puts '   技能路由提供 AI 建议，但你始终有最终决定权。'
+      puts '   即使 AI 认为不匹配，你仍然可以使用任何技能。'
+      puts
       puts '可用命令:'
-      puts '   vibe skills list    - 列出所有技能'
-      puts '   vibe route-context  - 基于项目上下文推荐'
+      puts '   vibe skills list           - 列出所有可用技能'
+      puts '   vibe skills use <skill-id> - 直接使用指定技能'
+      puts '   vibe route-context         - 基于项目上下文推荐'
+    end
+
+    # Show alternative skills even for non-matches
+    def show_alternative_skills(result)
+      # Get a few generally useful skills to suggest
+      fallback_skills = [
+        { id: 'riper-workflow', name: 'RIPER 工作流', desc: '通用 5 阶段开发流程' },
+        { id: 'systematic-debugging', name: '系统化调试', desc: '问题排查方法论' },
+        { id: 'planning-with-files', name: '文件化规划', desc: '复杂任务规划' },
+        { id: 'verification-before-completion', name: '完成前验证', desc: '质量检查' }
+      ]
+
+      puts
+      puts '   🔧 通用技能（可能仍然有用）：'
+      fallback_skills.each do |s|
+        puts "      • #{s[:id]} — #{s[:desc]}"
+      end
+
+      # Show external skill packs if available
+      if superpowers_installed?
+        puts
+        puts '   📦 外部技能包：'
+        puts '      • gstack/office-hours — 产品头脑风暴'
+        puts '      • superpowers/brainstorm — 结构化思考'
+      end
+    end
+
+    # Check if Superpowers is installed
+    def superpowers_installed?
+      File.directory?(File.expand_path('~/.config/skills/superpowers'))
     end
 
     def skill_path(skill_name)

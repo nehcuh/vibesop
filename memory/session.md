@@ -485,3 +485,36 @@ cat config/platforms.yaml
 - **测试状态**: 关键测试全部通过
 - **Commit**: e165f82 "refactor: code deduplication + config loading + parry scanner"
 - **Recorded**: yes - 代码重构 + 安全扫描补全
+
+---
+
+### S16 (2026-03-30) [项目深入审查 + AI 路由优化 + 环境检测]
+- **用户请求**: "虽然我们声称完成了项目目标和设计，并同时支持 claude code 和 opencode，但是是否真的如此呢？帮我深入审查该项目"
+- **核心发现**:
+  1. ✅ Claude Code 和 OpenCode 配置生成确实完整
+  2. ❌ 自动路由不触发（CLAUDE.md 措辞问题："When uncertain" 是条件式）
+  3. ❌ AI 匹配一切（prompt 没有明确允许"无匹配"）
+  4. ❌ Claude Code 调用外部 API（没有环境检测）
+  5. ❌ 缺少用户选择模式
+- **实施的修复**:
+  1. **CLAUDE.md 措辞修复**: "When uncertain" → "MANDATORY: ALWAYS call vibe route"
+  2. **用户选择模式**: AI 建议，用户决定
+     - `vibe skills use <skill-id>` 命令
+     - 无匹配时显示通用技能供选择
+  3. **环境智能检测**:
+     - Claude Code 内部禁用外部 AI Triage（使用内置推理）
+     - OpenCode/CLI 启用外部 API
+     - 检测 `CLAUDECODE=1` 环境变量
+  4. **可观测性**: `vibe route --stats` 命令
+- **新增文件**:
+  - `hooks/pre-tool-use-auto-route.sh`: 自动路由 Hook
+  - `docs/architecture/ai-routing-retrospective.md`: 经验教训总结
+  - `docs/implementation-checklist.md`: 实施检查清单
+- **核心教训 (P020)**:
+  1. 需求分析不足 — 没有定义所有运行环境场景
+  2. 过度承诺 — README 声称的功能与实际实现不符
+  3. 边界条件滞后 — "无匹配"场景作为事后补充
+  4. 错误的心智模型 — AI 作为决策者而非建议者
+  5. 环境盲点 — 没有检查 Claude Code 已有内置 AI
+  6. 补丁式迭代 — 3+ 次修改同一区域而非重新设计
+- **Recorded**: yes - P020（AI 路由反复修改的根本原因分析）+ 两个反思文档
