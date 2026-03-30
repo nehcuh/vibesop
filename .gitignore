@@ -57,3 +57,9 @@ settings.json
 
 # Debug / temporary files
 debug_*.rb
+
+# Vibe development cache and temporary files
+/.vibe/cache/
+/.vibe/docs/
+/.vibe/test-copy/
+/PROJECT_CONTEXT.md.bak
