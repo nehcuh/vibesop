@@ -1,7 +1,19 @@
 # ADR-003: Template System Design
 
 ## Status
-Proposed
+Implemented ✅ (2026-03-29)
+
+## Implementation Results
+
+All proposals in this ADR have been **successfully implemented** via configuration-driven architecture:
+
+- ✅ Template methods in `DocRendering` module
+- ✅ Parameterized templates with variable substitution
+- ✅ Shared partials for common sections
+- ✅ External template files support (via YAML config)
+- ✅ Template composition and inheritance
+
+See `lib/vibe/config_driven_renderers.rb` and `lib/vibe/doc_rendering.rb` for implementation.
 
 ## Context
 

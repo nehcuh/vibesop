@@ -1,7 +1,19 @@
 # ADR-002: Overlay System Improvements
 
 ## Status
-Proposed
+Implemented ✅ (2026-03-29)
+
+## Implementation Results
+
+All proposals in this ADR have been **successfully implemented**:
+
+- ✅ Overlay validation and preview before application
+- ✅ Dry-run mode for safe testing
+- ✅ `--inspect` command for transparency
+- ✅ Validation at overlay load time
+- ✅ Detailed error messages with path context
+
+See `lib/vibe/overlay_support.rb` for implementation details.
 
 ## Context
 

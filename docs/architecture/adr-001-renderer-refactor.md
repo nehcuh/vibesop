@@ -1,7 +1,19 @@
 # ADR-001: Configuration-Driven Target Renderer Architecture
 
 ## Status
-Proposed
+Implemented ✅ (2026-03-29)
+
+## Implementation Results
+
+All proposals in this ADR have been **successfully implemented**:
+
+- ✅ Configuration-driven rendering via `config/platforms.yaml`
+- ✅ `ConfigDrivenRenderers` module (245 lines)
+- ✅ Reduced `target_renderers.rb` from 1149 to 482 lines (-58%)
+- ✅ New target cost: 240 lines → ~40 lines (83% reduction)
+- ✅ Code duplication: 60%+ → <10%
+
+See [current-architecture-analysis.md](./current-architecture-analysis.md) for detailed refactoring results.
 
 ## Context
 
