@@ -2,6 +2,7 @@
 
 require 'time'
 require_relative 'platform_paths'
+require_relative 'config_loader'
 
 module Vibe
   class PreferenceLearner
@@ -281,15 +282,10 @@ module Vibe
     #
     # @return [void]
     def load_history
-      if File.exist?(@preference_file)
-        require 'yaml'
-        prefs = YAML.load_file(@preference_file)
-        @selection_history = (prefs['selection_history'] || []).map do |h|
-          # Convert to symbol keys for consistency with build_selection_entry
-          h.transform_keys(&:to_s).transform_keys(&:to_sym)
-        end
-      else
-        @selection_history = []
+      prefs = ConfigLoader.load_yaml_silent(@preference_file, default: {})
+      @selection_history = (prefs['selection_history'] || []).map do |h|
+        # Convert to symbol keys for consistency with build_selection_entry
+        h.transform_keys(&:to_s).transform_keys(&:to_sym)
       end
     end
 
@@ -297,22 +293,15 @@ module Vibe
     #
     # @return [void]
     def save_history
-      require 'yaml'
-
       # Load existing preferences
-      prefs = if File.exist?(@preference_file)
-        YAML.load_file(@preference_file)
-      else
-        {}
-      end
+      prefs = ConfigLoader.load_yaml_silent(@preference_file, default: {})
 
       # Update selection history
       prefs['selection_history'] = @selection_history
       prefs['updated_at'] = Time.now.iso8601
 
       # Save
-      FileUtils.mkdir_p(File.dirname(@preference_file))
-      File.write(@preference_file, YAML.dump(prefs))
+      ConfigLoader.save_yaml(@preference_file, prefs, context: 'selection history')
     end
 
     # Trim history to max size

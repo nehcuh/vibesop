@@ -65,6 +65,35 @@ module ParryScanner
       /eval\s*\(/i,
       /exec\s*\(/i,
       /\\x[0-9a-f]{2}/i # hex escape sequences
+    ],
+
+    # XSS (Cross-Site Scripting) attempts
+    xss: [
+      /<script[^>]*>.*?<\/script>/im,
+      /<iframe[^>]*>.*?<\/iframe>/im,
+      /javascript:/i,
+      /onerror\s*=/i,
+      /onload\s*=/i,
+      /onclick\s*=/i,
+      /<img[^>]+src\s*=\s*["']?javascript:/im,
+      /<input[^>]+on\w+\s*=/im,
+      /fromCharCode/i,
+      /document\.cookie/i,
+      /alert\s*\(/i,
+      /<svg[^>]*>.*?<\/svg>/im
+    ],
+
+    # Path traversal attempts
+    path_traversal: [
+      /\.\.\/[\.\/]*/,           # ../ or ../../
+      /\.\.\\[\.\\]*/,           # ..\ or ..\\
+      /%2e%2e\//i,               # URL encoded ../
+      /%252e%252e\//i,           # Double URL encoded ../
+      /\/etc\/passwd/i,
+      /\/proc\//i,
+      /c:\\windows/i,
+      /\\\\[\\]*[a-z]/i,         # UNC path
+      /\.\.[%&]/i                # ../ with bypass variations
     ]
   }.freeze
 
@@ -83,7 +112,9 @@ module ParryScanner
     data_extraction: :critical,
     command_injection: :critical,
     filesystem_danger: :critical,
-    obfuscation: :high
+    obfuscation: :high,
+    xss: :high,
+    path_traversal: :critical
   }.freeze
 
   # Whitelist patterns (safe patterns that should be ignored)
@@ -178,6 +209,10 @@ module ParryScanner
     recommendations << 'Sanitize command input' if matches.any? { |m| m[:category] == :command_injection }
 
     recommendations << 'System prompts are protected' if matches.any? { |m| m[:category] == :system_leak }
+
+    recommendations << 'Sanitize HTML output and use CSP' if matches.any? { |m| m[:category] == :xss }
+
+    recommendations << 'Validate and sanitize file paths' if matches.any? { |m| m[:category] == :path_traversal }
 
     recommendations << 'Proceed with caution' if risk_level == :medium
     recommendations << 'Block this request' if risk_level == :critical

@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require 'yaml'
 require 'json'
 require 'securerandom'
 require 'digest'
 require_relative 'defaults'
 require_relative 'cache_manager'
+require_relative 'config_loader'
 require_relative 'llm_provider/factory'
 require_relative 'platform_paths'
 
@@ -352,17 +352,12 @@ module Vibe
     # @return [Hash] Preferences hash
     def load_preferences
       if File.exist?(@preference_file)
-        begin
-          YAML.load_file(@preference_file) || default_preferences
-        rescue StandardError => e
-          log_error("Failed to load preferences: #{e.message}")
-          default_preferences
-        end
+        ConfigLoader.load_yaml_silent(@preference_file, default: default_preferences)
       else
         # Create default preferences file
         default_preferences.tap do |prefs|
           ensure_directory_exists
-          File.write(@preference_file, YAML.dump(prefs))
+          ConfigLoader.save_yaml(@preference_file, prefs, context: 'preferences')
         end
       end
     end
@@ -376,7 +371,7 @@ module Vibe
       @preferences['updated_at'] = Time.now.iso8601
       @preferences['schema_version'] ||= '1.0'
 
-      File.write(@preference_file, YAML.dump(@preferences))
+      ConfigLoader.save_yaml(@preference_file, @preferences, context: 'preferences')
     end
 
     # Ensure preference directory exists

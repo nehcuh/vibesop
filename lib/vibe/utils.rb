@@ -2,6 +2,8 @@
 
 require 'tmpdir'
 require 'date'
+require 'json'
+require 'yaml'
 require_relative 'errors'
 
 module Vibe
@@ -10,7 +12,13 @@ module Vibe
   # Host requirements:
   #   @repo_root [String] — absolute path to the workflow repository root
   #                          (used by display_path)
+  #
+  # Usage patterns:
+  #   - include Vibe::Utils; deep_merge(a, b)  # as instance method
+  #   - Vibe::Utils.deep_merge(a, b)           # as module method
   module Utils
+    # extend self makes all methods available as both instance and module methods
+    extend self
     # Deep merge two nested data structures.
     #
     # DESIGN DECISION: LENIENT MODE (宽容模式)
@@ -141,11 +149,11 @@ module Vibe
     end
 
     def read_yaml_abs(path)
-      YAML.safe_load(File.read(path), aliases: true)
+      ::YAML.safe_load(File.read(path), aliases: true)
     end
 
     def read_json(path)
-      JSON.parse(File.read(path))
+      ::JSON.parse(File.read(path))
     end
 
     def read_json_if_exists(path)
@@ -156,7 +164,7 @@ module Vibe
 
     def write_json(path, content)
       FileUtils.mkdir_p(File.dirname(path))
-      File.write(path, "#{JSON.pretty_generate(content)}\n")
+      File.write(path, "#{::JSON.pretty_generate(content)}\n")
     end
 
     # --- Formatting helpers ---

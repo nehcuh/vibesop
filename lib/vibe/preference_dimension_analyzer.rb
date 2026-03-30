@@ -3,6 +3,7 @@
 require 'time'
 require_relative 'platform_paths'
 require_relative 'preference_learner'
+require_relative 'config_loader'
 
 module Vibe
   # Multi-Dimensional Preference Analyzer
@@ -91,15 +92,10 @@ module Vibe
     #
     # @return [void]
     def load_history
-      if File.exist?(@preference_file)
-        require 'yaml'
-        prefs = YAML.load_file(@preference_file)
-        @selection_history = (prefs['selection_history'] || []).map do |h|
-          # Convert to symbol keys for consistent access
-          h.transform_keys(&:to_s).transform_keys(&:to_sym)
-        end
-      else
-        @selection_history = []
+      prefs = ConfigLoader.load_yaml_silent(@preference_file, default: {})
+      @selection_history = (prefs['selection_history'] || []).map do |h|
+        # Convert to symbol keys for consistent access
+        h.transform_keys(&:to_s).transform_keys(&:to_sym)
       end
     end
 

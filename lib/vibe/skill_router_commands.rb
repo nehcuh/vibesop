@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'skill_router'
+require_relative 'config_loader'
 require_relative 'user_interaction'
 
 module Vibe
@@ -43,8 +44,7 @@ module Vibe
       unless File.exist?(policy_file)
         errors << '缺少配置文件: core/policies/skill-selection.yaml'
       else
-        require 'yaml'
-        policy = YAML.load_file(policy_file)
+        policy = ConfigLoader.load_yaml(policy_file, context: 'skill-selection policy')
 
         # Validate structure
         unless policy['candidate_selection']

@@ -2,6 +2,7 @@
 
 require_relative '../defaults'
 require_relative '../preference_dimension_analyzer'
+require_relative '../utils'
 
 module Vibe
   class SkillRouter
@@ -22,7 +23,7 @@ module Vibe
       # @param config [Hash] Selection configuration from skill-selection.yaml
       # @param preference_analyzer [PreferenceDimensionAnalyzer] Preference learning
       def initialize(config: {}, preference_analyzer: nil)
-        @config = deep_merge(defaults, config)
+        @config = Utils.deep_merge(defaults, config)
         @preference_analyzer = preference_analyzer || PreferenceDimensionAnalyzer.new
       end
 
@@ -287,20 +288,6 @@ module Vibe
         }
       end
 
-      # Deep merge two hashes
-      #
-      # @param base [Hash] Base hash
-      # @param override [Hash] Override hash
-      # @return [Hash] Merged hash
-      def deep_merge(base, override)
-        base.merge(override) do |key, old_val, new_val|
-          if old_val.is_a?(Hash) && new_val.is_a?(Hash)
-            deep_merge(old_val, new_val)
-          else
-            new_val
-          end
-        end
-      end
     end
   end
 end
