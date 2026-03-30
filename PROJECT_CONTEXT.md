@@ -3,6 +3,20 @@
 ## Session Handoff
 
 <!-- handoff:start -->
+### 2026-03-31 Windows Git Bash $HOME 环境变量修复
+
+**问题**: Git Bash wrapper 使用 `$USERPROFILE` 但 Git Bash 实际使用 `$HOME`
+
+**修复**: wrapper 优先检查 `$HOME`，回退到 `$USERPROFILE`
+
+**提交**:
+- `f47fbac` - fix(windows): use HOME instead of USERPROFILE
+- `87e7207` - feat(ai-routing): environment detection + user choice mode
+
+**待测试**: Windows 用户重新安装后验证 `vibe route` 命令
+
+---
+
 ### 2026-03-30 Windows Git Bash 兼容性修复
 
 **问题**: Claude Code 在 Windows 上内部使用 Git Bash 执行命令，但 `vibe-install.bat` 只创建 `vibe.bat`，bash 无法执行。
