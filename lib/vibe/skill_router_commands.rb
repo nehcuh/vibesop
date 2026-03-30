@@ -30,6 +30,26 @@ module Vibe
       0
     end
 
+    # Select a specific skill (for use after multi-candidate routing)
+    def cmd_route_select(argv)
+      if argv.empty?
+        puts 'Usage: vibe route-select <skill-id>'
+        puts
+        puts 'Select a skill from multiple candidates.'
+        return 1
+      end
+
+      skill_id = argv.first
+      puts
+      puts "✅ 已选择技能: #{skill_id}"
+      puts
+      puts '🚀 执行建议:'
+      puts "   1. 加载技能: read #{skill_path(skill_id)}"
+      puts "   2. 遵循技能中的步骤执行"
+      puts "   3. 完成后运行验证"
+      0
+    end
+
     # Analyze current directory and suggest skills
     def cmd_route_context
       router = SkillRouter.new
@@ -116,10 +136,78 @@ module Vibe
       puts "📥 输入: #{user_input}"
       puts '-' * 40
 
-      if result[:matched]
+      # Handle new multi-candidate decision types
+      if result[:requires_user_choice]
+        display_user_choice(result)
+      elsif result[:status] && result[:status] != :single
+        # Parallel execution result
+        display_parallel_result(result)
+      elsif result[:matched]
         display_match(result)
       else
         display_no_match(result)
+      end
+    end
+
+    def display_user_choice(result)
+      puts '🤔 多个技能匹配你的请求'
+      puts
+      puts result[:prompt]
+      puts
+      puts '提示: 使用技能ID执行，例如:'
+      result[:candidates].each_with_index do |c, i|
+        puts "   vibe route-select #{c[:skill]}"
+      end
+    end
+
+    def display_parallel_result(result)
+      status_emoji = case result[:status]
+                     when :consensus then '🎯'
+                     when :majority then '📊'
+                     when :merged then '🔀'
+                     when :all then '📋'
+                     else '✅'
+                     end
+
+      puts "#{status_emoji} 并行执行结果"
+      puts "   状态: #{result[:status]}"
+      puts "   参与者: #{result[:participants]}" if result[:participants]
+
+      if result[:message]
+        puts "   说明: #{result[:message]}"
+      end
+
+      if result[:consensus_rate]
+        puts "   一致性: #{(result[:consensus_rate] * 100).round(1)}%"
+      end
+
+      if result[:insights]&.any?
+        puts
+        puts '💡 综合洞察:'
+        result[:insights].each do |insight|
+          puts "   • #{insight}"
+        end
+      end
+
+      if result[:recommendations]&.any?
+        puts
+        puts '📌 建议:'
+        result[:recommendations].each_with_index do |rec, i|
+          puts "   #{i + 1}. #{rec}"
+        end
+      end
+
+      if result[:best_match]
+        puts
+        puts '🏆 最佳匹配:'
+        best = result[:best_match]
+        puts "   技能: #{best[:candidate][:skill]}"
+        puts "   评分: #{best[:score].round(2)}"
+      end
+
+      if result[:failed]&.positive?
+        puts
+        puts "⚠️  #{result[:failed]} 个执行失败"
       end
     end
 
