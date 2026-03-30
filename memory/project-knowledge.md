@@ -92,6 +92,40 @@
 - **解决**: Fix the test
 - **遇到次数**: 2
 
+### P018: Ruby module_function 使方法在 include 后变为私有
+- **场景**: 创建 Utils 模块，希望方法既可作为模块方法调用 (`Utils.deep_merge`)，也可混入类中 (`include Utils; deep_merge`)
+- **问题**: 使用 `module_function :deep_merge` 后，通过 `include` 使用时方法变为私有，导致 `NoMethodError: private method 'deep_merge' called`
+- **根因**: `module_function` 创建方法的副本作为模块方法，同时将原方法设为私有
+- **解决**: 使用 `extend self` 代替 `module_function`，使方法同时可用作实例方法和模块方法
+  ```ruby
+  module Utils
+    extend self  # 替代 module_function
+
+    def deep_merge(base, extra)
+      # ...
+    end
+  end
+  ```
+- **影响**: 同时支持两种调用模式
+  - `include Utils; deep_merge(a, b)` ✓
+  - `Utils.deep_merge(a, b)` ✓
+- **遇到次数**: 1
+- **Commit**: 本会话 e165f82
+
+### P019: Bash Hook 在非交互环境失败导致错误提示
+- **场景**: Claude Code 的 pre-session-end.sh hook 每次会话结束都报错 "Failed with non-blocking status code: No stderr output"
+- **问题**: Hook 使用 `read -p` 进行交互式提示，但 Claude Code 运行时没有 stdin/tty，导致 `read` 失败
+- **解决**: 在 hook 开头检测非交互模式，直接退出成功
+  ```bash
+  # Exit silently if not interactive (no tty)
+  if [ ! -t 0 ]; then
+    exit 0
+  fi
+  ```
+- **影响**: 消除每次会话结束的丑陋错误提示
+- **遇到次数**: 1（持续多次直到修复）
+- **Commit**: 即将提交
+
 
 ### P001: Windows 上 `which` 命令不存在
 - **场景**: Ruby 代码中使用 `system("which", "git")` 检测命令是否存在
