@@ -352,6 +352,36 @@ cat config/platforms.yaml
 2. 更新 `memory/session.md`
 3. 导出高置信度模式供团队使用
 
+### S14 (2026-03-30) [多候选技能选择 + 偏好学习系统]
+- **继续任务**: 完成意外中断的智能路由优化功能
+- **实现的核心功能**:
+  1. CandidateSelector: 多候选技能决策逻辑
+     - 置信度差距大 → 自动选择最高
+     - 置信度接近 → 提供用户选择
+     - 符合条件 → 并行执行多个技能
+  2. PreferenceDimensionAnalyzer: 4 维偏好分析
+     - 一致性（40%）：用户对类似任务的历史选择一致性
+     - 满意度（30%）：用户过去的满意度评分
+     - 上下文（20%）：文件类型、项目类型等
+     - 最近度（10%）：最近选择的权重衰减
+  3. ParallelExecutor: 并行执行与结果聚合
+     - 5 种聚合策略：consensus, majority, first_success, all, merged
+     - 超时处理和错误恢复
+- **配置文件**: core/policies/skill-selection.yaml（跨平台复用）
+- **修复的问题**:
+  - skill_router.rb 语法错误（重复代码块）
+  - preference_analyzer 键类型不匹配（字符串 vs 符号）
+  - preference_learner 加载历史后的键类型问题
+  - 测试中的时间跨度要求处理
+- **测试结果**: 1564 runs, 4063 assertions, 0 failures, 0 errors, 10 skips
+- **Coverage**: 71.97% line, 51.48% branch
+- **Files changed**: 10 files, 2893 insertions, 22 deletions
+- **Commit**: 88d3002 "feat(skill-router): implement multi-candidate selection with preference learning"
+- **Next steps**: 集成到 CLI 命令，验证端到端流程
+- **Recorded**: yes - 多候选技能选择系统完整实现
+
+---
+
 ### S13 (2026-03-29) [AI 路由断层修复 + Instinct Learning 首次应用]
 - **问题诊断**: 用户质疑 "为什么你没有触发我们设计的智能路由"，发现 Layer 0 AI Triage 实现完整但 Agent 无法使用
 - **根因**: 配置生成链路断层（config/platforms.yaml 缺少 doc_types、规则文件未复制、CLAUDE.md 缺少说明）
