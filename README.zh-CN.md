@@ -117,6 +117,10 @@ vibe --version   # 查看版本
 |------|------|
 | 项目定制 | [Project Overlays](docs/project-overlays.md), [Overlay 教程](docs/overlay-tutorial.md) |
 | 技能路由 | [技能路由](docs/claude/skills/routing.md), [任务路由](docs/task-routing.md) |
+| **🚀 AI 路由（新）** | [API 参考](docs/api-reference-skill-routing.md), [架构图](docs/architecture-diagrams.md), [使用示例](docs/usage-examples.md) |
+| 多候选选择 | [API 参考 → CandidateSelector](docs/api-reference-skill-routing.md#vibeskillroutercandidateselector) |
+| 偏好学习 | [API 参考 → PreferenceAnalyzer](docs/api-reference-skill-routing.md#vibepreferencedimensionanalyzer) |
+| 并行执行 | [API 参考 → ParallelExecutor](docs/api-reference-skill-routing.md#vibeskillrouterparallelexecutor) |
 | 添加新平台 | [目标适配器](targets/README.md) |
 | 集成外部工具 | [集成指南](docs/integrations.md) |
 | 故障排查 | [故障排查](docs/troubleshooting.md) |

@@ -290,7 +290,10 @@ vibe --version   # Show version
 |------|---------------|
 | Customize for your project | [Project Overlays](docs/project-overlays.md), [Overlay Tutorial](docs/overlay-tutorial.md) |
 | Understand skill routing | [Skill Routing](docs/claude/skills/routing.md), [Task Routing](docs/task-routing.md) |
-| **🚀 AI-Powered Routing (NEW)** | [AI Routing Architecture](docs/architecture/ai-powered-skill-routing.md), [Implementation Guide](docs/architecture/ai-routing-implementation-complete.md), [Deployment Checklist](docs/architecture/ai-routing-deployment-checklist.md) |
+| **🚀 AI-Powered Routing (NEW)** | [API Reference](docs/api-reference-skill-routing.md), [Architecture Diagrams](docs/architecture-diagrams.md), [Usage Examples](docs/usage-examples.md) |
+| Multi-candidate selection | [API Reference → CandidateSelector](docs/api-reference-skill-routing.md#vibeskillroutercandidateselector) |
+| Preference learning | [API Reference → PreferenceAnalyzer](docs/api-reference-skill-routing.md#vibepreferencedimensionanalyzer) |
+| Parallel execution | [API Reference → ParallelExecutor](docs/api-reference-skill-routing.md#vibeskillrouterparallelexecutor) |
 | Add a new platform | [Target Adapters](targets/README.md) |
 | Integrate external tools | [Integrations](docs/integrations.md) |
 | Troubleshoot issues | [Troubleshooting](docs/troubleshooting.md) |
