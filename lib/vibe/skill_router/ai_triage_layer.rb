@@ -52,13 +52,21 @@ module Vibe
         @enabled = ENV.fetch('VIBE_AI_TRIAGE_ENABLED', 'true') == 'true'
 
         # 🔧 Smart environment detection
-        # When running inside Claude Code, we have two options:
-        # 1. Use the built-in fast model (Haiku) via Agent tool
-        # 2. Fall back to algorithm-based routing (Layer 1-4)
+        # Priority: Project configuration > Environment variables
         #
-        # Current implementation: Option 2 (fallback) to avoid API overhead
-        # User can override with VIBE_AI_TRIAGE_ENABLED=true in Claude Code settings
-        if running_in_claude_code?
+        # 1. OpenCode project (has opencode.json) → AI triage enabled
+        # 2. Claude Code (has CLAUDECODE env var) → AI triage disabled by default
+        # 3. Standalone → AI triage enabled
+        #
+        # Reasoning: Project configuration should take precedence over runtime environment.
+        # If a project has opencode.json, it's designed for OpenCode behavior regardless
+        # of where it's being executed (even if inside Claude Code for testing).
+        if running_in_opencode?
+          # OpenCode project - AI triage should be enabled
+          @enabled = true
+          @disabled_reason = nil
+        elsif running_in_claude_code?
+          # Claude Code environment (but not an OpenCode project)
           # Check if user explicitly enabled AI triage in Claude Code
           explicitly_enabled = ENV.key?('VIBE_AI_TRIAGE_ENABLED')
 
@@ -167,19 +175,29 @@ module Vibe
 
       # Detect if we're running inside OpenCode
       #
+      # Checks for OpenCode configuration files:
+      # - opencode.json (project root)
+      # - .vibe/opencode.json (hidden config)
+      # - OPENCODE=1 environment variable
+      #
       # @return [Boolean] true if running inside OpenCode
       def running_in_opencode?
-        ENV['OPENCODE'] == '1' || File.exist?('.vibe/opencode/config.json')
+        ENV['OPENCODE'] == '1' ||
+          File.exist?('opencode.json') ||
+          File.exist?('.vibe/opencode.json') ||
+          File.exist?('.vibe/opencode/config.json')
       end
 
       # Get the current runtime environment
       #
-      # @return [Symbol] :claude_code, :opencode, or :standalone
+      # Priority: OpenCode project > Claude Code env > Standalone
+      #
+      # @return [Symbol] :opencode, :claude_code, or :standalone
       def runtime_environment
-        if running_in_claude_code?
-          :claude_code
-        elsif running_in_opencode?
+        if running_in_opencode?
           :opencode
+        elsif running_in_claude_code?
+          :claude_code
         else
           :standalone
         end
@@ -237,27 +255,32 @@ module Vibe
       # Step 2: Quick algorithm check for high-confidence matches
       def quick_algorithm_check(input, context)
         # Explicit overrides (e.g., "use gstack for debugging")
+        # Only these should return :very_high confidence to skip AI
         if input.match?(/用\s+(gstack|superpowers)\s+(.+)/)
           return extract_explicit_skill(input)
         end
 
         # Direct skill invocation (e.g., "/review this code")
+        # Also return :very_high confidence for explicit skill invocations
         if input.match?(/(?:\/\w+|调用|使用)\s*[\u4e00-\u9fa5\w]+/)
           return extract_direct_skill(input)
         end
 
-        # High-confidence keyword patterns
-        high_confidence_patterns = [
+        # Keyword patterns - return :high confidence instead of :very_high
+        # This allows AI to still be consulted for better semantic understanding
+        keyword_patterns = [
           { pattern: /(?:帮我|请)\s*(调试|debug|fix|修复| investigate)/, skill_hint: 'debugging' },
           { pattern: /(?:审查|review|评审|检查)\s*(?:代码|code)/, skill_hint: 'review' },
           { pattern: /(?:重构|refactor|重构)/, skill_hint: 'refactoring' }
         ]
 
-        high_confidence_patterns.each do |pattern_info|
+        keyword_patterns.each do |pattern_info|
           if input.match?(pattern_info[:pattern])
             # Try to find best skill for this hint
             skill = find_best_skill_for_hint(pattern_info[:skill_hint], context)
-            return build_quick_result(skill, :very_high) if skill
+            # Return :high confidence instead of :very_high
+            # This allows AI to provide better semantic matching
+            return build_quick_result(skill, :high) if skill
           end
         end
 
@@ -330,6 +353,9 @@ module Vibe
           - confidence >= #{@confidence_threshold} 时推荐最佳匹配
           - 如果没有直接相关的技能，返回 {"skill": null, "confidence": 0}
           - null 表示"没有明显匹配"，但用户仍可选择使用任何技能
+          - "评审项目"、"验证项目"、"检查架构" → 选择 riper-workflow，不是 session-end
+          - "结束会话"、"保存进度"、"handoff" → 才选择 session-end
+          - "session-end" 仅用于会话结束和交接场景，不要用于项目评审
         PROMPT
       end
 
@@ -366,6 +392,9 @@ module Vibe
           - 如果没有明显匹配，skill 为 null，confidence 为 0
           - null 只表示"没有明显匹配"，用户仍可选择使用任何技能
           - 只返回JSON，不要其他内容
+          - 重要："评审项目"、"验证项目"、"检查架构" → riper-workflow，不是 session-end
+          - 重要："session-end" 仅用于"结束会话"、"保存进度"、"handoff" 场景
+          - 重要：不要将"评审"或"验证"类请求路由到 session-end
         PROMPT
       end
 
@@ -676,25 +705,34 @@ module Vibe
 
       # Create LLM provider from configuration
       #
+      # Priority:
+      #   1. OpenCode config (explicit project configuration)
+      #   2. Local model environment variables
+      #   3. Auto-detect from environment variables
+      #
       # @return [LLMProvider::Base] Provider instance
       def create_provider_from_config
-        # Priority 1: Check for local model configuration
+        # Priority 1: Try to load from OpenCode config (explicit project configuration)
+        if File.exist?('opencode.json') || File.exist?('.vibe/opencode.json')
+          begin
+            provider = LLMProvider::Factory.create_from_opencode_config
+            # Only use if provider is configured (has API key)
+            return provider if provider&.configured?
+          rescue ArgumentError => e
+            # OpenCode config exists but is invalid, fall through to next option
+            warn "OpenCode config found but invalid: #{e.message}"
+          end
+        end
+
+        # Priority 2: Check for local model configuration
         local_url = ENV.fetch('LOCAL_MODEL_URL', nil) || ENV.fetch('VIBE_LOCAL_MODEL_URL', nil)
         if local_url
           return LLMProvider::Factory.create_local_provider(url: local_url)
         end
 
-        # Priority 2: Try to detect from OpenCode config
-        opencode_provider = LLMProvider::Factory.detect_opencode_provider
-
-        if opencode_provider
-          # Use provider specified in OpenCode config
-          LLMProvider::Factory.create(provider: opencode_provider)
-        else
-          # Priority 3: Auto-detect from environment variables
-          # Prefer Anthropic for AI routing, fallback to OpenAI
-          LLMProvider::Factory.create_from_env('anthropic')
-        end
+        # Priority 3: Auto-detect from environment variables
+        # Prefer Anthropic for AI routing, fallback to OpenAI
+        LLMProvider::Factory.create_from_env('anthropic')
       rescue ArgumentError => e
         # If no provider available, create an unconfigured AnthropicProvider
         # This allows the system to initialize but AI triage will be disabled
@@ -717,6 +755,10 @@ module Vibe
         local_url = ENV.fetch('LOCAL_MODEL_URL', nil) || ENV.fetch('VIBE_LOCAL_MODEL_URL', nil)
         return local_model if local_model && local_url
 
+        # Check OpenCode config for model specification
+        opencode_model = detect_model_from_opencode_config
+        return opencode_model if opencode_model
+
         # Auto-detect based on provider
         if @llm_provider&.provider_name == 'OpenAI'
           # Use GPT-4o-mini for OpenAI (fast and cost-effective)
@@ -725,6 +767,23 @@ module Vibe
           # Default to Claude Haiku for Anthropic
           'claude-haiku-4-5-20251001'
         end
+      end
+
+      # Detect model from OpenCode configuration
+      #
+      # @return [String, nil] Model identifier or nil
+      def detect_model_from_opencode_config
+        return nil unless File.exist?('opencode.json') || File.exist?('.vibe/opencode.json')
+
+        config_file = File.exist?('opencode.json') ? 'opencode.json' : '.vibe/opencode.json'
+        config = JSON.parse(File.read(config_file))
+        models_config = config['models'] || {}
+
+        # Check fast router model (used for AI triage)
+        model_config = models_config['fast'] || models_config['workhorse'] || models_config['critical']
+        model_config&.dig('model')
+      rescue JSON::ParserError, Errno::ENOENT
+        nil
       end
 
       # Log error (placeholder - can be extended)

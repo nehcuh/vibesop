@@ -9,6 +9,41 @@ schema_version: 1
 routing_rules:
 
   # ==========================================================================
+  # 项目评审场景
+  # ==========================================================================
+  - scenario: project_review
+    description: 深入评审和验证整个项目，包括目标、架构、功能、文档等
+    primary:
+      skill: riper-workflow
+      source: builtin
+      reason: "5 阶段结构化评审：Research → Innovate → Plan → Execute → Review，适合全方位项目评审"
+    alternatives:
+      - skill: /review
+        source: gstack
+        trigger: "专注于代码 diff 的预发布审查"
+        priority: P2
+      - skill: /plan-eng-review
+        source: gstack
+        trigger: "专注于架构和技术实现审查"
+        priority: P1
+      - skill: /plan-ceo-review
+        source: gstack
+        trigger: "从产品策略角度审查项目"
+        priority: P1
+    conflict_resolution: builtin_for_holistic_gstack_for_specific_angle
+    keywords:
+      - "评审"
+      - "review"
+      - "验证"
+      - "检查项目"
+      - "项目评审"
+      - "深入评审"
+      - "项目目标"
+      - "架构审查"
+      - "功能验证"
+      - "多系统支持"
+
+  # ==========================================================================
   # 调试场景
   # ==========================================================================
   - scenario: debugging
@@ -467,3 +502,8 @@ suggestions:
       suggest: /browse
       source: gstack
       message: "需要使用浏览器？建议用 /browse 技能"
+
+    - pattern: "(深入|全面)?(评审|验证|检查)(项目|架构|功能)"
+      suggest: riper-workflow
+      source: builtin
+      message: "项目评审建议使用 riper-workflow 进行结构化 5 阶段评审"

@@ -90,10 +90,10 @@ module Vibe
       end
       puts
 
-      # Environment info
+      # Environment info (use same detection logic as ai_triage_layer.rb)
       puts '🖥️  Runtime Environment:'
-      puts "   Claude Code: #{ENV['CLAUDECODE'] == '1' ? '✅ Yes' : '❌ No'}"
-      puts "   OpenCode: #{File.exist?('.vibe/opencode/config.json') ? '✅ Yes' : '❌ No'}"
+      puts "   Claude Code: #{ENV['CLAUDECODE'] == '1' || ENV['CLAUDE_CODE_ENTRYPOINT'] == 'cli' || ENV.key?('CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC') ? '✅ Yes' : '❌ No'}"
+      puts "   OpenCode: #{(ENV['OPENCODE'] == '1' || File.exist?('opencode.json') || File.exist?('.vibe/opencode.json') || File.exist?('.vibe/opencode/config.json')) ? '✅ Yes' : '❌ No'}"
       puts "   Local Model: #{ai_stats[:is_local_model] ? '✅ Yes' : '❌ No'}"
 
       0

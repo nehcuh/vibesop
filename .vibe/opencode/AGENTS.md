@@ -1,90 +1,52 @@
-# Vibe workflow for OpenCode
+# Project OpenCode Configuration
 
-Generated from the portable `core/` spec with profile `opencode-default`.## Optional Integrations
-
-### Superpowers Skill Pack
-
-**Status**: ❌ Not installed
-
-Superpowers provides advanced skills for design refinement, TDD, debugging, and more.
-
-**Installation for OpenCode**:
-```bash
-# Clone the repository
-git clone https://github.com/obra/superpowers ~/.config/skills/superpowers
-
-# For OpenCode, manually register the skills in your tool's skill system
-# or use the skill files from ~/.config/skills/superpowers/skills/
-```
-
-**Available skills**:
-- `superpowers/brainstorming` — Design refinement and feature exploration
-- `superpowers/writing-plans` — Implementation planning for complex changes
-- `superpowers/test-driven-development` — TDD enforcement and test-first workflow
-- `superpowers/systematic-debugging` — Root cause analysis and structured debugging
-- `superpowers/subagent-driven-development` — Parallel task execution with multiple agents
-- `superpowers/using-git-worktrees` — Branch isolation using git worktrees
-- `superpowers/requesting-code-review` — Code review preparation and workflow
-- `superpowers/refactor` — Systematic code refactoring with safety checks
-- `superpowers/architect` — System architecture design and documentation
-- `superpowers/optimize` — Performance optimization and profiling guidance
-
-
-### RTK Token Optimizer
-
-**Status**: ❌ Not installed
-
-RTK is a CLI proxy that reduces LLM token consumption by 60-90% on common development commands.
-
-**Installation**:
-```bash
-# macOS/Linux with Homebrew
-brew install rtk
-
-# Or build from source
-cargo install --git https://github.com/rtk-ai/rtk
-
-# Then configure
-rtk init --global
-```
-
-
-**Note**: RTK works best with Claude Code. For OpenCode, you may need to manually prefix commands with `rtk`.
-
+Generated from the portable `core/` spec with profile `opencode-default`.
 Applied overlay: `none`
 
-Project rules are split into modular instruction files loaded from `opencode.json`.
+## ⚠️ CRITICAL AGENT INSTRUCTION
 
-Keep repository files as the single source of truth, verify before claiming completion, and follow the generated safety policy.
+**Do NOT guess or hallucinate rules.** When you need information from any category below, you **MUST** use the `read` tool to fetch the file contents before proceeding.
 
-## Non-negotiable rules
+## 🚀 AI-Powered Skill Routing
 
-- `ssot-first` (`mandatory`) — Keep repository files as the single source of truth; tool-managed memory is cache.
-- `verify-before-claim` (`mandatory`) — Never claim completion without fresh verification evidence.
-- `capability-tier-routing` (`mandatory`) — Route by capability tier first, then resolve through the active provider profile.
-- `reversible-small-batches` (`recommended`) — Prefer small, reversible, single-purpose changes over large mixed batches.
-- `root-cause-debugging` (`mandatory`) — Investigate root cause before attempting fixes and reassess after repeated failures.
-- `security-escalation` (`mandatory`) — Treat destructive commands, network egress, secret access, and obfuscation as security-sensitive actions.
-- `record-reusable-learning` (`recommended`) — Record user corrections, repeated failures, and counter-intuitive discoveries for reuse.
+**⚠️ MANDATORY: ALWAYS call vibe route before starting ANY non-trivial task**
+This is NOT optional — routing ensures the correct skill is loaded for the task.
 
-## Capability routing
+### MANDATORY Workflow (必须遵循 - 无条件执行)
 
-- `critical_reasoner` → `configured.primary-high-reasoning`
-- `workhorse_coder` → `configured.primary-coder`
-- `fast_router` → `configured.fast-agent`
-- `independent_verifier` → `second-model.cross-family`
-- `cheap_local` → `local.ollama-class`
+**Step 1**: 调用路由获取推荐
+```bash
+vibe route "<user_request>"
+```
 
-## Mandatory portable skills
+**Step 2**: 读取推荐的技能文件 ⚠️ 关键步骤
+```markdown
+read skills/<matched-skill>/SKILL.md
+```
 
-- `systematic-debugging` (`P0`, `mandatory`) — Find root cause before attempting fixes.
-- `verification-before-completion` (`P0`, `mandatory`) — Require fresh verification evidence before claiming completion.
-- `session-end` (`P0`, `mandatory`) — Capture handoff, memory, and wrap-up state before ending a session.
+**Step 3**: 按照技能的步骤执行
+- 不要跳过技能定义
+- 严格按照技能说明的流程执行
 
+**Step 4**: 完成后运行验证
+```bash
+# 根据技能要求运行相应的验证命令
+```
 
+## Project Context
 
-## Safety floor
+<!-- Describe your project: tech stack, architecture, key constraints -->
 
-- `P0` — Prefer native permission rules or wrapper deny.
-- `P1` — Ask through configured permission flow.
-- `P2` — Warn and continue.
+## Project-specific rules
+
+<!-- Add rules that apply only to this project -->
+
+## Reference docs
+
+Supporting notes are under `.vibe/opencode/`:
+- `behavior-policies.md` — portable behavior baseline
+- `safety.md` — safety policy
+- `routing.md` — capability tier routing
+- `skills.md` — available skills
+- `tools.md` — available modern CLI tools
+- `execution.md` — execution policy

@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **OpenCode AI 路由配置增强** (2026-03-30)
+  - 支持在配置文件中直接添加 API key（无需环境变量）
+  - 支持自定义 OpenAI 兼容端点（如智谱 GLM、Azure、Together 等）
+  - 配置文件分离：`opencode.json`（OpenCode 原生）+ `.vibe/llm-config.json`（Vibe 扩展）
+  - 新增文档：[OpenCode LLM 配置指南](docs/opencode-llm-setup.md)、[配置分离说明](docs/opencode-llm-config-separation.md)
+  - 修复 OpenCode 环境检测优先级问题
+  - 优化 AI 路由置信度，让 AI 有更多机会介入
 - **Autonomous Experiment System** (2026-03-29)
   - `lib/vibe/experiment_manager.rb` — 核心基础设施 (178 lines)
   - `skills/autonomous-experiment/SKILL.md` — builtin skill

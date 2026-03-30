@@ -63,3 +63,4 @@ debug_*.rb
 /.vibe/docs/
 /.vibe/test-copy/
 /PROJECT_CONTEXT.md.bak
+.vibe/llm-config.json

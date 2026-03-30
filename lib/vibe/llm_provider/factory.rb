@@ -81,11 +81,20 @@ module Vibe
 
         # Create provider from OpenCode configuration file
         #
+        # Also checks for .vibe/llm-config.json for model configuration
+        # This allows separating model config from OpenCode's native config
+        #
         # @param config_path [String] Path to opencode.json
         # @return [LLMProvider::Base] Provider instance
         # @raise [ArgumentError] If config file not found or invalid
         def create_from_opencode_config(config_path = nil)
-          # Default path
+          # First, try to load from .vibe/llm-config.json (Vibe-specific model config)
+          vibe_config_path = File.join(Dir.pwd, '.vibe', 'llm-config.json')
+          if File.exist?(vibe_config_path)
+            return create_provider_from_config_file(vibe_config_path)
+          end
+
+          # Fallback to opencode.json
           config_path ||= File.join(Dir.pwd, 'opencode.json')
 
           unless File.exist?(config_path)
@@ -96,40 +105,66 @@ module Vibe
           raise ArgumentError, "OpenCode config not found: #{config_path}" unless File.exist?(config_path)
 
           config = JSON.parse(File.read(config_path))
+
+          # Check if config has models field (Vibe extension)
+          if config['models']
+            return create_provider_from_config_hash(config['models'])
+          end
+
+          # No models configuration found
+          raise ArgumentError, "No model configuration found. Create .vibe/llm-config.json or add 'models' field to opencode.json"
+        rescue JSON::ParserError => e
+          raise ArgumentError, "Invalid OpenCode config JSON: #{e.message}"
+        end
+
+        # Create provider from a configuration file
+        #
+        # @param config_path [String] Path to config file
+        # @return [LLMProvider::Base] Provider instance
+        def create_provider_from_config_file(config_path)
+          config = JSON.parse(File.read(config_path))
           models_config = config['models'] || {}
 
+          create_provider_from_config_hash(models_config)
+        end
+
+        # Create provider from models configuration hash
+        #
+        # @param models_config [Hash] Models configuration
+        # @return [LLMProvider::Base] Provider instance
+        def create_provider_from_config_hash(models_config)
           # Determine which provider to use for routing
           # Priority: fast agent > workhorse coder > critical reasoner
           model_config = models_config['fast'] || models_config['workhorse'] || models_config['critical']
 
           unless model_config
-            raise ArgumentError, "No model configuration found in opencode.json"
+            raise ArgumentError, "No model configuration found. Please configure 'fast', 'workhorse', or 'critical' model."
           end
 
           provider_name = model_config['provider']
+          api_key = model_config['api_key'] # Support API key in config
+          base_url = model_config['base_url']   # Support custom base URL in config
 
           case provider_name
           when 'anthropic'
             AnthropicProvider.new(
-              api_key: ENV[ANTHROPIC_API_KEY],
-              base_url: ENV['ANTHROPIC_BASE_URL'] || ANTHROPIC_BASE_URL
+              api_key: api_key || ENV[ANTHROPIC_API_KEY],
+              base_url: base_url || ENV['ANTHROPIC_BASE_URL'] || ANTHROPIC_BASE_URL
             )
           when 'openai'
             OpenAIProvider.new(
-              api_key: ENV[OPENAI_API_KEY],
-              base_url: ENV['OPENAI_BASE_URL'] || OPENAI_BASE_URL
+              api_key: api_key || ENV[OPENAI_API_KEY],
+              base_url: base_url || ENV['OPENAI_BASE_URL'] || OPENAI_BASE_URL
             )
           when nil, ''
             # No provider specified, default to Anthropic
             AnthropicProvider.new(
-              api_key: ENV[ANTHROPIC_API_KEY],
-              base_url: ENV['ANTHROPIC_BASE_URL'] || ANTHROPIC_BASE_URL
+              api_key: api_key || ENV[ANTHROPIC_API_KEY],
+              base_url: base_url || ENV['ANTHROPIC_BASE_URL'] || ANTHROPIC_BASE_URL
             )
           else
-            raise ArgumentError, "Unsupported provider in OpenCode config: #{provider_name}. Supported: anthropic, openai"
+            raise ArgumentError, "Unsupported provider: #{provider_name}. Supported: anthropic, openai"
           end
-        rescue JSON::ParserError => e
-          raise ArgumentError, "Invalid OpenCode config JSON: #{e.message}"
         end
 
         # Detect provider from OpenCode configuration

@@ -291,6 +291,7 @@ vibe --version   # Show version
 | Customize for your project | [Project Overlays](docs/project-overlays.md), [Overlay Tutorial](docs/overlay-tutorial.md) |
 | Understand skill routing | [Skill Routing](docs/claude/skills/routing.md), [Task Routing](docs/task-routing.md) |
 | **🚀 AI-Powered Routing (NEW)** | [API Reference](docs/api-reference-skill-routing.md), [Architecture Diagrams](docs/architecture-diagrams.md), [Usage Examples](docs/usage-examples.md) |
+| **🤖 OpenCode LLM Configuration** | [OpenCode LLM Setup Guide](docs/opencode-llm-setup.md), [Config Separation](docs/opencode-llm-config-separation.md) |
 | Multi-candidate selection | [API Reference → CandidateSelector](docs/api-reference-skill-routing.md#vibeskillroutercandidateselector) |
 | Preference learning | [API Reference → PreferenceAnalyzer](docs/api-reference-skill-routing.md#vibepreferencedimensionanalyzer) |
 | Parallel execution | [API Reference → ParallelExecutor](docs/api-reference-skill-routing.md#vibeskillrouterparallelexecutor) |
@@ -467,14 +468,45 @@ vibe apply claude-code --overlay ./my-overlay.yaml
 
 ### Platform Support
 
-| Platform | Status | Command |
-|----------|--------|---------|
-| Claude Code | ✅ Production | `vibe init --platform claude-code` |
-| OpenCode | ✅ Functional | `vibe init --platform opencode` |
-| Cursor | 📝 Planned | - |
-| VS Code | 📝 Planned | - |
-| Warp | 📝 Planned | - |
-| Kimi Code | 📝 Planned | - |
+| Platform | Status | Command | LLM Configuration |
+|----------|--------|---------|-------------------|
+| Claude Code | ✅ Production | `vibe init --platform claude-code` | Uses built-in models |
+| OpenCode | ✅ Functional | `vibe init --platform opencode` | [Configure LLM →](docs/opencode-llm-setup.md) |
+| Cursor | 📝 Planned | - | - |
+| VS Code | 📝 Planned | - | - |
+| Warp | 📝 Planned | - | - |
+| Kimi Code | 📝 Planned | - | - |
+
+**OpenCode LLM Configuration**:
+
+OpenCode 支持多种 LLM 提供商和自定义端点：
+
+```bash
+# 创建配置文件
+cat > .vibe/llm-config.json << 'EOF'
+{
+  "models": {
+    "fast": {
+      "provider": "openai",
+      "model": "gpt-4o-mini",
+      "api_key": "your-api-key-here",
+      "temperature": 0.3
+    }
+  }
+}
+EOF
+
+# 验证配置
+./bin/vibe route --stats
+```
+
+支持的配置：
+- ✅ **在配置中直接添加 API key**
+- ✅ **使用环境变量**（推荐用于生产环境）
+- ✅ **OpenAI 兼容端点**（Azure、Together、Anyscale 等）
+- ✅ **自定义端点**（如智谱 GLM、本地模型等）
+
+[查看完整配置指南 →](docs/opencode-llm-setup.md)
 
 ---
 
