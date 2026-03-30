@@ -5,10 +5,13 @@ require_relative 'semantic_matcher'
 require_relative 'llm_client'                         # NEW
 require_relative 'cache_manager'                      # NEW
 require_relative 'skill_router/ai_triage_layer'       # NEW
+require_relative 'skill_router/candidate_selector'    # NEW
+require_relative 'skill_router/parallel_executor'     # NEW
 require_relative 'skill_router/explicit_layer'
 require_relative 'skill_router/scenario_layer'
 require_relative 'skill_router/semantic_layer'
 require_relative 'skill_router/fuzzy_layer'
+require_relative 'preference_dimension_analyzer'   # NEW
 
 module Vibe
   # Intelligent Skill Router - Enhanced Edition
@@ -26,15 +29,17 @@ module Vibe
 
     ROUTING_FILE = '.vibe/skill-routing.yaml'
     REGISTRY_FILE = 'core/skills/registry.yaml'
+    SELECTION_POLICY_FILE = 'core/policies/skill-selection.yaml'
     PREFERENCES_FILE = '.vibe/skill-preferences.yaml'
 
-    attr_reader :routing_config, :registry, :preferences, :project_root
+    attr_reader :routing_config, :registry, :preferences, :project_root, :selection_policy
 
     def initialize(project_root = Dir.pwd)
       @project_root = project_root
       @routing_config = load_routing_config
       @registry = load_registry
       @preferences = load_preferences
+      @selection_policy = load_selection_policy
 
       # Initialize routing statistics
       @stats = {
@@ -66,9 +71,21 @@ module Vibe
         cache: @cache,
         llm_client: @llm_client
       )
+
+      # NEW: Initialize candidate selection and parallel execution
+      @preference_analyzer = Vibe::PreferenceDimensionAnalyzer.new(
+        config: @selection_policy.dig('preference_learning') || {}
+      )
+      @candidate_selector = Vibe::SkillRouter::CandidateSelector.new(
+        config: @selection_policy,
+        preference_analyzer: @preference_analyzer
+      )
+      @parallel_executor = Vibe::SkillRouter::ParallelExecutor.new(
+        config: @selection_policy.dig('parallel_execution') || {}
+      )
     end
 
-    # Enhanced routing with FIVE layers (Layer 0 added)
+    # Enhanced routing with FIVE layers (Layer 0 added) + Multi-candidate selection
     # @param user_input [String] User's request
     # @param context [Hash] Additional context:
     #   - current_task: current active task
@@ -80,50 +97,218 @@ module Vibe
       input_normalized = normalize_input(user_input)
       @stats[:total_routes] += 1
 
-      # Layer 0: AI-Powered Semantic Triage (NEW)
+      # Collect all candidates from all layers
+      candidates = collect_all_candidates(input_normalized, context)
+
+      if candidates.empty?
+        @stats[:layer_distribution][:no_match] += 1
+        return no_match_result(input_normalized, context)
+      end
+
+      # Use CandidateSelector to make the final decision
+      decision = @candidate_selector.select(candidates, context)
+
+      # Handle different decision types
+      case decision[:action]
+      when :auto_select
+        # Auto-selected by confidence or preference
+        record_layer_usage_for(decision[:selected])
+        format_routing_result(decision[:selected], context)
+
+      when :user_choice
+        # Multiple candidates with similar confidence - present to user
+        {
+          matched: true,
+          requires_user_choice: true,
+          candidates: decision[:candidates],
+          prompt: decision[:prompt],
+          message: "Multiple skills match your request. Please choose."
+        }
+
+      when :parallel_execute
+        # Execute multiple skills in parallel
+        execute_parallel_skills(decision[:candidates], context)
+
+      when :no_candidates
+        no_match_result(input_normalized, context)
+
+      else
+        # Fallback to first candidate
+        record_layer_usage(:layer_0_ai)  # Assume AI triage
+        format_routing_result(candidates.first, context)
+      end
+    end
+
+    # Collect candidates from all routing layers
+    #
+    # @param input_normalized [String] Normalized user input
+    # @param context [Hash] Additional context
+    # @return [Array<Hash>] All candidates from all layers
+    def collect_all_candidates(input_normalized, context)
+      candidates = []
+
+      # Layer 0: AI-Powered Semantic Triage
       ai_result = @ai_triage_layer.route(input_normalized, context)
       if ai_result && ai_result[:matched]
-        record_layer_usage(:layer_0_ai)
-        return enrich_result(ai_result, context)
+        candidates << normalize_candidate(ai_result, :layer_0_ai)
       end
 
-      # Layer 1: Check for explicit override
+      # Layer 1: Explicit override (highest priority)
       override = @explicit_layer.check_explicit_override(input_normalized)
       if override
-        record_layer_usage(:layer_1_explicit)
-        return enrich_result(override, context)
+        candidates << normalize_candidate(override, :layer_1_explicit)
+        # Explicit override always wins, return immediately
+        return candidates
       end
 
-      # Layer 2: Match scenarios from routing config
+      # Layer 2: Scenario matching
       scenario = @scenario_layer.match_scenario(input_normalized, context)
       if scenario
-        record_layer_usage(:layer_2_scenario)
-        return enrich_result(scenario, context)
+        candidates << normalize_candidate(scenario, :layer_2_scenario)
       end
 
-      # Layer 3: Enhanced semantic matching
+      # Layer 3: Semantic matching
       semantic = @semantic_layer.enhanced_semantic_match(input_normalized, context)
       if semantic
-        record_layer_usage(:layer_3_semantic)
-        return enrich_result(semantic, context)
+        candidates << normalize_candidate(semantic, :layer_3_semantic)
       end
 
-      # Layer 4: Fuzzy fallback + user preferences
+      # Layer 4: Fuzzy fallback
       fallback = @fuzzy_layer.fuzzy_fallback_match(input_normalized, context)
       if fallback
-        record_layer_usage(:layer_4_fuzzy)
-        return enrich_result(fallback, context)
+        candidates << normalize_candidate(fallback, :layer_4_fuzzy)
       end
 
-      # No match found - provide helpful suggestions
+      candidates
+    end
+
+    # Normalize candidate to common format
+    #
+    # @param result [Hash] Raw routing result
+    # @param layer [Symbol] Source layer
+    # @return [Hash] Normalized candidate
+    def normalize_candidate(result, layer)
+      {
+        skill: result[:skill] || result[:id],
+        id: result[:skill] || result[:id],
+        source: result[:source] || result[:namespace] || 'builtin',
+        confidence: normalize_confidence(result[:confidence]),
+        reason: result[:reason],
+        layer: layer,
+        original: result
+      }
+    end
+
+    # Normalize confidence to 0-1 float
+    #
+    # @param confidence [Symbol, Float, Integer] Confidence value
+    # @return [Float] Normalized confidence
+    def normalize_confidence(confidence)
+      case confidence
+      when :very_high then 0.95
+      when :high then 0.85
+      when :medium then 0.70
+      when :low then 0.55
+      when :very_low then 0.40
+      when Float then [[confidence, 0].max, 1].min
+      when Integer then [[confidence.to_f / 100, 0].max, 1].min
+      else 0.70
+      end
+    end
+
+    # Record layer usage for a candidate
+    #
+    # @param candidate [Hash] Candidate with layer info
+    # @return [void]
+    def record_layer_usage_for(candidate)
+      layer = candidate[:layer] || :layer_0_ai
+      record_layer_usage(layer)
+    end
+
+    # Execute skills in parallel
+    #
+    # @param candidates [Array<Hash>] Candidates to execute
+    # @param context [Hash] Execution context
+    # @return [Hash] Parallel execution result
+    def execute_parallel_skills(candidates, context)
+      # Define the skill executor
+      executor = ->(candidate, ctx) {
+        # For now, return the candidate info
+        # In real implementation, this would trigger the skill execution
+        {
+          skill: candidate[:skill],
+          status: :ready,
+          message: "Skill ready for execution: #{candidate[:skill]}"
+        }
+      }
+
+      @parallel_executor.execute(candidates, executor: executor, context: context)
+    end
+
+    # No match result
+    #
+    # @param input [String] User input
+    # @param context [Hash] Context
+    # @return [Hash] No match result
+    def no_match_result(input, context)
       @stats[:layer_distribution][:no_match] += 1
       {
         matched: false,
         skill: nil,
         reason: 'No matching skill found for this request',
-        suggestions: generate_suggestions(input_normalized, context),
-        alternatives: find_similar_skills(input_normalized)
+        suggestions: generate_suggestions(input, context),
+        alternatives: find_similar_skills(input)
       }
+    end
+
+    # Format a candidate as a routing result
+    #
+    # @param candidate [Hash] Normalized candidate
+    # @param context [Hash] Execution context
+    # @return [Hash] Formatted routing result
+    def format_routing_result(candidate, context = {})
+      return { matched: false } unless candidate
+
+      # Build result with matched flag
+      result = {
+        matched: true,
+        skill: candidate[:skill],
+        id: candidate[:id],
+        source: candidate[:source],
+        confidence: denormalize_confidence(candidate[:confidence]),
+        reason: candidate[:reason],
+        layer: candidate[:layer]
+      }
+
+      # Add original data if available
+      result[:original] = candidate[:original] if candidate[:original]
+
+      # Add scenario if available from original
+      if candidate[:original] && candidate[:original][:scenario]
+        result[:scenario] = candidate[:original][:scenario]
+      end
+
+      # Add override flag for explicit overrides
+      if candidate[:layer] == :layer_1_explicit
+        result[:override] = true
+      end
+
+      enrich_result(result, context)
+    end
+
+    # Convert float confidence back to symbol (for backward compatibility)
+    #
+    # @param confidence [Float] Normalized confidence 0-1
+    # @return [Symbol] Confidence symbol
+    def denormalize_confidence(confidence)
+      case confidence
+      when 0.90..1.0 then :very_high
+      when 0.75..0.89 then :high
+      when 0.60..0.74 then :medium
+      when 0.45..0.59 then :low
+      when 0.0..0.44 then :very_low
+      else :medium
+      end
     end
 
     # Quick check if input should trigger a skill
@@ -300,6 +485,56 @@ module Vibe
       puts "Warning: Failed to save preferences: #{e.message}"
     end
 
+    # Load selection policy from skill-selection.yaml
+    #
+    # @return [Hash] Selection policy configuration
+    def load_selection_policy
+      policy_path = File.join(@project_root, SELECTION_POLICY_FILE)
+      return default_selection_policy unless File.exist?(policy_path)
+
+      YAML.safe_load(File.read(policy_path), aliases: true) || default_selection_policy
+    rescue StandardError => e
+      puts "Warning: Failed to load selection policy: #{e.message}"
+      default_selection_policy
+    end
+
+    # Default selection policy
+    #
+    # @return [Hash] Default policy config
+    def default_selection_policy
+      {
+        'candidate_selection' => {
+          'max_candidates' => 3,
+          'auto_select_threshold' => 0.15,
+          'min_confidence' => 0.6,
+          'sort_by' => 'balanced'
+        },
+        'preference_learning' => {
+          'enabled' => true,
+          'dimensions' => {
+            'consistency' => { 'weight' => 0.4, 'threshold' => 0.7, 'min_samples' => 5 },
+            'satisfaction' => { 'weight' => 0.3, 'min_samples' => 3 },
+            'context' => { 'weight' => 0.2 },
+            'recency' => { 'weight' => 0.1, 'decay_days' => 30 }
+          }
+        },
+        'parallel_execution' => {
+          'enabled' => true,
+          'max_parallel' => 2,
+          'mode' => 'auto',
+          'conditions' => {
+            'max_confidence_diff' => 0.10,
+            'min_candidates' => 2,
+            'max_candidates' => 3
+          },
+          'aggregation' => {
+            'method' => 'merged',
+            'timeout' => 300
+          }
+        }
+      }
+    end
+
     def enrich_result(result, context)
       return result unless result[:matched]
 
@@ -380,8 +615,6 @@ module Vibe
 
       suggestions.uniq.first(3)
     end
-
-    private
 
     # NEW: Record which layer handled a request
     def record_layer_usage(layer)
