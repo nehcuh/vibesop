@@ -438,11 +438,9 @@ module Vibe
       # Supports both single-skill and multi-skill response formats
       def parse_ai_response(response)
         # Extract JSON from response (handle various formats)
-        # Use greedy matching to capture nested objects correctly
-        json_match = response.match(/\{[\s\S]*\}/)
-        return nil unless json_match
-
-        json_str = json_match[0]
+        # AI may wrap JSON in markdown code blocks: ```json ... ```
+        json_str = extract_json_from_response(response)
+        return nil unless json_str
 
         begin
           parsed = JSON.parse(json_str)
@@ -466,6 +464,23 @@ module Vibe
           log_error("JSON parsing error: #{e.message}", response, {})
           nil
         end
+      end
+
+      # Extract JSON string from AI response
+      # Handles markdown code blocks and plain JSON
+      def extract_json_from_response(response)
+        return nil if response.nil? || response.empty?
+
+        # Try to extract JSON from markdown code block first
+        # Format: ```json\n{...}\n``` or ```\n{...}\n```
+        code_block_match = response.match(/```(?:json)?\s*\n([\s\S]*?)\n```/)
+        if code_block_match
+          return code_block_match[1].strip
+        end
+
+        # Fallback: find JSON object (from first { to last })
+        json_match = response.match(/\{[\s\S]*\}/)
+        json_match ? json_match[0] : nil
       end
 
       # Match skills from AI analysis result (supports multiple candidates)
