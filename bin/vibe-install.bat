@@ -20,53 +20,41 @@ set "HAS_GIT=0"
 set "HAS_BUN=0"
 set "HAS_NPM=0"
 
-REM Color codes for Windows 10+ (will work in Windows Terminal and modern CMD)
-for /F %%a in ('echo prompt $E ^| cmd') do set "ESC=%%a"
-set "RED=%ESC%[31m"
-set "GREEN=%ESC%[32m"
-set "YELLOW=%ESC%[33m"
-set "BLUE=%ESC%[34m"
-set "CYAN=%ESC%[36m"
-set "BOLD=%ESC%[1m"
-set "NC=%ESC%[0m"
-
 REM ========================================
-REM Print Functions
+REM Print Functions (ASCII-only for Windows compatibility)
 REM ========================================
 
 :print_header
 echo.
-echo %BOLD%%CYAN%██╗   ██╗███████╗██████╗       ██╗   ██╗██╗██████╗ ███████╗%NC%
-echo %BOLD%%CYAN%██║   ██║██╔════╝██╔══██╗      ██║   ██║██║██╔══██╗██╔════╝%NC%
-echo %BOLD%%CYAN%██║   ██║█████╗  ██████╔╝█████╗██║   ██║██║██║  ██║█████╗  %NC%
-echo %BOLD%%CYAN%╚██╗ ██╔╝██╔══╝  ██╔══██╗╚════╝██║   ██║██║██║  ██║██╔══╝  %NC%
-echo %BOLD%%CYAN% ╚████╔╝ ███████╗██████╔╝      ╚██████╔╝██║██████╔╝███████╗%NC%
-echo %BOLD%%CYAN%  ╚═══╝  ╚══════╝╚═════╝        ╚═════╝ ╚═╝╚═════╝ ╚══════╝%NC%
+echo   ___       ___ __  __ ___       ___   ___  __  __ _____
+echo  /   \     /___ |  \/  |   \     /   \ |___ |  \/  |   _ \
+echo / /^\ \   //  \| |\/| |    \   //^\ \|   \| |\/| |  _  |
+echo/_/   \_\ \\___/|_|  |_|__|\_\ /_/   \_\___/|_|  |_|_____/
 echo.
-echo %BOLD%Windows Installation Wizard%NC%
+echo Windows Installation Wizard
 echo ================================================================================
 echo.
 goto :eof
 
 :print_success
-echo %GREEN%✓%NC% %~1
+echo [OK] %~1
 goto :eof
 
 :print_error
-echo %RED%✗%NC% %~1
+echo [ERROR] %~1
 goto :eof
 
 :print_warning
-echo %YELLOW⚠%NC% %~1
+echo [WARNING] %~1
 goto :eof
 
 :print_info
-echo %BLUEℹ%NC% %~1
+echo [INFO] %~1
 goto :eof
 
 :print_section
 echo.
-echo %BOLD%%CYAN%▶ %~1%NC%
+echo > %~1
 echo -------------------------------------------------------------------------------
 goto :eof
 
@@ -150,21 +138,21 @@ call :print_section "Ruby Installation Guide"
 
 echo Ruby is required for vibe to function properly.
 echo.
-echo %BOLD%Recommended Installation Methods:%NC%
+echo Recommended Installation Methods:
 echo.
-echo   1. %BOLD%RubyInstaller (Recommended)%NC%
+echo   1. RubyInstaller (Recommended)
 echo      Download: https://rubyinstaller.org/downloads/
 echo      - Choose version 3.0 or higher
 echo      - During install, check "Add Ruby to PATH"
 echo      - Also install "MSYS2 development tools" when prompted
 echo.
-echo   2. %BOLD%Chocolatey (if already installed)%NC%
+echo   2. Chocolatey (if already installed)
 echo      choco install ruby
 echo.
-echo   3. %BOLD%Scoop (if already installed)%NC%
+echo   3. Scoop (if already installed)
 echo      scoop install ruby
 echo.
-echo   4. %BOLD%Winget (Windows 10+)%NC%
+echo   4. Winget (Windows 10+)
 echo      winget install RubyInstaller.Ruby
 echo.
 goto :eof
@@ -174,20 +162,20 @@ call :print_section "Git Installation Guide"
 
 echo Git is required for version control and vibe operations.
 echo.
-echo %BOLD%Recommended Installation Methods:%NC%
+echo Recommended Installation Methods:
 echo.
-echo   1. %BOLD%Git for Windows (Recommended)%NC%
+echo   1. Git for Windows (Recommended)
 echo      Download: https://git-scm.com/download/win
 echo      - During install, choose "Git from the command line"
 echo      - Recommended: "Checkout Windows-style, commit Unix-style line endings"
 echo.
-echo   2. %BOLD%Chocolatey (if already installed)%NC%
+echo   2. Chocolatey (if already installed)
 echo      choco install git
 echo.
-echo   3. %BOLD%Scoop (if already installed)%NC%
+echo   3. Scoop (if already installed)
 echo      scoop install git
 echo.
-echo   4. %BOLD%Winget (Windows 10+)%NC%
+echo   4. Winget (Windows 10+)
 echo      winget install Git.Git
 echo.
 goto :eof
@@ -197,18 +185,18 @@ call :print_section "Bun Installation Guide (Optional)"
 
 echo Bun is optional but recommended for faster package operations.
 echo.
-echo %BOLD%Installation Methods:%NC%
+echo Installation Methods:
 echo.
-echo   1. %BOLD%Official Script (PowerShell)%NC%
+echo   1. Official Script (PowerShell)
 echo      irm bun.sh/install.ps1 ^| iex
 echo.
-echo   2. %BOLD%Chocolatey (if already installed)%NC%
+echo   2. Chocolatey (if already installed)
 echo      choco install bun
 echo.
-echo   3. %BOLD%Scoop (if already installed)%NC%
+echo   3. Scoop (if already installed)
 echo      scoop install bun
 echo.
-echo   4. %BOLD%Winget (Windows 10+)%NC%
+echo   4. Winget (Windows 10+)
 echo      winget install Oven-Sh.Bun
 echo.
 goto :eof
@@ -217,7 +205,7 @@ goto :eof
 set "URL=%~1"
 call :print_info "Opening download page in your default browser..."
 echo.
-echo %CYAN%If the browser doesn't open automatically, visit:%NC%
+echo If the browser doesn't open automatically, visit:
 echo   %URL%
 echo.
 
@@ -239,7 +227,7 @@ REM ========================================
 call :show_ruby_install_guide
 call :print_divider
 echo.
-echo %BOLD%Options:%NC%
+echo Options:
 echo   1. Open RubyInstaller download page
 echo   2. Install via winget (Windows 10+)
 echo   3. Install via choco (if Chocolatey is installed)
@@ -283,7 +271,7 @@ goto :eof
 call :show_git_install_guide
 call :print_divider
 echo.
-echo %BOLD%Options:%NC%
+echo Options:
 echo   1. Open Git for Windows download page
 echo   2. Install via winget (Windows 10+)
 echo   3. Install via choco (if Chocolatey is installed)
@@ -346,15 +334,15 @@ REM ========================================
 :install_fallback_mode
 call :print_section "Limited Installation (Bash Fallback Mode)"
 echo.
-echo %YELLOW%Since Ruby is not available, vibe will be installed in limited mode.%NC%
+echo Since Ruby is not available, vibe will be installed in limited mode.
 echo.
-echo %BOLD%What works in limited mode:%NC%
+echo What works in limited mode:
 echo   - build: Build pre-generated configurations
 echo   - switch: Apply configurations to your project
 echo   - targets: List available configurations
 echo   - doctor: Check environment status
 echo.
-echo %BOLD%What won't work:%NC%
+echo What won't work:
 echo   - init: Initialize new configurations
 echo   - route: AI-powered skill routing
 echo   - skills: Manage skills
@@ -490,7 +478,7 @@ echo %INSTALL_DIR% | findstr /C:"%PATH%" >nul
 if errorlevel 1 (
     call :print_warning "%INSTALL_DIR% is not in your PATH"
     echo.
-    echo %BOLD%To add vibe to your PATH:%NC%
+    echo To add vibe to your PATH:
     echo   1. Press Win+R, type: sysdm.cpl
     echo   2. Go to Advanced ^> Environment Variables
     echo   3. Edit "Path" under User variables
@@ -506,11 +494,11 @@ goto :eof
 
 :show_completion
 call :print_divider
-echo %BOLD%%GREEN%Installation Complete!%NC%
+echo Installation Complete!
 echo ================================================================================
 echo.
 if "%~1"=="fallback" (
-    echo %YELLOW%Limited mode installed (Ruby not found)%NC%
+    echo Limited mode installed (Ruby not found)
     echo.
     echo To enable full functionality:
     echo   1. Install Ruby from https://rubyinstaller.org/downloads/
@@ -518,15 +506,15 @@ if "%~1"=="fallback" (
     echo   3. Run: vibe-install.bat
     echo.
 ) else (
-    echo %GREEN%Full mode installed!%NC%
+    echo Full mode installed!
     echo.
 )
-echo %BOLD%Quick Start:%NC%
+echo Quick Start:
 echo   vibe --version
 echo   vibe doctor
 echo   vibe init --platform claude-code
 echo.
-echo %BOLD%Documentation:%NC%
+echo Documentation:
 echo   https://github.com/your-org/vibesop
 echo.
 goto :eof
