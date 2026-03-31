@@ -80,8 +80,24 @@ Examples:
   ./vibe-bash.sh switch opencode
   ./vibe-bash.sh targets
 
-Note: This is a simplified fallback version. For full functionality,
-      please install Ruby and use the main 'vibe' command.
+──────────────────────────────────────────────────────────────────────────────
+  Limited Mode Notice
+──────────────────────────────────────────────────────────────────────────────
+
+Some commands are NOT available in this mode:
+  init, route, skills, inspect, use, deploy, quickstart
+
+To unlock full functionality, install Ruby:
+
+  🪟 Windows: Run 'bin\vibe-install.bat' for guided installation
+             Or visit: https://rubyinstaller.org/downloads/
+
+  🍎 macOS:   brew install ruby
+
+  🐧 Linux:   sudo apt install ruby-full  (Ubuntu/Debian)
+             sudo pacman -S ruby           (Arch)
+
+──────────────────────────────────────────────────────────────────────────────
 EOF
 }
 
@@ -249,24 +265,38 @@ cmd_doctor() {
     log_info "Environment Check (Bash Fallback Mode)"
     echo "====================================="
     echo ""
-    
+
     # Check shell
     log_info "Shell: $SHELL"
     log_info "Bash version: $BASH_VERSION"
-    
+
+    # Detect platform
+    local platform="$(uname -s)"
+
     # Check Git
     if command -v git &> /dev/null; then
         log_success "Git: $(git --version | head -1)"
     else
         log_error "Git: not found"
     fi
-    
+
     # Check for Ruby (optional)
     if command -v ruby &> /dev/null; then
         log_success "Ruby: $(ruby --version)"
         log_warn "Ruby is available! Consider using the full 'vibe' command"
     else
         log_info "Ruby: not found (using bash fallback)"
+        echo ""
+        echo "  To enable full functionality, install Ruby:"
+        if [[ "$platform" == MINGW* ]] || [[ "$platform" == MSYS* ]]; then
+            echo "    🪟 Windows: Run 'bin\\vibe-install.bat' for guided installation"
+            echo "       Or visit: https://rubyinstaller.org/downloads/"
+        elif [[ "$platform" == Darwin ]]; then
+            echo "    🍎 macOS:   brew install ruby"
+        else
+            echo "    🐧 Linux:   sudo apt install ruby-full  (Ubuntu/Debian)"
+            echo "               sudo pacman -S ruby           (Arch)"
+        fi
     fi
     
     # Check repo structure
@@ -337,10 +367,28 @@ main() {
         doctor)
             cmd_doctor
             ;;
-        use|deploy|init|quickstart|inspect|skills)
+        use|deploy|init|quickstart|inspect|skills|route)
             log_error "Command '$command' is not supported in bash fallback mode"
             log_info "This command requires Ruby and the full 'vibe' CLI"
-            log_info "Please install Ruby or use an alternative approach"
+            echo ""
+            echo "To enable full functionality:"
+            echo ""
+            # Detect if on Windows
+            if [[ "$(uname -s)" == MINGW* ]] || [[ "$(uname -s)" == MSYS* ]]; then
+                echo "  🪟 Windows detected. Run: bin\\vibe-install.bat"
+                echo "     It will guide you through Ruby installation."
+                echo ""
+                echo "  Or install manually:"
+                echo "     1. Download from: https://rubyinstaller.org/downloads/"
+                echo "     2. Run the installer with 'Add to PATH' checked"
+                echo "     3. Restart your terminal"
+            else
+                echo "  📦 Install Ruby:"
+                echo "     - macOS:   brew install ruby"
+                echo "     - Ubuntu:  sudo apt install ruby-full"
+                echo "     - Arch:    sudo pacman -S ruby"
+            fi
+            echo ""
             return 1
             ;;
         *)
