@@ -144,24 +144,31 @@ module Vibe
           provider_name = model_config['provider']
           api_key = model_config['api_key'] # Support API key in config
           base_url = model_config['base_url']   # Support custom base URL in config
+          endpoint = model_config['endpoint']   # Support custom endpoint path (optional)
 
           case provider_name
           when 'anthropic'
             AnthropicProvider.new(
               api_key: api_key || ENV[ANTHROPIC_API_KEY],
               base_url: base_url || ENV['ANTHROPIC_BASE_URL'] || ANTHROPIC_BASE_URL
-            )
+            ).tap do |p|
+              p.instance_variable_set(:@api_endpoint_override, endpoint) if endpoint
+            end
           when 'openai'
             OpenAIProvider.new(
               api_key: api_key || ENV[OPENAI_API_KEY],
               base_url: base_url || ENV['OPENAI_BASE_URL'] || OPENAI_BASE_URL
-            )
+            ).tap do |p|
+              p.instance_variable_set(:@api_endpoint_override, endpoint) if endpoint
+            end
           when nil, ''
             # No provider specified, default to Anthropic
             AnthropicProvider.new(
               api_key: api_key || ENV[ANTHROPIC_API_KEY],
               base_url: base_url || ENV['ANTHROPIC_BASE_URL'] || ANTHROPIC_BASE_URL
-            )
+            ).tap do |p|
+              p.instance_variable_set(:@api_endpoint_override, endpoint) if endpoint
+            end
           else
             raise ArgumentError, "Unsupported provider: #{provider_name}. Supported: anthropic, openai"
           end

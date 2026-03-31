@@ -124,20 +124,13 @@ module Vibe
           end
 
           # Record failure if AI returned nil
-          unless ai_result
-            record_failure
-            return nil
-          end
-
-          # Step 4: Match skill based on AI analysis
-          matched_skill = match_skill_from_analysis(ai_result, context)
-          unless matched_skill
+          if ai_result.nil? || ai_result[:skills]&.empty?
             record_failure
             return nil
           end
 
           # Build and cache final result
-          result = build_result(matched_skill, ai_result)
+          result = build_multi_candidate_result(ai_result)
           cache_result(input, context, result)
 
           reset_circuit_breaker # Success - reset failure count
@@ -287,7 +280,7 @@ module Vibe
         nil
       end
 
-      # Step 3: AI semantic analysis using configured provider
+      # AI semantic analysis using configured provider
       def ai_semantic_analysis(input, context)
         prompt = build_triage_prompt(input, context)
 
@@ -296,7 +289,7 @@ module Vibe
                     @llm_provider.call(
                       model: @triage_model,
                       prompt: prompt,
-                      max_tokens: 300,
+                      max_tokens: 500,
                       temperature: 0.3
                     )
                   elsif @llm_client
@@ -304,12 +297,16 @@ module Vibe
                     @llm_client.call(
                       model: @triage_model,
                       prompt: prompt,
-                      max_tokens: 300,
+                      max_tokens: 500,
                       temperature: 0.3
                     )
                   else
                     raise "No LLM client or provider configured"
                   end
+
+        puts "[AI Triage] Response for '#{input[0..30]}':"
+        puts response[0..500] if response.length > 0
+        puts ""
 
         parse_ai_response(response)
       end
@@ -332,7 +329,7 @@ module Vibe
 
       def build_simple_prompt(input, context_info, skills_summary)
         <<~PROMPT
-          分析用户请求，选择最合适的技能。
+          分析用户请求，选择最合适的技能（最多 3 个）。
 
           用户请求: #{input}
 
@@ -343,25 +340,28 @@ module Vibe
 
           返回JSON格式（仅JSON，不要其他内容）：
           {
-            "skill": "技能ID 或 null",
-            "confidence": 0.0-1.0,
-            "reasoning": "简短原因（1句话）"
+            "skills": [
+              {"id": "技能ID", "confidence": 0.0-1.0, "reasoning": "简短原因"},
+              {"id": "技能ID", "confidence": 0.0-1.0, "reasoning": "简短原因"}
+            ]
           }
 
           匹配规则：
-          - 优先选择与用户请求最相关的技能
-          - confidence >= #{@confidence_threshold} 时推荐最佳匹配
-          - 如果没有直接相关的技能，返回 {"skill": null, "confidence": 0}
-          - null 表示"没有明显匹配"，但用户仍可选择使用任何技能
-          - "评审项目"、"验证项目"、"检查架构" → 选择 riper-workflow，不是 session-end
-          - "结束会话"、"保存进度"、"handoff" → 才选择 session-end
-          - "session-end" 仅用于会话结束和交接场景，不要用于项目评审
+          - 返回 1-3 个最相关的技能，按 confidence 降序排列
+          - confidence >= #{@confidence_threshold} 的技能才返回
+          - 如果只有一个相关技能，只返回一个
+          - 如果没有相关技能，返回 {"skills": []}
+
+          注意：
+          - "我要走了"、"保存进度"、"今天先到这" → session-end
+          - "review"、"审查"、"评审代码" → /review 或 gstack/review
+          - "refactor"、"重构" → /refactor 或 superpowers/refactor
         PROMPT
       end
 
       def build_detailed_prompt(input, context_info, skills_summary)
         <<~PROMPT
-          你是一个技能路由专家。分析用户请求，返回最合适的技能。
+          你是一个技能路由专家。分析用户请求，返回最合适的技能（最多 3 个）。
 
           ## 用户请求
           #{input}
@@ -373,28 +373,27 @@ module Vibe
           #{skills_summary}
 
           ## 任务
-          分析用户请求的意图、紧急程度和复杂度，返回JSON：
+          分析用户请求的意图，返回 top-3 相关技能的 JSON：
 
           ```json
           {
-            "intent": "调试|审查|重构|测试|文档|性能优化|安全审查|其他",
-            "urgency": "紧急|正常|低优先级",
-            "complexity": "简单|中等|复杂",
-            "skill": "技能ID 或 null",
-            "confidence": 0.0-1.0,
-            "reasoning": "选择这个技能的原因（1-2句话）"
+            "skills": [
+              {"id": "技能ID", "confidence": 0.0-1.0, "reasoning": "原因"},
+              {"id": "技能ID", "confidence": 0.0-1.0, "reasoning": "原因"}
+            ]
           }
           ```
 
           ## 匹配规则
-          - 优先选择与用户请求最相关的技能
-          - confidence >= #{@confidence_threshold} 时推荐最佳匹配
-          - 如果没有明显匹配，skill 为 null，confidence 为 0
-          - null 只表示"没有明显匹配"，用户仍可选择使用任何技能
-          - 只返回JSON，不要其他内容
-          - 重要："评审项目"、"验证项目"、"检查架构" → riper-workflow，不是 session-end
-          - 重要："session-end" 仅用于"结束会话"、"保存进度"、"handoff" 场景
-          - 重要：不要将"评审"或"验证"类请求路由到 session-end
+          - 返回 1-3 个最相关的技能，按 confidence 降序
+          - confidence >= #{@confidence_threshold} 才返回
+          - 没有相关技能时返回 {"skills": []}
+
+          ## 特殊规则
+          - "我要走了"、"保存进度" → session-end
+          - "review"、"审查" → /review 或 gstack/review
+          - "refactor"、"重构" → /refactor 或 superpowers/refactor
+          - "测试失败"、"bug" → systematic-debugging
         PROMPT
       end
 
@@ -402,7 +401,7 @@ module Vibe
         return '' unless @registry['skills']
 
         # Show all available skills (P0, P1, P2) for accurate matching
-        # Previously only showed P0/P1, causing P2 skills to never be matched
+        # Previously only showed P0/P1, causing P2 skills to never match
         @registry['skills']
           .map { |s| "- #{s['id']}: #{s['intent']}" }
           .join("\n")
@@ -436,9 +435,11 @@ module Vibe
       end
 
       # Parse AI response from Haiku
+      # Supports both single-skill and multi-skill response formats
       def parse_ai_response(response)
         # Extract JSON from response (handle various formats)
-        json_match = response.match(/\{[\s\S]*?\}/)
+        # Use greedy matching to capture nested objects correctly
+        json_match = response.match(/\{[\s\S]*\}/)
         return nil unless json_match
 
         json_str = json_match[0]
@@ -446,49 +447,57 @@ module Vibe
         begin
           parsed = JSON.parse(json_str)
 
-          # Validate required fields
-          return nil unless parsed['confidence']
+          # DEBUG: Log the parsed response
+          puts "[AI Triage Debug] Parsed response: #{parsed.inspect[0..500]}" if ENV['VIBE_DEBUG_AI_TRIAGE']
 
-          # Check for explicit null skill (AI determined request is irrelevant)
-          if parsed['skill'].nil? || parsed['skill'] == 'null'
-            return nil
+          # Handle both old single-skill and new multi-skill formats
+          if parsed['skills']
+            # New multi-skill format: {"skills": [...]}
+            parsed
+          elsif parsed['skill']
+            # Old single-skill format: {"skill": ..., "confidence": ...}
+            # Convert to new format for consistency
+            {'skills' => [parsed]}
+          else
+            # Unknown format
+            nil
           end
-
-          # Validate confidence threshold
-          return nil unless parsed['confidence'].is_a?(Numeric) &&
-                            parsed['confidence'] >= @confidence_threshold
-
-          parsed
         rescue JSON::ParserError => e
           log_error("JSON parsing error: #{e.message}", response, {})
           nil
         end
       end
 
-      # Match skill from AI analysis result
-      def match_skill_from_analysis(ai_result, context)
-        skill_id = ai_result['skill']
-        skill = find_skill(skill_id)
-        return nil unless skill
+      # Match skills from AI analysis result (supports multiple candidates)
+      def match_skills_from_analysis(ai_result, context)
+        skills_list = ai_result['skills']
+        return nil unless skills_list
+        return [] if skills_list.empty?
 
-        # Calculate preference boost (user history)
-        preference_boost = calculate_preference_boost(skill_id)
+        matched_skills = []
+        skills_list.each do |skill_data|
+          skill_id = skill_data['id']
+          skill = find_skill(skill_id)
+          next unless skill
 
-        # Calculate context boost (file type relevance)
-        context_boost = calculate_context_boost(skill, context)
+          # Calculate preference boost (user history)
+          preference_boost = calculate_preference_boost(skill_id)
 
-        # Combine AI confidence with boosts
-        final_confidence = ai_result['confidence'] * (1 + preference_boost + context_boost)
+          # Calculate context boost (file type relevance)
+          context_boost = calculate_context_boost(skill, context)
 
-        {
-          skill: skill,
-          ai_confidence: ai_result['confidence'],
-          final_confidence: final_confidence,
-          reasoning: ai_result['reasoning'] || '',
-          intent: ai_result['intent'],
-          urgency: ai_result['urgency'],
-          complexity: ai_result['complexity']
-        }
+          # Combine AI confidence with boosts
+          final_confidence = skill_data['confidence'] * (1 + preference_boost + context_boost)
+
+          matched_skills << {
+            skill: skill,
+            ai_confidence: skill_data['confidence'],
+            final_confidence: final_confidence,
+            reasoning: skill_data['reasoning'] || ''
+          }
+        end
+
+        matched_skills.sort_by { |s| -s[:final_confidence] }
       end
 
       # Find skill by ID in registry
@@ -610,19 +619,34 @@ module Vibe
         }
       end
 
-      # Build final result from AI match
-      def build_result(matched_skill, ai_result)
+      # Build result with multiple candidates for user selection or parallel execution
+      def build_multi_candidate_result(matched_skills)
+        return nil if matched_skills.empty?
+
+        # Convert to CandidateSelector format
+        candidates = matched_skills.map do |s|
+          {
+            id: s[:skill]['id'],
+            skill: s[:skill]['id'],
+            namespace: s[:skill]['namespace'],
+            confidence: s[:final_confidence],
+            source: :layer_0_ai,
+            metadata: {
+              reasoning: s[:reasoning],
+              ai_confidence: s[:ai_confidence],
+              intent: s[:intent],
+              urgency: s[:urgency],
+              complexity: s[:complexity]
+            }
+          }
+        end
+
         {
           matched: true,
-          skill: matched_skill[:skill]['id'],
-          source: matched_skill[:skill]['namespace'],
-          reason: matched_skill[:reasoning],
-          confidence: confidence_level(matched_skill[:final_confidence]),
+          candidates: candidates,
+          source: :layer_0_ai,
           ai_triaged: true,
-          intent: matched_skill[:intent],
-          urgency: matched_skill[:urgency],
-          complexity: matched_skill[:complexity],
-          ai_confidence: matched_skill[:ai_confidence]
+          candidate_count: candidates.size
         }
       end
 
@@ -723,31 +747,42 @@ module Vibe
       # Create LLM provider from configuration
       #
       # Priority:
-      #   1. OpenCode config (explicit project configuration)
-      #   2. Local model environment variables
-      #   3. Auto-detect from environment variables
+      #   1. .vibe/llm-config.json (explicit project model configuration)
+      #   2. opencode.json with models field (OpenCode native config)
+      #   3. Local model environment variables (fallback for local dev)
+      #   4. Auto-detect from environment variables
       #
       # @return [LLMProvider::Base] Provider instance
       def create_provider_from_config
-        # Priority 1: Try to load from OpenCode config (explicit project configuration)
-        if File.exist?('opencode.json') || File.exist?('.vibe/opencode.json')
+        # Priority 1: Try .vibe/llm-config.json (Vibe's explicit model configuration)
+        if File.exist?('.vibe/llm-config.json')
           begin
             provider = LLMProvider::Factory.create_from_opencode_config
             # Only use if provider is configured (has API key)
             return provider if provider&.configured?
           rescue ArgumentError => e
-            # OpenCode config exists but is invalid, fall through to next option
-            warn "OpenCode config found but invalid: #{e.message}"
+            # Config exists but is invalid, fall through to next option
+            warn "llm-config.json found but invalid: #{e.message}"
           end
         end
 
-        # Priority 2: Check for local model configuration
+        # Priority 2: Try opencode.json (OpenCode native config)
+        if File.exist?('opencode.json') || File.exist?('.vibe/opencode.json')
+          begin
+            provider = LLMProvider::Factory.create_from_opencode_config
+            return provider if provider&.configured?
+          rescue ArgumentError => e
+            warn "opencode.json found but invalid: #{e.message}"
+          end
+        end
+
+        # Priority 3: Check for local model configuration
         local_url = ENV.fetch('LOCAL_MODEL_URL', nil) || ENV.fetch('VIBE_LOCAL_MODEL_URL', nil)
         if local_url
           return LLMProvider::Factory.create_local_provider(url: local_url)
         end
 
-        # Priority 3: Auto-detect from environment variables
+        # Priority 4: Auto-detect from environment variables
         # Prefer Anthropic for AI routing, fallback to OpenAI
         LLMProvider::Factory.create_from_env('anthropic')
       rescue ArgumentError => e
@@ -762,19 +797,27 @@ module Vibe
 
       # Detect which triage model to use based on provider
       #
+      # Priority:
+      #   1. VIBE_TRIAGE_MODEL env (explicit override)
+      #   2. OpenCode/.vibe/llm-config.json (project configuration)
+      #   3. Local model environment variables (fallback for local dev)
+      #   4. Auto-detect based on provider
+      #
       # @return [String] Model identifier
       def detect_triage_model
+        # Priority 1: Explicit environment variable override
         env_model = ENV.fetch('VIBE_TRIAGE_MODEL', nil)
         return env_model if env_model
 
-        # Check for local model configuration
+        # Priority 2: OpenCode config (includes .vibe/llm-config.json)
+        # This is the explicit project configuration and should have priority
+        opencode_model = detect_model_from_opencode_config
+        return opencode_model if opencode_model
+
+        # Priority 3: Local model configuration (fallback for local development)
         local_model = ENV.fetch('LOCAL_MODEL_NAME', nil) || ENV.fetch('VIBE_LOCAL_MODEL_NAME', nil)
         local_url = ENV.fetch('LOCAL_MODEL_URL', nil) || ENV.fetch('VIBE_LOCAL_MODEL_URL', nil)
         return local_model if local_model && local_url
-
-        # Check OpenCode config for model specification
-        opencode_model = detect_model_from_opencode_config
-        return opencode_model if opencode_model
 
         # Auto-detect based on provider
         if @llm_provider&.provider_name == 'OpenAI'
@@ -788,8 +831,23 @@ module Vibe
 
       # Detect model from OpenCode configuration
       #
+      # Checks multiple config files in priority order:
+      #   1. .vibe/llm-config.json (Vibe's explicit model configuration)
+      #   2. opencode.json (OpenCode native config)
+      #   3. .vibe/opencode.json (OpenCode config in .vibe directory)
+      #
       # @return [String, nil] Model identifier or nil
       def detect_model_from_opencode_config
+        # Priority 1: .vibe/llm-config.json (Vibe's explicit model configuration)
+        vibe_config = File.join(Dir.pwd, '.vibe', 'llm-config.json')
+        if File.exist?(vibe_config)
+          config = JSON.parse(File.read(vibe_config))
+          models_config = config['models'] || {}
+          model_config = models_config['fast'] || models_config['workhorse'] || models_config['critical']
+          return model_config&.dig('model')
+        end
+
+        # Priority 2: opencode.json or .vibe/opencode.json
         return nil unless File.exist?('opencode.json') || File.exist?('.vibe/opencode.json')
 
         config_file = File.exist?('opencode.json') ? 'opencode.json' : '.vibe/opencode.json'

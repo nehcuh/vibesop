@@ -94,9 +94,40 @@ module Vibe
 
       # Build URI for API request
       #
+      # Handles custom base URLs that may include path segments.
+      # If api_endpoint starts with '/', it's treated as an absolute path.
+      # Otherwise, it's joined relative to the base URL.
+      #
       # @return [URI] Parsed URI object
       def build_uri
-        URI.join(@base_url, api_endpoint)
+        base_uri = URI.parse(@base_url)
+
+        # Use custom endpoint override if provided (for non-standard APIs)
+        endpoint_override = instance_variable_get(:@api_endpoint_override)
+
+        # Check if this is a standard provider base_url
+        # (e.g., https://api.openai.com or https://api.anthropic.com)
+        standard_hosts = ['api.openai.com', 'api.anthropic.com']
+
+        if standard_hosts.include?(base_uri.host)
+          # Standard provider - use URI.join behavior (leading / replaces path)
+          URI.join(@base_url, api_endpoint)
+        elsif endpoint_override
+          # Custom endpoint specified in config - use it directly
+          base_path = base_uri.path.sub(/\/$/, '')
+          endpoint_path = endpoint_override.sub(/^\//, '')
+          full_path = [base_path, endpoint_path].join('/')
+
+          URI.parse("#{base_uri.scheme}://#{base_uri.host}#{base_uri.port ? ":#{base_uri.port}" : ''}#{full_path}")
+        else
+          # Custom provider - append default endpoint to base_url path
+          # Remove leading / from endpoint, and ensure base_path doesn't end with /
+          base_path = base_uri.path.sub(/\/$/, '')
+          endpoint_path = api_endpoint.sub(/^\//, '')
+          full_path = [base_path, endpoint_path].join('/')
+
+          URI.parse("#{base_uri.scheme}://#{base_uri.host}#{base_uri.port ? ":#{base_uri.port}" : ''}#{full_path}")
+        end
       end
 
       # Get the API endpoint path
