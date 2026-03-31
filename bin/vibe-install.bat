@@ -589,5 +589,8 @@ call :show_completion full
 pause
 exit /b 0
 
-REM Run main
-:main
+REM ========================================
+REM Entry Point - Run main when script is executed
+REM ========================================
+
+call :main
