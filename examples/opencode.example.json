@@ -7,7 +7,7 @@
     "fast": {
       "provider": "anthropic",
       "model": "claude-haiku-4-20250514",
-      "api_key": "sk-ant-api03-your-api-key-here",
+      "api_key": "<YOUR_ANTHROPIC_API_KEY>",
       "temperature": 0.3
     }
   }

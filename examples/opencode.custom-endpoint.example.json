@@ -6,9 +6,9 @@
   "models": {
     "fast": {
       "provider": "openai",
-      "model": "your-model-name",
-      "api_key": "your-api-key",
-      "base_url": "https://your-custom-endpoint.com/v1",
+      "model": "<YOUR_MODEL_NAME>",
+      "api_key": "<YOUR_API_KEY>",
+      "base_url": "https://<YOUR_CUSTOM_ENDPOINT>/v1",
       "temperature": 0.3
     }
   }
