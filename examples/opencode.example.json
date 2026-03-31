@@ -1,0 +1,14 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "AGENTS.md"
+  ],
+  "models": {
+    "fast": {
+      "provider": "anthropic",
+      "model": "claude-haiku-4-20250514",
+      "api_key": "sk-ant-api03-your-api-key-here",
+      "temperature": 0.3
+    }
+  }
+}

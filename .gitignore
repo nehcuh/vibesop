@@ -64,3 +64,11 @@ debug_*.rb
 /.vibe/test-copy/
 /PROJECT_CONTEXT.md.bak
 .vibe/llm-config.json
+
+# AI routing benchmark results
+ai_routing_*_results.json
+test/benchmark/ai_routing_benchmark_results.json
+
+# Test result files
+test_*.json
+*_test_results.json

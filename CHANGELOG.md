@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **项目全面改进与文档同步** (2026-03-31)
+  - 清理根目录散落的测试脚本，移动到 `test/` 目录
+  - 更新 gitignore 忽略测试结果文件
+  - 同步架构文档状态：标记 `instinct-learning-design.md` 为已实现
+  - 合并项目审查报告，使用更新版本
+  - 移动 OpenCode 示例配置到 `examples/` 目录
+  - 修复测试脚本路径引用
+
 - **OpenCode AI 路由配置增强** (2026-03-30)
   - 支持在配置文件中直接添加 API key（无需环境变量）
   - 支持自定义 OpenAI 兼容端点（如智谱 GLM、Azure、Together 等）

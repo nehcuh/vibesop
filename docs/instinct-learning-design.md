@@ -1,5 +1,14 @@
 # Instinct 学习系统设计文档
 
+> **状态**: ✅ **已实现** (2026-03-29)
+> **实现文件**: `lib/vibe/instinct_manager.rb` (29 tests, passing)
+> **技能定义**: `skills/instinct-learning/SKILL.md`
+> **命令**: `vibe instinct <learn|learn-eval|status|export|import|evolve>`
+>
+> 本设计文档已完整实现，保留作为架构参考。
+
+---
+
 ## 概述
 
 Instinct 学习系统是 VibeSOP 的核心创新，能够从 session 中自动提取可复用的模式，形成"本能"知识库。

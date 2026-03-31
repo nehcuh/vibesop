@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "AGENTS.md"
+  ],
+  "models": {
+    "fast": {
+      "provider": "openai",
+      "model": "your-model-name",
+      "api_key": "your-api-key",
+      "base_url": "https://your-custom-endpoint.com/v1",
+      "temperature": 0.3
+    }
+  }
+}
