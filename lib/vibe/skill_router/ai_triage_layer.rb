@@ -638,6 +638,8 @@ module Vibe
       def build_multi_candidate_result(matched_skills)
         return nil if matched_skills.empty?
 
+        top_skill = matched_skills.first
+
         # Convert to CandidateSelector format
         candidates = matched_skills.map do |s|
           {
@@ -658,11 +660,22 @@ module Vibe
 
         {
           matched: true,
-          candidates: candidates,
+          skill: top_skill[:skill]['id'],           # Primary skill (top match)
+          candidates: candidates,                    # All candidates for user choice/parallel
           source: :layer_0_ai,
           ai_triaged: true,
-          candidate_count: candidates.size
+          candidate_count: candidates.size,
+          confidence: confidence_level(top_skill[:final_confidence])
         }
+      end
+
+      # Convert numeric confidence to symbolic level
+      def confidence_level(score)
+        return :very_high if score >= 0.85
+        return :high if score >= 0.75
+        return :medium if score >= 0.60
+        return :low if score >= 0.40
+        :very_low
       end
 
       # Enrich result with metadata
