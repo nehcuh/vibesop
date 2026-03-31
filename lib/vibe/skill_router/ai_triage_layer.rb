@@ -401,9 +401,9 @@ module Vibe
       def build_skills_summary
         return '' unless @registry['skills']
 
-        # Only show high-priority skills to save tokens
+        # Show all available skills (P0, P1, P2) for accurate matching
+        # Previously only showed P0/P1, causing P2 skills to never be matched
         @registry['skills']
-          .select { |s| s['priority'] == 'P0' || s['priority'] == 'P1' }
           .map { |s| "- #{s['id']}: #{s['intent']}" }
           .join("\n")
       end
@@ -492,8 +492,25 @@ module Vibe
       end
 
       # Find skill by ID in registry
+      # Supports both full IDs (gstack/review) and shorthand (/review)
       def find_skill(skill_id)
-        @registry['skills']&.find { |s| s['id'] == skill_id }
+        return nil unless skill_id
+        return nil unless @registry['skills']
+
+        # Try exact match first
+        skill = @registry['skills']&.find { |s| s['id'] == skill_id }
+        return skill if skill
+
+        # Try shorthand match (e.g., /review → gstack/review or superpowers/review)
+        if skill_id.start_with?('/')
+          shorthand = skill_id.gsub('/', '')
+          @registry['skills']&.find do |s|
+            s['id']&.end_with?(shorthand) || s['id']&.end_with?("/#{shorthand}")
+          end
+        else
+          # Try matching just the suffix
+          @registry['skills']&.find { |s| s['id']&.end_with?("/#{skill_id}") || s['id']&.end_with?("-#{skill_id}") }
+        end
       end
 
       # Calculate preference boost based on user history
