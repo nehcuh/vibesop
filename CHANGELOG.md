@@ -7,57 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- **项目全面改进与文档同步** (2026-03-31)
-  - 清理根目录散落的测试脚本，移动到 `test/` 目录
-  - 更新 gitignore 忽略测试结果文件
-  - 同步架构文档状态：标记 `instinct-learning-design.md` 为已实现
-  - 合并项目审查报告，使用更新版本
-  - 移动 OpenCode 示例配置到 `examples/` 目录
-  - 修复测试脚本路径引用
-
-- **OpenCode AI 路由配置增强** (2026-03-30)
-  - 支持在配置文件中直接添加 API key（无需环境变量）
-  - 支持自定义 OpenAI 兼容端点（如智谱 GLM、Azure、Together 等）
-  - 配置文件分离：`opencode.json`（OpenCode 原生）+ `.vibe/llm-config.json`（Vibe 扩展）
-  - 新增文档：[OpenCode LLM 配置指南](docs/opencode-llm-setup.md)、[配置分离说明](docs/opencode-llm-config-separation.md)
-  - 修复 OpenCode 环境检测优先级问题
-  - 优化 AI 路由置信度，让 AI 有更多机会介入
-- **Autonomous Experiment System** (2026-03-29)
-  - `lib/vibe/experiment_manager.rb` — 核心基础设施 (178 lines)
-  - `skills/autonomous-experiment/SKILL.md` — builtin skill
-  - `vibe experiment <start|results|apply|clean>` 命令
-  - Git worktree 隔离、TSV 结果记录、beliefs 持久化
-  - 多维 rubric 评估、stale experiment 恢复
-  - 21 unit + integration tests
-  - Windows 路径兼容性增强
-- **Bug 修复 + Instinct Skills 移植** (2026-03-29)
-  - 修复 `skills list` TypeError (YAML string/symbol key 混合)
-  - 修复 `route "帮我评审代码"` 无匹配 (缺少"评审"关键词)
-  - 修复 `skills check` NoMethodError (过期引用)
-  - Instinct Skills 从文档落地为独立 skills (`/learn`, `/learn-eval`, `/instinct-status`, `/export`, `/import`, `/evolve`)
-- **VibeSOP 全面评审 + 修复** (2026-03-28)
-  - 测试套件全绿 (1445 tests, 71.96% coverage)
-  - 拆分 3 个大类为 18 个子模块
-  - 删除 17 个过程性文档 (-7026 行)
-  - 提取硬编码常量到 `lib/vibe/defaults.rb`
-
-### Fixed
-- **path_safety: Windows compatibility** — 添加 `norm_sep()`, `root_path?()`, SystemDrive 支持
-- **checkpoint_manager: 冗余路径展开** — 简化 `File.expand_path()` 调用
-- **platform_utils: 路径处理** — 统一使用 `File.join` 而非平台特定逻辑
-
-### Added
-- **Auto Memory Trigger System** (`vibe memory`) (2026-03-24)
-  - `lib/vibe/memory_trigger.rb` — automatic error capture and recording (280 lines)
-  - `lib/vibe/cli/memory_commands.rb` — CLI commands for memory management (190 lines)
-  - `test/unit/test_memory_trigger.rb` — unit tests (9 tests, 35 assertions, 100% pass)
-  - Auto-capture command execution errors with pattern deduplication
-  - Auto-numbering (P001, P002...) for project knowledge entries
-  - Configurable threshold (default: 2 occurrences before recording)
-  - Commands: `record`, `stats`, `enable`, `disable`, `status`
-  - Addresses P0 priority: enhance memory system value through automation
-
 ### Fixed
 - **grader: `determine_grade` Symbol/String type mismatch** — `linter` and `security` warning grades never triggered because `TYPES[type]` (String) was compared against `type` (Symbol) in the `case` statement; fix passes `TYPES[type]` to `determine_grade`, making warning paths reachable for the first time
 - **grader: `@language` instance variable coupling** — `write_temp_candidate` depended on hidden `@language` state set by `pass_at_k`; refactored to explicit parameter, eliminating the implicit coupling
@@ -74,14 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Configurable instinct confidence weights** — `InstinctManager` accepts `config: { weights: { success_rate:, usage_frequency:, source_diversity: } }`; `DEFAULT_WEIGHTS` constant exposes the 60/30/10 defaults; fully backward-compatible
 - **Grader token budget** — `pass_at_k` supports `:token_budget` (chars/4 estimate); over-budget candidates are marked `grade: :skipped` with `reason: 'exceeds_token_budget'`; result includes `budget_exceeded_count` field; no-op when unset
 
-- **Modern CLI Tools Detection** (2026-03-23)
-  - `core/integrations/modern-cli.yaml` — configuration for 8 modern CLI tools
-  - `lib/vibe/external_tools.rb` — detection logic with Ruby native PATH lookup (no subprocess)
-  - `lib/vibe/doc_rendering.rb` — `render_tools_doc` for TOOLS.md generation
-  - `lib/vibe/platform_installer.rb` — user interaction during `vibe init`
-  - `bin/vibe` — `vibe tools <enable|disable|refresh|status>` command
-  - `vibe doctor` — automatic TOOLS.md refresh
-  - Detection: bat, fd, rg, eza, dust, duf, procs, btop (with alternatives support)
 - **Skill Craft System** (2026-03-20)
   - `skills/skill-craft/SKILL.md` — craft personal skills from session history
   - Multi-trigger mechanism: project completion, session accumulation, periodic review
@@ -109,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `core/integrations/gstack.yaml` — full skill pack definition with 21 skills across 7 sprint phases
   - `gstack` namespace in `core/skills/registry.yaml` with trigger modes (suggest/manual)
   - `GstackInstaller` — auto-clone from GitHub (Gitee mirror fallback), run setup, verify installation
-  - Detection logic in `lib/vibe/external_tools.rb` — checks `~/.config/skills/gstack`, `.claude/skills/gstack`, and `~/.config/opencode/skills/gstack`
+  - Detection logic in `lib/vibe/external_tools.rb` — checks `~/.claude/skills/gstack`, `.claude/skills/gstack`, and `~/.config/opencode/skills/gstack`
   - Integration manager auto-installs gstack during `vibe init` (interactive clone + setup + verification)
   - Integration verifier displays gstack status (version, location, skills count, browse readiness with Bun check)
   - Trigger rules in `rules/skill-triggers.md` with overlap documentation for builtin skills

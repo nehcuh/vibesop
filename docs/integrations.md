@@ -97,8 +97,8 @@ This configures a hook in `~/.claude/settings.json` to transparently intercept c
 
 **Installation**:
 - Automatic: `bin/vibe init` detects and offers to install gstack (clone + setup + verification)
-- Global: `git clone https://github.com/garrytan/gstack.git ~/.config/skills/gstack && cd ~/.config/skills/gstack && ./setup`
-- Project-level: `cp -Rf ~/.config/skills/gstack .claude/skills/gstack && cd .claude/skills/gstack && ./setup`
+- Claude Code: `git clone https://github.com/garrytan/gstack.git ~/.claude/skills/gstack && cd ~/.claude/skills/gstack && ./setup`
+- Project-level: `cp -Rf ~/.claude/skills/gstack .claude/skills/gstack && cd .claude/skills/gstack && ./setup`
 - Requires: Bun v1.0+ (for `/browse` browser skills; other skills work without Bun)
 - China mirror: Gitee fallback is used automatically when GitHub is unreachable
 
@@ -328,7 +328,7 @@ Checking external integrations...
    ✓ Cloned successfully from https://github.com/garrytan/gstack.git
    Running gstack setup...
    ✅ gstack installed successfully!
-   Location: ~/.config/skills/gstack
+   Location: ~/.claude/skills/gstack
 
 Configuration complete! 🎉
 ```
@@ -364,7 +364,7 @@ Verifying integrations...
     Status: Ready
 
 [✓] gstack
-    Location: ~/.config/skills/gstack
+    Location: ~/.claude/skills/gstack
     Version: 1.1.0
     Skills: 15 detected
     Browser: Ready

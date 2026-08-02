@@ -2,8 +2,6 @@
 
 require 'tmpdir'
 require 'date'
-require 'json'
-require 'yaml'
 require_relative 'errors'
 
 module Vibe
@@ -12,13 +10,7 @@ module Vibe
   # Host requirements:
   #   @repo_root [String] — absolute path to the workflow repository root
   #                          (used by display_path)
-  #
-  # Usage patterns:
-  #   - include Vibe::Utils; deep_merge(a, b)  # as instance method
-  #   - Vibe::Utils.deep_merge(a, b)           # as module method
   module Utils
-    # extend self makes all methods available as both instance and module methods
-    extend self
     # Deep merge two nested data structures.
     #
     # DESIGN DECISION: LENIENT MODE (宽容模式)
@@ -104,7 +96,9 @@ module Vibe
         else
           # For unknown types, return the original value (shallow copy)
           # This is safer than potentially executing malicious code
-          warn "deep_copy: unhandled type #{value.class}, returning original reference" if ENV['VIBE_DEBUG']
+          if ENV['VIBE_DEBUG']
+            warn "deep_copy: unhandled type #{value.class}, returning original reference"
+          end
           value
         end
       end
@@ -115,21 +109,6 @@ module Vibe
     end
 
     # --- Path helpers ---
-
-    # Walk up from Dir.pwd looking for a .git directory.
-    # Returns the absolute path to the repo root, or nil if not found.
-    def find_repo_root
-      current = Dir.pwd
-      loop do
-        return current if File.exist?(File.join(current, '.git'))
-
-        parent = File.dirname(current)
-        break if parent == current
-
-        current = parent
-      end
-      nil
-    end
 
     # Returns a display-friendly path: relative to @repo_root when possible,
     # otherwise the absolute path.
@@ -149,11 +128,11 @@ module Vibe
     end
 
     def read_yaml_abs(path)
-      ::YAML.safe_load(File.read(path), aliases: true)
+      YAML.safe_load(File.read(path), aliases: true)
     end
 
     def read_json(path)
-      ::JSON.parse(File.read(path))
+      JSON.parse(File.read(path))
     end
 
     def read_json_if_exists(path)
@@ -164,7 +143,7 @@ module Vibe
 
     def write_json(path, content)
       FileUtils.mkdir_p(File.dirname(path))
-      File.write(path, "#{::JSON.pretty_generate(content)}\n")
+      File.write(path, "#{JSON.pretty_generate(content)}\n")
     end
 
     # --- Formatting helpers ---
@@ -208,7 +187,9 @@ module Vibe
         end
         safe = allowed_roots.any? { |root| expanded.start_with?(root) }
 
-        raise ValidationError, "#{context} contains unsafe path traversal: #{path_str}" unless safe
+        unless safe
+          raise ValidationError, "#{context} contains unsafe path traversal: #{path_str}"
+        end
       end
 
       path_str

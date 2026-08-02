@@ -5,23 +5,21 @@
 # Ensures code changes are accompanied by tests
 # Install: Add to pre-commit or pre-push hooks
 
-# TDD enforcement guard — blocks or warns when tests are missing.
 module TDDGuard
-  # Configuration for TDD guard behavior and patterns.
   class Config
     attr_accessor :strict_mode, :test_patterns, :src_patterns, :min_coverage
 
     def initialize
-      @strict_mode = false # false = warn only, true = block
+      @strict_mode = false  # false = warn only, true = block
       @test_patterns = %w[*_test.rb *_spec.rb test_*.py *_test.go]
       @src_patterns = %w[*.rb *.py *.go *.js *.ts *.java]
       @min_coverage = 80.0
     end
 
-    def self.load_from_file(path = '.tdd-guard.yml')
+    def self.load_from_file(path = ".tdd-guard.yml")
       return new unless File.exist?(path)
 
-      require 'yaml'
+      require "yaml"
       config = new
       data = YAML.safe_load(File.read(path), symbolize_names: true)
 
@@ -37,7 +35,6 @@ module TDDGuard
     end
   end
 
-  # Result of a TDD guard check with pass/fail status and issues.
   class CheckResult
     attr_reader :passed, :issues, :warnings
 
@@ -48,10 +45,10 @@ module TDDGuard
     end
 
     def to_s
-      return '✅ TDD Guard: All checks passed' if @passed && @warnings.empty?
+      return "✅ TDD Guard: All checks passed" if @passed && @warnings.empty?
 
       output = []
-      output << (@passed ? '⚠️ TDD Guard: Warnings found' : '🚨 TDD Guard: Issues found')
+      output << (@passed ? "⚠️ TDD Guard: Warnings found" : "🚨 TDD Guard: Issues found")
 
       unless @issues.empty?
         output << "\nIssues:"
@@ -78,7 +75,7 @@ module TDDGuard
   end
 
   # Find corresponding test file for a source file
-  def self.find_test_file(src_path, _test_patterns)
+  def self.find_test_file(src_path, test_patterns)
     base_name = File.basename(src_path, File.extname(src_path))
     dir = File.dirname(src_path)
 
@@ -99,7 +96,7 @@ module TDDGuard
       "#{dir}/#{base_name}.test.js",
       "#{dir}/#{base_name}.spec.js",
       "#{dir}/#{base_name}.test.ts",
-      "#{dir}/#{base_name}.spec.ts"
+      "#{dir}/#{base_name}.spec.ts",
     ]
 
     candidates.find { |c| File.exist?(c) }
@@ -108,7 +105,7 @@ module TDDGuard
   # Main check function
   def self.check(files = nil, config: Config.new)
     files ||= `git diff --cached --name-only --diff-filter=ACM`.strip.split("\n")
-    files = files.reject { |f| f.empty? || f.start_with?('#') }
+    files = files.reject { |f| f.empty? || f.start_with?("#") }
 
     return CheckResult.new(passed: true, issues: [], warnings: []) if files.empty?
 
@@ -133,12 +130,14 @@ module TDDGuard
     if config.strict_mode
       source_files.each do |src|
         test_file = find_test_file(src, config.test_patterns)
-        warnings << "Test file #{test_file} not updated with #{src}" if test_file && !files.include?(test_file)
+        if test_file && !files.include?(test_file)
+          warnings << "Test file #{test_file} not updated with #{src}"
+        end
       end
     end
 
     # Check 3: Coverage check (if coverage data available)
-    if File.exist?('.coverage') || File.exist?('coverage/coverage.json')
+    if File.exist?(".coverage") || File.exist?("coverage/coverage.json")
       coverage = check_coverage(config.min_coverage)
       unless coverage[:passed]
         issues << "Test coverage below threshold: #{coverage[:actual]}% < #{config.min_coverage}%"
@@ -148,7 +147,9 @@ module TDDGuard
     # Check 4: Tests must pass
     if config.strict_mode && !test_files.empty?
       test_result = run_tests
-      issues << "Tests failed: #{test_result[:output]}" unless test_result[:passed]
+      unless test_result[:passed]
+        issues << "Tests failed: #{test_result[:output]}"
+      end
     end
 
     passed = issues.empty?
@@ -157,34 +158,34 @@ module TDDGuard
 
   def self.check_coverage(min_coverage)
     # Try to read coverage from common formats
-    if File.exist?('coverage/coverage.json')
-      require 'json'
-      data = JSON.parse(File.read('coverage/coverage.json'))
-      actual = data['totals']['percent_covered'] || data['total']
+    if File.exist?("coverage/coverage.json")
+      require "json"
+      data = JSON.parse(File.read("coverage/coverage.json"))
+      actual = data["totals"]["percent_covered"] || data["total"]
       return { passed: actual >= min_coverage, actual: actual }
     end
 
-    if File.exist?('.coverage')
+    if File.exist?(".coverage")
       # Simplecov format
       # This is a simplified check
-      return { passed: true, actual: 'unknown' }
+      return { passed: true, actual: "unknown" }
     end
 
-    { passed: true, actual: 'N/A' }
+    { passed: true, actual: "N/A" }
   rescue StandardError
-    { passed: true, actual: 'unknown' }
+    { passed: true, actual: "unknown" }
   end
 
   def self.run_tests
     # Try common test commands
     commands = [
-      'bundle exec rake test',
-      'bundle exec rspec',
-      'pytest',
-      'python -m pytest',
-      'go test ./...',
-      'npm test',
-      'yarn test'
+      "bundle exec rake test",
+      "bundle exec rspec",
+      "pytest",
+      "python -m pytest",
+      "go test ./...",
+      "npm test",
+      "yarn test",
     ]
 
     commands.each do |cmd|
@@ -192,7 +193,7 @@ module TDDGuard
       return { passed: result, output: cmd } if result
     end
 
-    { passed: true, output: 'No test runner found' }
+    { passed: true, output: "No test runner found" }
   end
 end
 
@@ -201,19 +202,19 @@ if __FILE__ == $PROGRAM_NAME
   config = TDDGuard::Config.load_from_file
 
   # Parse command line options
-  require 'optparse'
+  require "optparse"
   OptionParser.new do |opts|
     opts.banner = "Usage: #{$PROGRAM_NAME} [options] [files...]"
 
-    opts.on('-s', '--strict', 'Enable strict mode (block on warnings)') do
+    opts.on("-s", "--strict", "Enable strict mode (block on warnings)") do
       config.strict_mode = true
     end
 
-    opts.on('-c', '--config FILE', 'Config file path') do |f|
+    opts.on("-c", "--config FILE", "Config file path") do |f|
       config = TDDGuard::Config.load_from_file(f)
     end
 
-    opts.on('-h', '--help', 'Show this help') do
+    opts.on("-h", "--help", "Show this help") do
       puts opts
       exit 0
     end
@@ -222,7 +223,7 @@ if __FILE__ == $PROGRAM_NAME
   files = ARGV.empty? ? nil : ARGV
   result = TDDGuard.check(files, config: config)
 
-  puts result
+  puts result.to_s
 
   exit(result.passed ? 0 : 1)
 end

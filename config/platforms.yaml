@@ -18,8 +18,8 @@ platforms:
         entrypoint_name: CLAUDE.md
 
     doc_types:
-      global: [behavior, routing, safety, skills, task_routing, test_standards, tools]
-      project: [behavior, routing, safety, skills, tools]
+      global: [behavior, safety, task_routing, test_standards]
+      project: [behavior, safety]
 
     native_config:
       global:
@@ -59,8 +59,8 @@ platforms:
         entrypoint_name: AGENTS.md
 
     doc_types:
-      global: [behavior, routing, safety, skills, task_routing, test_standards, tools]
-      project: [behavior, routing, safety, skills, tools]
+      global: [behavior, safety, task_routing, test_standards]
+      project: [behavior, safety]
 
     native_config:
       global:

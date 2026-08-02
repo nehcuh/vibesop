@@ -43,9 +43,6 @@ module Vibe
       File.write(File.join(vibe_dir, 'README.md'),
                  generate_vibe_readme(manifest, platform_id))
 
-      # Copy critical rule files to vibe directory for Agent access
-      copy_critical_rule_files(vibe_dir)
-
       # Copy runtime directories if configured
       if config['runtime_dirs'] && !config['runtime_dirs'].empty?
         copy_runtime_dirs(output_root, config['runtime_dirs'], mode)
@@ -66,24 +63,6 @@ module Vibe
     end
 
     private
-
-    # Copy critical rule files to vibe directory for Agent access
-    # This ensures Claude Code Agent can read skill trigger rules
-    def copy_critical_rule_files(vibe_dir)
-      rules_dir = File.join(vibe_dir, 'rules')
-      FileUtils.mkdir_p(rules_dir)
-
-      # Critical rule files that Agent needs to access
-      critical_files = %w[skill-triggers.md behaviors.md memory-flush.md]
-
-      critical_files.each do |file|
-        source = File.join(@repo_root, 'rules', file)
-        next unless File.exist?(source)
-
-        destination = File.join(rules_dir, file)
-        FileUtils.cp(source, destination)
-      end
-    end
 
     def platform_config_dir(platform_id)
       case platform_id
@@ -196,7 +175,6 @@ module Vibe
         - `safety.md` — safety policy
         - `routing.md` — capability tier routing
         - `task-routing.md` — task complexity routing
-        - `tools.md` — available modern CLI tools
       MD
     end
 

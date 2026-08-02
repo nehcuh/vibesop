@@ -92,7 +92,11 @@ module Vibe
       when 'opencode'
         # OpenCode uses XDG config directory per official docs
         # https://github.com/opencode-ai/opencode
-        File.join(base_path, '.config', 'opencode')
+        if windows?
+          File.join(base_path, '.config', 'opencode')
+        else
+          File.expand_path('~/.config/opencode')
+        end
       else
         File.join(base_path, ".#{target}")
       end

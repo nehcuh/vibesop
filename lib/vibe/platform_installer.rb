@@ -3,7 +3,6 @@
 require_relative 'platform_utils'
 require_relative 'user_interaction'
 require_relative 'hook_installer'
-require_relative 'external_tools'
 
 module Vibe
   # Platform installation logic.
@@ -15,12 +14,10 @@ module Vibe
   #   - Vibe::PlatformUtils — for platform-related utilities
   #   - Vibe::UserInteraction — for user prompts
   #   - Vibe::HookInstaller — for hook installation
-  #   - Vibe::ExternalTools — for modern CLI tool detection
   module PlatformInstaller
     include PlatformUtils
     include UserInteraction
     include HookInstaller
-    include ExternalTools
 
     # Build, copy, and write marker for a target to a destination.
     # Shared core used by install_global_config and quickstart.
@@ -41,13 +38,6 @@ module Vibe
                                   destination_root, @repo_root
                                 ])
 
-      # Detect modern CLI tools (only for global init)
-      enable_tools = if !project_level && mode == 'init'
-                       detect_and_enable_modern_cli_tools(target)
-                     else
-                       true
-                     end
-
       manifest = build_target(
         target: target,
         profile_name: profile_name,
@@ -56,12 +46,6 @@ module Vibe
         overlay: overlay,
         project_level: project_level
       )
-
-      # Remove tools.md if user opted out
-      unless enable_tools
-        tools_md = File.join(output_root, 'tools.md')
-        FileUtils.rm(tools_md) if File.exist?(tools_md)
-      end
 
       FileUtils.mkdir_p(destination_root)
       copy_tree_contents(output_root, destination_root)
@@ -131,108 +115,6 @@ module Vibe
                                                 config_entrypoint(target))}"
       puts "2. In your project directory, run: vibe switch --platform #{platform}"
       puts
-    end
-
-    # Detect modern CLI tools and ask user if they want to enable recommendations
-    # @param target [String] Target platform
-    # @return [Boolean] Whether tools were enabled
-    def detect_and_enable_modern_cli_tools(_target)
-      puts "\n🔍 Detecting modern CLI tools..."
-
-      detected = detect_modern_cli_tools
-      available = detected.select { |t| t[:available] }
-      unavailable = detected.reject { |t| t[:available] }
-
-      # Show detection results
-      available.each do |tool|
-        puts "   Checking #{tool[:modern]}... ✅ found at #{tool[:path]}"
-      end
-
-      unavailable.each do |tool|
-        puts "   Checking #{tool[:modern]}... ❌ not found"
-      end
-
-      puts "\n📊 Found #{available.size} of #{detected.size} modern CLI tools"
-      puts
-
-      # Ask user if they want to enable
-      if available.empty?
-        puts 'ℹ️  No modern CLI tools detected. Skipping tool recommendations.'
-        return false
-      end
-
-      puts '📝 Generate tool recommendations for AI?'
-      puts '   This will create tools.md and help AI use modern tools automatically.'
-      print '[Y/n] '
-      response = $stdin.gets
-      return false if response.nil?
-
-      response.chomp.downcase != 'n'
-    end
-
-    # Enable modern CLI tools for all installed platforms
-    # @return [void]
-    def enable_modern_cli_tools_for_all
-      %w[claude-code opencode].each do |target|
-        destination = default_global_destination(target)
-        next unless Dir.exist?(destination)
-
-        puts "Enabling modern CLI tools for #{platform_label(target)}..."
-        build_and_deploy_target(
-          target: target,
-          destination_root: destination,
-          mode: 'tools-enable',
-          project_level: false
-        )
-        puts "  ✅ Updated #{target}"
-      end
-    end
-
-    # Disable modern CLI tools for all installed platforms
-    # @return [void]
-    def disable_modern_cli_tools_for_all
-      %w[claude-code opencode].each do |target|
-        destination = default_global_destination(target)
-        next unless Dir.exist?(destination)
-
-        tools_md = File.join(destination, 'tools.md')
-        if File.exist?(tools_md)
-          FileUtils.rm(tools_md)
-          puts "  ✅ Removed tools.md from #{target}"
-        end
-      end
-    end
-
-    # Refresh modern CLI tools documentation for all platforms
-    # @return [void]
-    def refresh_modern_cli_tools_docs
-      %w[claude-code opencode].each do |target|
-        destination = default_global_destination(target)
-        next unless Dir.exist?(destination)
-
-        # Rebuild with current tool detection
-        build_and_deploy_target(
-          target: target,
-          destination_root: destination,
-          mode: 'doctor',
-          project_level: false
-        )
-      end
-    end
-
-    # Show modern CLI tools status
-    # @return [void]
-    def show_modern_cli_tools_status
-      puts "\n🔧 Modern CLI Tools Status"
-      puts '=' * 40
-      detected = detect_modern_cli_tools
-      detected.each do |tool|
-        icon = tool[:available] ? '✅' : '❌'
-        puts "  #{icon} #{tool[:modern].to_s.ljust(10)} (#{tool[:traditional]})"
-      end
-      puts
-      available_count = detected.count { |t| t[:available] }
-      puts "  #{available_count}/#{detected.size} tools available"
     end
   end
 end

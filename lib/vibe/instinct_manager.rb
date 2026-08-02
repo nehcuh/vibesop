@@ -4,18 +4,15 @@ require 'yaml'
 require 'securerandom'
 require 'time'
 require 'fileutils'
-require_relative 'utils'
-require_relative 'defaults'
 
 module Vibe
   # Manages instinct learning system - automatic pattern extraction from sessions
   class InstinctManager
-    include Utils
     attr_reader :data, :path
 
     DEFAULT_WEIGHTS = {
-      success_rate: 0.6,
-      usage_frequency: 0.3,
+      success_rate:     0.6,
+      usage_frequency:  0.3,
       source_diversity: 0.1
     }.freeze
 
@@ -67,7 +64,9 @@ module Vibe
       results.select! { |i| i['status'] == filters[:status] } if filters[:status]
 
       # Filter by minimum confidence
-      results.select! { |i| i['confidence'] >= filters[:min_confidence] } if filters[:min_confidence]
+      if filters[:min_confidence]
+        results.select! { |i| i['confidence'] >= filters[:min_confidence] }
+      end
 
       # Sort results
       if filters[:sort_by]
@@ -86,7 +85,7 @@ module Vibe
       instinct = {
         'id' => SecureRandom.uuid,
         'pattern' => attributes[:pattern] || attributes['pattern'],
-        'confidence' => attributes[:confidence] || attributes['confidence'] || Defaults::CONFIDENCE_DEFAULT,
+        'confidence' => attributes[:confidence] || attributes['confidence'] || 0.5,
         'source_sessions' => attributes[:source_sessions] ||
                              attributes['source_sessions'] || [],
         'usage_count' => 0,
@@ -158,10 +157,8 @@ module Vibe
     # @return [Float] Confidence score (0.0-1.0)
     def calculate_confidence(instinct)
       base_score      = instinct['success_rate'] * @weights[:success_rate]
-      usage_score     = [instinct['usage_count'] / 20.0,
-                         1.0].min * @weights[:usage_frequency]
-      diversity_score = [instinct['source_sessions'].size / 5.0,
-                         1.0].min * @weights[:source_diversity]
+      usage_score     = [instinct['usage_count'] / 20.0, 1.0].min * @weights[:usage_frequency]
+      diversity_score = [instinct['source_sessions'].size / 5.0, 1.0].min * @weights[:source_diversity]
       [base_score + usage_score + diversity_score, 1.0].min
     end
 
@@ -283,7 +280,7 @@ module Vibe
     # @param filters [Hash] Optional filters
     # @return [String] Formatted context string
     def load_to_context(filters = {})
-      filters[:min_confidence] ||= Defaults::MIN_SUCCESS_RATE
+      filters[:min_confidence] ||= 0.7
       filters[:status] ||= 'active'
       filters[:sort_by] ||= :confidence
 
@@ -304,8 +301,22 @@ module Vibe
     private
 
     def default_storage_path
-      # User-level storage for cross-project instinct sharing
-      File.expand_path('~/.config/vibe/instincts.yaml')
+      # Try to find repo root
+      repo_root = find_repo_root || Dir.pwd
+      File.join(repo_root, 'memory', 'instincts.yaml')
+    end
+
+    def find_repo_root
+      current = Dir.pwd
+      loop do
+        return current if File.exist?(File.join(current, '.git'))
+
+        parent = File.dirname(current)
+        break if parent == current
+
+        current = parent
+      end
+      nil
     end
 
     def default_structure
@@ -334,7 +345,7 @@ module Vibe
               'Success rate must be between 0 and 1'
       end
       # rubocop:disable Style/GuardClause
-      if instinct['usage_count'].negative?
+      if (instinct['usage_count']).negative?
         raise ArgumentError,
               'Usage count must be non-negative'
       end

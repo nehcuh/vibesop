@@ -1,147 +1,107 @@
 @echo off
+REM Vibe installation script for Windows
+REM Installs vibe command to user PATH and records project location
+
 setlocal enabledelayedexpansion
 
-REM Configuration
 set "SCRIPT_DIR=%~dp0"
 set "REPO_ROOT=%SCRIPT_DIR%.."
 set "CONFIG_DIR=%USERPROFILE%\.vibe"
+set "CONFIG_FILE=%CONFIG_DIR%\config.json"
 set "INSTALL_DIR=%USERPROFILE%\.local\bin"
 
-echo ===============================================================================
+echo Vibe Installation for Windows
+echo ==================================================
 echo.
-echo                    VIBE - Windows Installation Wizard
-echo.
-echo ===============================================================================
-echo.
-echo [DEBUG] Script location: %SCRIPT_DIR%
-echo [DEBUG] Repo root: %REPO_ROOT%
+echo Project location: %REPO_ROOT%
+echo Install target: %INSTALL_DIR%\vibe.bat
 echo.
 
-REM Step 1: Validate repository
-echo [1/4] Validating repository structure...
+REM Validate repository structure
 if not exist "%REPO_ROOT%\core" (
-    echo [ERROR] Missing: core\ directory
-    goto :error
+    echo Error: Invalid vibe repository. Missing 'core' directory
+    exit /b 1
 )
 if not exist "%REPO_ROOT%\lib" (
-    echo [ERROR] Missing: lib\ directory
-    goto :error
+    echo Error: Invalid vibe repository. Missing 'lib' directory
+    exit /b 1
 )
 if not exist "%REPO_ROOT%\bin\vibe" (
-    echo [ERROR] Missing: bin\vibe
-    goto :error
-)
-echo [OK] Repository structure validated
-echo.
-
-REM Step 2: Detect dependencies
-echo [2/4] Checking dependencies...
-
-set "HAS_RUBY=0"
-where ruby >nul 2>&1
-if %errorlevel% equ 0 (
-    set "HAS_RUBY=1"
-    echo [OK] Ruby is installed
-) else (
-    echo [WARN] Ruby is NOT installed (required for full functionality)
+    echo Error: bin/vibe not found in repository
+    exit /b 1
 )
 
-set "HAS_GIT=0"
-where git >nul 2>&1
-if %errorlevel% equ 0 (
-    set "HAS_GIT=1"
-    echo [OK] Git is installed
-) else (
-    echo [WARN] Git is NOT installed (required)
-)
-echo.
-
-REM Step 3: Show installation guide if missing deps
-if "%HAS_RUBY%"=="0" (
-    echo ===============================================================================
-    echo ACTION REQUIRED: Install Ruby
-    echo ===============================================================================
-    echo.
-    echo Download Ruby from: https://rubyinstaller.org/downloads/
-    echo.
-    echo 1. Download Ruby+Devkit 3.0 or higher
-    echo 2. Run installer - check "Add Ruby to PATH"
-    echo 3. Also install MSYS2 when prompted
-    echo 4. Close and reopen CMD after installation
-    echo.
-    echo Then run this installer again.
-    echo ===============================================================================
-    echo.
-    pause
+set /p "CONFIRM=Continue? [y/N] "
+if /i not "%CONFIRM%"=="y" if /i not "%CONFIRM%"=="yes" (
+    echo Installation cancelled.
     exit /b 0
 )
 
-if "%HAS_GIT%"=="0" (
-    echo ===============================================================================
-    echo ACTION REQUIRED: Install Git
-    echo ===============================================================================
-    echo.
-    echo Download Git from: https://git-scm.com/download/win
-    echo.
-    echo 1. Download Git for Windows
-    echo 2. Run installer with default options
-    echo 3. Close and reopen CMD after installation
-    echo.
-    echo Then run this installer again.
-    echo ===============================================================================
-    echo.
-    pause
-    exit /b 0
+echo.
+echo Installing...
+echo.
+
+REM Create config directory
+if not exist "%CONFIG_DIR%" (
+    mkdir "%CONFIG_DIR%"
+    echo Created config directory: %CONFIG_DIR%
 )
 
-REM Step 4: Install Vibe
-echo [3/4] Creating configuration...
-if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
-echo [OK] Created: %CONFIG_DIR%
+REM Save configuration
+echo { > "%CONFIG_FILE%"
+echo   "repo_root": "%REPO_ROOT:\=\\%", >> "%CONFIG_FILE%"
+echo   "installed_at": "%date% %time%", >> "%CONFIG_FILE%"
+echo   "platform": "windows" >> "%CONFIG_FILE%"
+echo } >> "%CONFIG_FILE%"
+echo Saved configuration to %CONFIG_FILE%
 
-echo [4/4] Creating wrapper scripts...
-if not exist "%INSTALL_DIR%" mkdir "%INSTALL_DIR%"
+REM Create install directory
+if not exist "%INSTALL_DIR%" (
+    mkdir "%INSTALL_DIR%"
+    echo Created install directory: %INSTALL_DIR%
+)
 
-REM Create batch wrapper for CMD
-echo @echo off > "%INSTALL_DIR%\vibe.bat"
-echo set "REPO_ROOT=%REPO_ROOT%" >> "%INSTALL_DIR%\vibe.bat"
-echo ruby "%%REPO_ROOT%%\bin\vibe" %%* >> "%INSTALL_DIR%\vibe.bat"
-echo [OK] Created: %INSTALL_DIR%\vibe.bat
+REM Create wrapper batch script
+set "WRAPPER_PATH=%INSTALL_DIR%\vibe.bat"
+echo @echo off > "%WRAPPER_PATH%"
+echo REM Vibe wrapper for Windows >> "%WRAPPER_PATH%"
+echo setlocal >> "%WRAPPER_PATH%"
+echo. >> "%WRAPPER_PATH%"
+echo set "CONFIG_FILE=%%USERPROFILE%%\.vibe\config.json" >> "%WRAPPER_PATH%"
+echo. >> "%WRAPPER_PATH%"
+echo if not exist "%%CONFIG_FILE%%" ( >> "%WRAPPER_PATH%"
+echo     echo Error: Vibe not properly installed. Run vibe-install.bat from the repository. >> "%WRAPPER_PATH%"
+echo     exit /b 1 >> "%WRAPPER_PATH%"
+echo ) >> "%WRAPPER_PATH%"
+echo. >> "%WRAPPER_PATH%"
+echo REM Parse JSON to get repo_root (simple extraction) >> "%WRAPPER_PATH%"
+echo for /f "tokens=2 delims=:," %%%%a in ('findstr "repo_root" "%%CONFIG_FILE%%"') do ( >> "%WRAPPER_PATH%"
+echo     set "REPO_ROOT=%%%%a" >> "%WRAPPER_PATH%"
+echo     set "REPO_ROOT=!REPO_ROOT:"=!" >> "%WRAPPER_PATH%"
+echo     set "REPO_ROOT=!REPO_ROOT: =!" >> "%WRAPPER_PATH%"
+echo ) >> "%WRAPPER_PATH%"
+echo. >> "%WRAPPER_PATH%"
+echo if not exist "%%REPO_ROOT%%\bin\vibe" ( >> "%WRAPPER_PATH%"
+echo     echo Error: Vibe repository not found at %%REPO_ROOT%% >> "%WRAPPER_PATH%"
+echo     exit /b 1 >> "%WRAPPER_PATH%"
+echo ) >> "%WRAPPER_PATH%"
+echo. >> "%WRAPPER_PATH%"
+echo ruby "%%REPO_ROOT%%\bin\vibe" %%* >> "%WRAPPER_PATH%"
+echo Installed vibe wrapper to %WRAPPER_PATH%
 
-REM Create bash wrapper for Git Bash
-echo #!/bin/bash > "%INSTALL_DIR%\vibe"
-echo REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." ^&^& pwd)" >> "%INSTALL_DIR%\vibe"
-echo exec ruby "$REPO_ROOT/bin/vibe" "$@" >> "%INSTALL_DIR%\vibe"
-echo [OK] Created: %INSTALL_DIR%\vibe
+echo.
+echo ========================================
+echo Installation complete!
+echo ========================================
+echo.
+echo Next steps:
+echo 1. Add %INSTALL_DIR% to your PATH if not already added
+echo    - Open System Properties ^> Environment Variables
+echo    - Add %INSTALL_DIR% to your user PATH
+echo.
+echo 2. Verify installation: vibe --version
+echo.
+echo 3. Run 'vibe init --platform claude-code' to set up global configuration
+echo.
 
-echo.
-echo ===============================================================================
-echo                    INSTALLATION COMPLETE!
-echo ===============================================================================
-echo.
-echo Quick Start:
-echo   vibe --version
-echo   vibe doctor
-echo   vibe init --platform claude-code
-echo.
-echo IMPORTANT: Add %INSTALL_DIR% to your PATH
-echo.
-echo   1. Press Win+R, type: sysdm.cpl
-echo   2. Advanced ^> Environment Variables
-echo   3. Edit "Path" under User variables
-echo   4. Add: %INSTALL_DIR%
-echo.
-pause
-exit /b 0
-
-:error
-echo.
-echo ===============================================================================
-echo Installation FAILED
-echo ===============================================================================
-echo.
-echo Please run this script from the vibesop repository root.
-echo Current directory should contain: core\, lib\, bin\vibe
-echo.
-pause
-exit /b 1
+endlocal

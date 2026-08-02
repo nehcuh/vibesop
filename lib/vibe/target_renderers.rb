@@ -39,7 +39,6 @@ module Vibe
                   when :skills then render_skills_doc(manifest)
                   when :task_routing then render_task_routing_doc(manifest)
                   when :test_standards then render_test_standards_doc(manifest)
-                  when :tools then render_tools_doc(manifest)
                   when :execution_policy then render_execution_policy_doc(manifest)
                   when :execution then render_execution_policy_doc(manifest)
                   when :general then render_general_doc(manifest)
@@ -67,146 +66,40 @@ module Vibe
       render_generic_project_md('opencode', manifest)
     end
 
-    def render_target_entrypoint_md(target_name, manifest, _extra_sections: nil)
-      integrations_ref = render_integrations_reference(target_name)
+    def render_target_entrypoint_md(target_name, manifest, extra_sections: nil)
+      sp_info = verify_superpowers
+      rtk_info = verify_rtk
+      integrations = render_integrations_section(target_name, sp_info, rtk_info)
 
       <<~MD
-        # #{target_name} Project Config
+        # Vibe workflow for #{target_name}
 
-        > Harness Engineering: Progressive Disclosure Mode
-
-        ## ⚠️ CRITICAL AGENT INSTRUCTION
-
-        **Do NOT guess or hallucinate rules.** When you need information from any category below, you **MUST** use the `read` tool to fetch the file contents before proceeding.
-
-        ## 🚀 AI-Powered Skill Routing
-
-        **⚠️ MANDATORY: ALWAYS call vibe route before starting ANY non-trivial task**
-        This is NOT optional — routing ensures the correct skill is loaded for the task.
-
-        ### MANDATORY Workflow (必须遵循 - 无条件执行)
-
-        **Step 1**: 调用路由获取推荐
-        \`\`\`bash
-        vibe route "<user_request>"
-        \`\`\`
-
-        **Step 2**: 读取推荐的技能文件 ⚠️ 关键步骤
-        \`\`\`markdown
-        read skills/<matched-skill>/SKILL.md
-        \`\`\`
-
-        **Step 3**: 按照技能的步骤执行
-        - 不要跳过技能定义
-        - 严格按照技能说明的流程执行
-
-        **Step 4**: 完成后运行验证
-        \`\`\`bash
-        # 根据技能要求运行相应的验证命令
-        \`\`\`
-
-        ### Example
-        \`\`\`bash
-        # Step 1: 获取推荐
-        vibe route "帮我评审当前项目，包括架构和实现"
-        # Output: 🔥 Matched skill: riper-workflow (95% confidence)
-
-        # Step 2: 读取技能定义 (MANDATORY)
-        read skills/riper-workflow/SKILL.md
-
-        # Step 3: 按照 RIPER 流程执行
-        # Research → Innovate → Plan → Execute → Review
-
-        # Step 4: 运行验证
-        \`\`\`
-
-        **Why use AI routing?**
-        - ✅ **95% accuracy** vs 70% for keyword matching
-        - ✅ **Semantic understanding** - understands intent, not just keywords
-        - ✅ **Multi-provider support** - Claude Haiku or OpenAI GPT
-        - ✅ **Context-aware** - considers file types, errors, recent work
-        - ✅ **~$0.11/month** - cost-effective with 70%+ cache hit rate
-
-        **5-Layer Routing System:**
-        - **Layer 0**: AI Semantic Triage (Haiku/GPT, 95% accuracy)
-        - **Layer 1**: Explicit overrides (user-specified)
-        - **Layer 2**: Scenario patterns (predefined cases)
-        - **Layer 3**: Semantic matching (TF-IDF + cosine similarity)
-        - **Layer 4**: Fuzzy matching (Levenshtein distance)
-
-        ## Quick Navigation
-
-        | Need | Go To |
-        |------|-------|
-        | AI Skill Routing | `Bash(vibe route "<request>")` |
-        | Skill catalog | `read #{config_dir(target_name)}/skills.md` |
-        | Safety rules | `read #{config_dir(target_name)}/safety.md` |
-        | Behavior policies | `read #{config_dir(target_name)}/behavior-policies.md` |
-        | Task routing | `read #{config_dir(target_name)}/task-routing.md` |
-
-        ## Policy Hierarchy (Override Order)
-
-        When rules conflict, follow this priority:
-
-        1. **AI-powered routing** - Use `vibe route` for semantic skill matching
-        2. **Project-specific docs** — Highest priority (if exists)
-        3. **`#{config_dir(target_name)}/`** — Global baseline policies (fallback)
-
-        ## Critical Rules (P0)
-
-        #{bullet_policy_summary(filtered_policies(manifest, %w[always_on routing safety])).lines.first(4).join.chomp}
-
-        ## Skill Priority (When Conflict)
-
-        ```
-        gstack (short) > superpowers (full) > builtin
-        ```
-
-        ## Optional Integrations
-
-        #{integrations_ref}
-
-        ## Reference
-
-        See `#{config_dir(target_name)}/` for full policy docs.
+        Generated from the portable `core/` spec with profile `#{manifest['profile']}`.#{integrations}
         Applied overlay: #{overlay_sentence(manifest)}
+
+        #{target_entrypoint_intent(target_name)}
+
+        ## Non-negotiable rules
+
+        #{bullet_policy_summary(filtered_policies(manifest, %w[always_on routing safety]))}
+
+        ## Capability routing
+
+        #{bullet_mapping(manifest['profile_mapping'])}
+
+        ## Mandatory portable skills
+
+        #{bullet_skill_summary(mandatory_skills(manifest))}
+
+        #{extra_sections}
+
+        ## Safety floor
+
+        #{bullet_target_actions(manifest)}
       MD
     end
 
     private
-
-    def config_dir(target_name)
-      case target_name
-      when 'OpenCode'
-        '.vibe/opencode'
-      else
-        '.vibe/claude-code'
-      end
-    end
-
-    def render_integrations_reference(_target_name)
-      sp_info = verify_superpowers
-      rtk_info = verify_rtk
-
-      lines = []
-
-      # Superpowers reference
-      lines << if sp_info[:installed]
-                 "- **Superpowers**: ✅ Installed (`#{sp_info[:location]}`)"
-               else
-                 '- **Superpowers**: ❌ Not installed — `vibe install superpowers` to enable'
-               end
-
-      # RTK reference
-      if rtk_info[:installed]
-        hook_note = rtk_info[:hook_configured] ? 'hook ✅' : 'run `rtk init --global`'
-        lines << "- **RTK**: ✅ Installed (v#{rtk_info[:version] || 'unknown'}, #{hook_note})"
-      else
-        lines << '- **RTK**: ❌ Not installed — `brew install rtk`'
-      end
-
-      lines.join("\n")
-    end
 
     def render_claude_project_md(manifest)
       config_dir = platform_config_dir('claude-code')
@@ -233,7 +126,6 @@ module Vibe
         - `safety.md` — safety policy
         - `task-routing.md` — task complexity routing
         - `test-standards.md` — testing requirements
-        - `tools.md` — available modern CLI tools
       MD
     end
 

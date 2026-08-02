@@ -133,7 +133,7 @@ See `core/integrations/superpowers.yaml` for full skill definitions.
 
 ## gstack Skill Pack Integration
 
-**Status**: Conditional (detected at `~/.config/skills/gstack`)
+**Status**: Conditional (detected at `~/.claude/skills/gstack`)
 
 gstack provides a virtual engineering team as slash commands, structured as a sprint pipeline:
 **Think → Plan → Build → Review → Test → Ship → Reflect**

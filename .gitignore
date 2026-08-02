@@ -43,32 +43,7 @@ settings.json
 
 # Development intermediate files
 /test-workspace/
-
-# Memory system - keep knowledge assets, ignore temp files
-/memory/.error_cache.yaml
-/memory/.memory-index.json
-/memory/checkpoints/
-/memory/checkpoints.yaml
-
-# Review files
+/memory/
 /PROJECT_REVIEW.md
 /VIBE_CODING_SOP.md
 .env
-
-# Debug / temporary files
-debug_*.rb
-
-# Vibe development cache and temporary files
-/.vibe/cache/
-/.vibe/docs/
-/.vibe/test-copy/
-/PROJECT_CONTEXT.md.bak
-.vibe/llm-config.json
-
-# AI routing benchmark results
-ai_routing_*_results.json
-test/benchmark/ai_routing_benchmark_results.json
-
-# Test result files
-test_*.json
-*_test_results.json

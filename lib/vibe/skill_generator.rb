@@ -11,7 +11,7 @@ module Vibe
     attr_reader :output_dir, :templates
 
     def initialize(output_dir: nil)
-      @output_dir = output_dir || File.expand_path('~/.config/claude/skills/personal')
+      @output_dir = output_dir || File.expand_path('~/.claude/skills/personal')
       @templates = load_templates
       FileUtils.mkdir_p(@output_dir)
     end
@@ -34,7 +34,7 @@ module Vibe
           # %<title>s
 
           > **Generated from your successful workflows**
-          > Confidence: %<confidence>s | Occurrences: %<occurrences>s | Success Rate: %<success_rate>s%%
+          > Confidence: %<confidence>s | Occurrences: %<occurrences>s | Success Rate: %<success_rate>s%
 
           ## When to Use
 

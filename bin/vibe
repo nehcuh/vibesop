@@ -7,7 +7,6 @@ require 'optparse'
 require 'time'
 require 'digest'
 require 'yaml'
-require 'open3'
 require_relative '../lib/vibe/errors'
 require_relative '../lib/vibe/utils'
 require_relative '../lib/vibe/version'
@@ -21,16 +20,15 @@ require_relative '../lib/vibe/builder'
 require_relative '../lib/vibe/init_support'
 require_relative '../lib/vibe/cli/skills_commands'
 require_relative '../lib/vibe/cli/instinct_commands'
+require_relative '../lib/vibe/cli/token_commands'
 require_relative '../lib/vibe/cli/checkpoint_commands'
+require_relative '../lib/vibe/cli/grade_commands'
+require_relative '../lib/vibe/cli/task_commands'
 require_relative '../lib/vibe/cli/parallel_commands'
 require_relative '../lib/vibe/cli/toolchain_commands'
 require_relative '../lib/vibe/cli/security_commands'
 require_relative '../lib/vibe/cli/skill_craft_commands'
-require_relative '../lib/vibe/cli/memory_commands'
-require_relative '../lib/vibe/memory_autoload'
 require_relative '../lib/vibe/skill_manager'
-require_relative '../lib/vibe/skill_router_commands'
-require_relative '../lib/vibe/experiment_manager'
 
 # Main CLI class for the vibe command-line tool.
 class VibeCLI
@@ -45,16 +43,16 @@ class VibeCLI
   include Vibe::InitSupport
   include Vibe::SkillsCommands
   include Vibe::InstinctCommands
+  include Vibe::TokenCommands
   include Vibe::CheckpointCommands
+  include Vibe::GradeCommands
+  include Vibe::TaskCommands
   include Vibe::ParallelCommands
   include Vibe::ToolchainCommands
   include Vibe::SecurityCommands
   include Vibe::SkillCraftCommands
-  include Vibe::MemoryCommands
-  include Vibe::MemoryAutoload
-  include Vibe::SkillRouterCommands
 
-  attr_accessor :skip_integrations, :skip_memory_autoload
+  attr_accessor :skip_integrations
 
   SUPPORTED_TARGETS = Vibe::PlatformUtils::VALID_TARGETS \
     unless defined?(SUPPORTED_TARGETS)
@@ -75,18 +73,15 @@ class VibeCLI
       'doctor' => :run_doctor_command,
       'skills' => :run_skills_command,
       'instinct' => :run_instinct_command,
+      'token' => :run_token_command,
       'checkpoint' => :run_checkpoint_command,
+      'grade' => :run_grade_command,
+      'tasks' => :run_tasks_command,
       'worktree' => :run_worktree_command,
       'cascade' => :run_cascade_command,
       'toolchain' => :run_toolchain_command,
       'scan' => :run_scan_command,
-      'skill-craft' => :run_skill_craft_command,
-      'tools' => :run_tools_command,
-      'memory' => :run_memory_command,
-      'route' => :cmd_route,
-      'route-select' => :cmd_route_select,
-      'route-validate' => :cmd_route_validate,
-      'experiment' => :run_experiment
+      'skill-craft' => :run_skill_craft_command
     }.freeze
   end
 
@@ -152,10 +147,6 @@ class VibeCLI
 
       opts.on('--force', 'Allow overwriting existing files') do
         options[:force] = true
-      end
-
-      opts.on('--skip-memory-autoload', 'Skip memory auto-load configuration prompt') do
-        @skip_memory_autoload = true
       end
 
       opts.on('-h', '--help', 'Show help') do
@@ -228,9 +219,6 @@ class VibeCLI
     puts "Applied #{target} (#{profile_name})#{overlay_label(manifest)} " \
          "-> #{destination_root}"
 
-    # Memory auto-load configuration (project-level only)
-    configure_memory_autoload_for_project(destination_root, target) if project_level
-
     # Check for new skills after applying
     check_skills_after_apply(target)
   end
@@ -245,7 +233,7 @@ class VibeCLI
     return if ENV['VIBE_SKIP_SKILL_CHECK']
 
     manager = Vibe::SkillManager.new(@repo_root, Dir.pwd)
-    changes = manager.check_skill_changes
+    changes = manager.detector.check_skill_changes
 
     return if changes[:new_skills].empty?
 
@@ -371,36 +359,6 @@ class VibeCLI
     end
     puts
 
-    # Check modern CLI tools
-    puts 'Modern CLI Tools:'
-    tools_status = verify_modern_cli_tools
-    if tools_status[:available_count].zero?
-      puts '  ℹ️  No modern CLI tools detected'
-    else
-      puts "  ✅ #{tools_status[:available_count]} tools available:"
-      tools_status[:available_tools].each do |tool|
-        puts "     - #{tool[:modern]} (#{tool[:traditional]})"
-      end
-    end
-
-    # Refresh tool documentation if TOOLS.md exists
-    refreshed = false
-    SUPPORTED_TARGETS.each do |target|
-      destination = default_global_destination(target)
-      next unless Dir.exist?(destination)
-
-      tools_md = File.join(destination, 'TOOLS.md')
-      if File.exist?(tools_md)
-        puts "\n📝 Refreshing TOOLS.md for #{platform_label(target)}..."
-        refresh_modern_cli_tools_docs
-        puts '  ✅ Updated'
-        refreshed = true
-        break
-      end
-    end
-    puts '  (Run `vibe tools enable` to generate TOOLS.md)' if !refreshed && tools_status[:available_count].positive?
-    puts
-
     # Check skill conflicts
     puts 'Skill conflict check:'
     check_skill_conflicts
@@ -459,7 +417,7 @@ class VibeCLI
     end
 
     # Check for new skills since last check
-    changes = manager.check_skill_changes
+    changes = manager.detector.check_skill_changes
     if changes[:new_skills].any?
       puts "     🆕 #{changes[:new_skills].length} new skills detected!"
       puts "        Run 'vibe skills check' to adapt them"
@@ -534,7 +492,7 @@ class VibeCLI
     <<~TEXT
       Usage:
         vibe init --platform PLATFORM [--force|--verify|--suggest]
-        vibe apply PLATFORM [--profile PROFILE] [--overlay FILE] [--force] [--skip-memory-autoload]
+        vibe apply PLATFORM [--profile PROFILE] [--overlay FILE] [--force]
         vibe quickstart [--force]
         vibe onboard [--skip-deploy]
         vibe build TARGET [--profile PROFILE] [--output DIR] [--overlay FILE]
@@ -544,13 +502,14 @@ class VibeCLI
         vibe doctor
         vibe skills <command>
         vibe instinct <command> [options]
+        vibe token <command> [options]
         vibe checkpoint <command> [options]
+        vibe grade <command> [options]
+        vibe tasks <command> [options]
         vibe worktree <command> [options]
         vibe cascade <command> <config.yaml>
         vibe scan <subcommand> [args]
         vibe skill-craft [analyze|generate|triggers|status]
-        vibe tools <enable|disable|refresh|status>
-        vibe experiment <start|results|apply|clean> [config_path]
 
       Commands:
         init        Install global configuration for a platform (e.g., ~/.claude, ~/.config/opencode)
@@ -564,14 +523,15 @@ class VibeCLI
         doctor      Check environment and integration status
         skills      Manage skills (check, list, adapt, install)
         instinct    Instinct learning system (learn, status, export, import, evolve)
+        token       Token optimization (analyze, optimize, stats)
         checkpoint  Code snapshots (create, list, rollback, compare)
+        grade       Code evaluation (run, pass-at-k, summary)
+        tasks       Background tasks (submit, list, status, cancel)
         worktree    Git worktree management (create, list, finish, remove, cleanup)
         cascade     Dependency-aware parallel task execution (run, plan)
         toolchain   Toolchain detection (detect, suggest)
         scan        Security scanning and TDD audit (text, file, tdd, ctx)
         skill-craft Personal skill generation from session history
-        tools       Modern CLI tools management (enable, disable, refresh, status)
-        experiment  Autonomous experiment loop (start, results, apply, clean)
 
       Typical workflow:
         1. vibe init --platform claude-code       # Install global config to ~/.claude
@@ -689,34 +649,6 @@ class VibeCLI
 
     puts "Applied #{target} (#{profile_name})#{overlay_label(manifest)} " \
          "-> #{destination_root}"
-
-    # Memory auto-load configuration (project-level only)
-    configure_memory_autoload_for_project(destination_root, target) if project_level
-  end
-
-  # Configure memory auto-load for project (used by run_use)
-  def configure_memory_autoload_for_project(destination_root, target)
-    return if @skip_memory_autoload
-
-    # Check if already configured
-    existing = existing_autoload_config(destination_root)
-    if existing && existing['enabled']
-      puts
-      puts '📋 记忆自动加载已配置'
-      puts "   平台: #{existing['platforms'].join(', ')}"
-      puts "   配置时间: #{existing['configured_at']}"
-      puts
-      puts '   提示: 使用 `vibe memory autoload --disable` 可禁用'
-      return
-    end
-
-    # Detect memory files
-    detection = detect_memory_files(destination_root)
-    return unless detection[:found]
-
-    # Interactive prompt and configuration
-    config = prompt_memory_autoload(detection, target, destination_root)
-    configure_memory_autoload(config, destination_root, target) if config[:enabled]
   end
 
   def run_inspect(argv)
@@ -744,7 +676,9 @@ class VibeCLI
     end
 
     remaining = parser.parse(argv)
-    options[:target] = normalize_target(remaining.shift) if options[:target].nil? && !remaining.empty?
+    if options[:target].nil? && !remaining.empty?
+      options[:target] = normalize_target(remaining.shift)
+    end
     ensure_no_remaining_args!(remaining)
 
     overlay = resolve_overlay(explicit_path: options[:overlay],
@@ -870,30 +804,6 @@ class VibeCLI
              suggest_only: suggest_only, dry_run: dry_run)
   end
 
-  def run_tools_command(argv)
-    subcommand = argv.first
-
-    case subcommand
-    when 'enable'
-      enable_modern_cli_tools_for_all
-    when 'disable'
-      disable_modern_cli_tools_for_all
-    when 'refresh'
-      refresh_modern_cli_tools_docs
-      puts "✅ Tool documentation refreshed"
-    when 'status'
-      show_modern_cli_tools_status
-    else
-      puts "Usage: vibe tools <enable|disable|refresh|status>"
-      puts ""
-      puts "  enable   — Generate TOOLS.md for all installed platforms"
-      puts "  disable  — Remove TOOLS.md from all installed platforms"
-      puts "  refresh  — Re-detect tools and update TOOLS.md"
-      puts "  status   — Show current tool detection status"
-      exit 1
-    end
-  end
-
   def parse_common_options(argv, banner:)
     options = { force: false }
 
@@ -934,11 +844,6 @@ class VibeCLI
       opts.on('--skip-integrations',
               'Disable automatic detection of external tools (Superpowers, RTK)') do
         @skip_integrations = true
-      end
-
-      opts.on('--skip-memory-autoload',
-              'Skip memory auto-load configuration prompt') do
-        @skip_memory_autoload = true
       end
 
       opts.on('-h', '--help', 'Show help') do
@@ -989,99 +894,6 @@ class VibeCLI
 
   def normalize_target(value, strict: true)
     super(value, strict: strict)
-  end
-
-  def run_experiment(argv)
-    subcommand = argv.shift
-    remaining = argv
-
-    if %w[help --help -h].include?(subcommand)
-      puts <<~TEXT
-        Usage: vibe experiment <start|results|apply|clean> [config_path]
-
-        Subcommands:
-          start    Start an experiment loop (default config: .vibe/experiment.yaml)
-          results  View experiment results and best iteration
-          apply    Apply best changes to main branch
-          clean    Remove worktree and experiment files
-
-        Options:
-          config_path  Path to experiment.yaml (default: .vibe/experiment.yaml)
-      TEXT
-      exit
-    end
-
-    case subcommand
-    when 'start'
-      config_path = File.expand_path(remaining.shift || '.vibe/experiment.yaml')
-      manager = Vibe::ExperimentManager.new(config_path)
-      info = manager.start
-      puts "Experiment started: #{info[:tag]}"
-      puts "  Branch: #{info[:branch]}"
-      puts "  Results: #{manager.results_path}"
-      puts "  Beliefs: #{manager.beliefs_path}"
-      puts "\nAgent should now read experiment.yaml and begin the loop."
-    when 'results'
-      config_path = File.expand_path(remaining.shift || '.vibe/experiment.yaml')
-      manager = Vibe::ExperimentManager.new(config_path)
-      best = manager.current_best
-      total = manager.count_iterations
-      if best
-        puts "Best: commit=#{best[:commit]} score=#{best[:score]}"
-        puts "Total iterations: #{total}"
-      else
-        puts "No iterations completed yet"
-      end
-    when 'apply'
-      config_path = File.expand_path(remaining.shift || '.vibe/experiment.yaml')
-      manager = Vibe::ExperimentManager.new(config_path)
-      best = manager.current_best
-      unless best
-        puts "No successful iteration found"
-        return
-      end
-
-      # Safety: check working tree is clean
-      dirty = `git status --porcelain`.strip
-      unless dirty.empty?
-        raise Vibe::ValidationError,
-              "Working tree has uncommitted changes. Stash or commit before applying experiment results."
-      end
-
-      # Remember current branch to restore on failure
-      original_branch = `git branch --show-current`.strip
-
-      # Switch to main first so dry-run and real merge share the same context
-      checkout_out, checkout_status = Open3.capture2e('git', 'checkout', 'main')
-      unless checkout_status.success?
-        raise Vibe::ValidationError, "Cannot checkout main:\n#{checkout_out}"
-      end
-
-      # Dry-run merge on main
-      dry_out, dry_status = Open3.capture2e('git', 'merge', '--no-commit', '--no-ff', best[:commit])
-      if File.exist?('.git/MERGE_HEAD')
-        system('git', 'merge', '--abort')
-      end
-      unless dry_status.success?
-        system('git', 'checkout', original_branch) unless original_branch.empty?
-        raise Vibe::ValidationError, "Merge would conflict on main:\n#{dry_out}"
-      end
-
-      puts "Applying commit #{best[:commit]} (score: #{best[:score]}) to main branch..."
-      merge_out, merge_status = Open3.capture2e('git', 'merge', best[:commit], '--no-edit')
-      unless merge_status.success?
-        warn "Merge failed:\n#{merge_out}"
-        raise Vibe::ValidationError, "Merge failed. Resolve conflicts manually or run 'vibe experiment clean'."
-      end
-      puts "Applied successfully"
-    when 'clean'
-      config_path = File.expand_path(remaining.shift || '.vibe/experiment.yaml')
-      manager = Vibe::ExperimentManager.new(config_path)
-      manager.clean
-      puts "Experiment files cleaned up"
-    else
-      raise Vibe::ValidationError, "Unknown experiment subcommand: #{subcommand}"
-    end
   end
 end
 if __FILE__ == $PROGRAM_NAME

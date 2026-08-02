@@ -4,7 +4,6 @@
 # These methods are included in VibeCLI class
 
 require_relative '../instinct_manager'
-require_relative '../defaults'
 
 module Vibe
   # CLI commands for the instinct learning subsystem, included in VibeCLI.
@@ -139,7 +138,11 @@ module Vibe
 
       instincts.each_with_index do |entry, idx|
         confidence = entry['confidence'].round(2)
-        label = Defaults.confidence_label(confidence)
+        label = if confidence >= 0.8
+                  'High'
+                else
+                  confidence >= 0.6 ? 'Medium' : 'Low'
+                end
         puts "  #{idx + 1}. [#{label}] #{entry['pattern']} (#{confidence})"
         puts "     Uses: #{entry['usage_count']} | " \
              "Success: #{(entry['success_rate'] * 100).round}%"
@@ -173,14 +176,14 @@ module Vibe
       end
 
       # Group by confidence level
-      high = instincts.select { |i| i['confidence'] >= Defaults::CONFIDENCE_HIGH }
-      medium = instincts.select { |i| i['confidence'] >= Defaults::CONFIDENCE_MEDIUM && i['confidence'] < Defaults::CONFIDENCE_HIGH }
-      low = instincts.select { |i| i['confidence'] < Defaults::CONFIDENCE_MEDIUM }
+      high = instincts.select { |i| i['confidence'] >= 0.8 }
+      medium = instincts.select { |i| i['confidence'] >= 0.6 && i['confidence'] < 0.8 }
+      low = instincts.select { |i| i['confidence'] < 0.6 }
 
       puts "Total: #{instincts.size} instincts\n\n"
 
       if high.any?
-        puts "High Confidence (≥ #{Defaults::CONFIDENCE_HIGH}):"
+        puts 'High Confidence (≥ 0.8):'
         high.each_with_index do |instinct, idx|
           print_instinct_summary(instinct, idx + 1)
         end
@@ -188,7 +191,7 @@ module Vibe
       end
 
       if medium.any?
-        puts "Medium Confidence (#{Defaults::CONFIDENCE_MEDIUM}-#{Defaults::CONFIDENCE_HIGH}):"
+        puts 'Medium Confidence (0.6-0.8):'
         medium.each_with_index do |instinct, idx|
           print_instinct_summary(instinct, high.size + idx + 1)
         end
@@ -197,7 +200,7 @@ module Vibe
 
       return unless low.any?
 
-      puts "Low Confidence (< #{Defaults::CONFIDENCE_MEDIUM}):"
+      puts 'Low Confidence (< 0.6):'
       low.each_with_index do |instinct, idx|
         print_instinct_summary(instinct, high.size + medium.size + idx + 1)
       end
@@ -265,9 +268,9 @@ module Vibe
       puts '=' * 60
       puts
       puts "  ✓ Imported: #{stats[:imported]} new instincts"
-      puts "  ⊘ Skipped: #{stats[:skipped]} duplicates" if stats[:skipped].positive?
-      puts "  🔀 Merged: #{stats[:merged]} instincts" if stats[:merged].positive?
-      puts "  ⚠ Errors: #{stats[:errors]}" if stats[:errors].positive?
+      puts "  ⊘ Skipped: #{stats[:skipped]} duplicates" if (stats[:skipped]).positive?
+      puts "  🔀 Merged: #{stats[:merged]} instincts" if (stats[:merged]).positive?
+      puts "  ⚠ Errors: #{stats[:errors]}" if (stats[:errors]).positive?
       puts
     rescue StandardError => e
       puts "\n✗ Import failed: #{e.message}"
@@ -441,13 +444,17 @@ module Vibe
         if success
           current_sequence << call
         else
-          candidates << build_candidate(current_sequence, session_data) if current_sequence.size >= 3
+          if current_sequence.size >= 3
+            candidates << build_candidate(current_sequence, session_data)
+          end
           current_sequence = []
         end
       end
 
       # Check last sequence
-      candidates << build_candidate(current_sequence, session_data) if current_sequence.size >= 3
+      if current_sequence.size >= 3
+        candidates << build_candidate(current_sequence, session_data)
+      end
 
       candidates
     end

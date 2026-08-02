@@ -8,40 +8,24 @@ author: Garry Tan (@garrytan)
 license: MIT
 
 installation_methods:
-  unified:
-    preferred: git_clone
-    commands:
-      - git clone https://github.com/garrytan/gstack.git ~/.config/skills/gstack
-      - cd ~/.config/skills/gstack && ./setup
-    requirements:
-      - Bun v1.0+ (for /browse browser binary)
-    notes: |
-      Unified storage location shared across all platforms (Claude Code, OpenCode, etc.)
-      Symlinks will be automatically created in platform-specific directories.
-      Project-level install: cp -Rf ~/.config/skills/gstack .claude/skills/gstack (legacy) or ~/.config/claude/skills/gstack (new)
-
   claude-code:
     preferred: git_clone
     commands:
-      - git clone https://github.com/garrytan/gstack.git ~/.config/skills/gstack
-      - cd ~/.config/skills/gstack && ./setup
-    notes: |
-      Unified location is preferred. Skills will be symlinked to ~/.config/claude/skills/gstack-*
+      - git clone https://github.com/garrytan/gstack.git ~/.claude/skills/gstack
+      - cd ~/.claude/skills/gstack && ./setup
     requirements:
       - Bun v1.0+ (for /browse browser binary)
     notes: |
-      Legacy installation method for Claude Code.
-      Consider using unified location (~/.config/skills/gstack) for cross-platform sharing.
+      After install, add a gstack section to CLAUDE.md listing available skills.
+      Project-level install: cp -Rf ~/.claude/skills/gstack .claude/skills/gstack
 
   opencode:
     preferred: manual
     steps:
-      - Clone to ~/.config/skills/gstack (unified location)
+      - Clone to ~/.config/opencode/skills/gstack
       - Run ./setup to build browser binary
       - Reference skills in AGENTS.md
-    notes: |
-      OpenCode can load gstack skills from unified location via symlinks.
-      Legacy path (~/.config/opencode/skills/gstack) is still supported.
+    notes: OpenCode can load gstack skills via instruction references
 
   manual:
     steps:
@@ -52,11 +36,8 @@ installation_methods:
 
 detection:
   paths:
-    - ~/.config/skills/gstack           # Unified storage location (preferred)
-    - ~/.config/claude/skills/gstack-*  # Claude Code skill symlinks
-    - ~/.config/opencode/skills/gstack-*  # OpenCode skill symlinks
-    - .claude/skills/gstack             # Project-level location (legacy)
-    - ~/.claude/skills/gstack-*         # Legacy Claude Code skill symlinks
+    - ~/.claude/skills/gstack
+    - .claude/skills/gstack
   verification:
     method: check_skill_dir
     marker_files:

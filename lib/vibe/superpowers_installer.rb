@@ -6,7 +6,6 @@ require 'timeout'
 require 'rbconfig'
 require_relative 'user_interaction'
 require_relative 'platform_utils'
-require_relative 'defaults'
 
 module Vibe
   # Installer for the Superpowers skill pack (clones repo and links skills).
@@ -22,23 +21,21 @@ module Vibe
     SUPERPOWERS_DEFAULT_INSTALL_DIR = File.expand_path('~/.config/skills/superpowers')
 
     # Clone configuration
-    CLONE_TIMEOUT = Defaults::CLONE_TIMEOUT
+    CLONE_TIMEOUT = 60 # seconds
     MAX_RETRIES = 3
 
     # target_dir: the skills directory where individual skill symlinks are created.
     # Each entry in source_subdir gets its own symlink inside target_dir.
-    # Symlink naming format: {repo}-{skill} (e.g., superpowers-brainstorming)
     SUPERPOWERS_PLATFORM_SYMLINK_PATHS = {
       'claude-code' => {
         source_subdir: 'skills',
-        target_dir: '~/.config/claude/skills'
+        target_dir: '~/.claude/skills'
       },
       'opencode' => {
         source_subdir: 'skills',
         target_dir: '~/.config/opencode/skills'
       }
     }.freeze
-    SUPERPOWERS_REPO_NAME = 'superpowers'
 
     def self.install_superpowers(platform = nil)
       install_superpowers_for_platform(platform || 'claude-code')
@@ -123,20 +120,18 @@ module Vibe
 
       skill_entries.each do |entry|
         source_path = File.join(source_skills_dir, entry)
-        # Use naming format: {repo}-{skill} (e.g., superpowers-brainstorming)
-        link_name = "#{SUPERPOWERS_REPO_NAME}-#{entry}"
-        link_path = File.join(target_dir, link_name)
+        link_path = File.join(target_dir, entry)
 
         if skill_linked?(link_path, source_path)
           skipped += 1
           next
         elsif File.exist?(link_path) || File.symlink?(link_path)
-          puts "   ⚠️  Skipping #{link_name}: already exists at #{link_path}"
+          puts "   ⚠️  Skipping #{entry}: already exists at #{link_path}"
           next
         end
 
         create_skill_link(source_path, link_path)
-        puts "   ✓ #{link_name}"
+        puts "   ✓ #{entry}"
         created += 1
       end
 
@@ -169,7 +164,9 @@ module Vibe
 
       issues << "Superpowers not cloned to #{shared_dir}" unless Dir.exist?(shared_dir)
 
-      issues << "Skills directory not found in #{shared_dir}" unless Dir.exist?(source_skills_dir)
+      unless Dir.exist?(source_skills_dir)
+        issues << "Skills directory not found in #{shared_dir}"
+      end
 
       skills_count = 0
       linked_count = 0
@@ -180,11 +177,11 @@ module Vibe
 
         skill_entries.each do |entry|
           source_path = File.join(source_skills_dir, entry)
-          # Use naming format: {repo}-{skill} (e.g., superpowers-brainstorming)
-          link_name = "#{SUPERPOWERS_REPO_NAME}-#{entry}"
-          link_path = File.join(target_dir, link_name)
+          link_path = File.join(target_dir, entry)
 
-          issues << "Missing or incorrect skill link for: #{link_name}" unless skill_linked?(link_path, source_path)
+          unless skill_linked?(link_path, source_path)
+            issues << "Missing or incorrect skill link for: #{entry}"
+          end
           linked_count += 1 if skill_linked?(link_path, source_path)
         end
       end

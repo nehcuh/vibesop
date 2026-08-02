@@ -20,4 +20,3 @@ Supporting notes are under `.vibe/claude-code/`:
 - `safety.md` — safety policy
 - `routing.md` — capability tier routing
 - `task-routing.md` — task complexity routing
-- `tools.md` — available modern CLI tools

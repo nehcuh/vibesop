@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'rbconfig'
 require_relative 'errors'
 
 module Vibe
@@ -13,19 +12,7 @@ module Vibe
   # Depends on methods from:
   #   Vibe::Utils — write_json, display_path
   module PathSafety
-    UNSAFE_OUTPUT_PATHS = if Gem.win_platform?
-      system_drive = (ENV['SystemDrive'] || 'C:').sub('\\', '/')
-      [
-        '/',
-        "#{system_drive}/",
-        "#{system_drive}/Windows",
-        "#{system_drive}/Program Files",
-        "#{system_drive}/Program Files (x86)",
-        "#{system_drive}/ProgramData"
-      ].freeze
-    else
-      ['/', '/tmp', '/var', '/etc', '/usr'].freeze
-    end
+    UNSAFE_OUTPUT_PATHS = ['/', '/tmp', '/var', '/etc', '/usr'].freeze
     # macOS temp directories under /var are safe
     SAFE_VAR_PREFIXES = ['/var/folders/'].freeze
     # Maximum recursion depth for normalize_path to prevent stack overflow
@@ -33,8 +20,8 @@ module Vibe
 
     def ensure_safe_output_path!(output_root)
       expanded = normalize_path(output_root)
-      home = norm_sep(File.expand_path(Dir.home))
-      repo = norm_sep(File.expand_path(@repo_root))
+      home = File.expand_path(Dir.home)
+      repo = File.expand_path(@repo_root)
 
       # Check if path is under a safe /var prefix (e.g., /var/folders/ on macOS)
       is_safe_var = SAFE_VAR_PREFIXES.any? do |prefix|
@@ -44,7 +31,9 @@ module Vibe
 
       UNSAFE_OUTPUT_PATHS.each do |unsafe|
         unsafe_expanded = normalize_path(unsafe)
-        next unless expanded == unsafe_expanded || expanded.start_with?("#{unsafe_expanded}/")
+        unless expanded == unsafe_expanded || expanded.start_with?("#{unsafe_expanded}/")
+          next
+        end
         # Allow if it's under a safe /var prefix
         next if unsafe == '/var' && is_safe_var
 
@@ -163,37 +152,27 @@ module Vibe
         )
       end
 
-      # Expand path first to handle relative paths, normalize separators
-      expanded = norm_sep(File.expand_path(path))
+      # Expand path first to handle relative paths
+      expanded = File.expand_path(path)
 
       # Try to resolve symlinks if path exists
       begin
-        return norm_sep(File.realpath(expanded))
+        File.realpath(expanded)
       rescue Errno::ENOENT
         # Path doesn't exist, try to resolve parent directories
         # This handles cases like: symlink -> real, comparing with real/nonexistent/child
         parent = File.dirname(expanded)
         basename = File.basename(expanded)
 
-        # Recursively normalize parent if it's not a root path
-        if parent != expanded && !root_path?(parent)
+        # Recursively normalize parent if it's not root
+        if parent != expanded && parent != '/'
           normalized_parent = normalize_path(parent, depth + 1)
-          return norm_sep(File.join(normalized_parent, basename))
+          return File.join(normalized_parent, basename)
         end
 
         # Parent is root or same as current, return as-is
         expanded
       end
-    end
-
-    # Normalize path separators to forward slashes for cross-platform comparison
-    def norm_sep(path)
-      path.tr('\\', '/')
-    end
-
-    # Check if path is a filesystem root (works on both Unix and Windows)
-    def root_path?(path)
-      path == '/' || path.match?(/\A[A-Za-z]:\/?\z/)
     end
 
     def enforce_safe_destination!(staging_root, destination_root, force)

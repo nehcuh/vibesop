@@ -97,7 +97,9 @@ module Vibe
             end
 
             # If this task failed and stop_on_failure, skip everything downstream
-            skip_downstream(tsk['id']) if tsk['status'] == STATUS[:failed] && stop_on_failure
+            if tsk['status'] == STATUS[:failed] && stop_on_failure
+              skip_downstream(tsk['id'])
+            end
           end
 
           threads << thread
@@ -222,7 +224,7 @@ module Vibe
 
     # Detect cycles via DFS
     def cyclic?
-      state = {} # :unvisited | :visiting | :visited
+      state = {}   # :unvisited | :visiting | :visited
 
       visit = lambda do |id|
         return false if state[id] == :visited

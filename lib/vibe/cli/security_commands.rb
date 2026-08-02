@@ -2,6 +2,7 @@
 
 require_relative '../security_scanner'
 require_relative '../tdd_enforcer'
+require_relative '../context_optimizer'
 
 module Vibe
   # CLI commands for security scanning and TDD enforcement, included in VibeCLI.
@@ -13,6 +14,7 @@ module Vibe
       when 'text'   then run_scan_text(argv)
       when 'file'   then run_scan_file(argv)
       when 'tdd'    then run_tdd_audit(argv)
+      when 'ctx'    then run_ctx_stats(argv)
       when nil, 'help', '--help', '-h' then puts security_usage
       else
         raise Vibe::ValidationError,
@@ -94,17 +96,17 @@ module Vibe
     end
 
     def run_ctx_stats(argv)
-      # Simple context stats without ContextOptimizer dependency
+      # Simple demo: estimate tokens for stdin or a file
       input = if argv.first && File.exist?(argv.first)
                 File.read(argv.shift)
               else
                 $stdin.read
               end
 
-      words  = input.split(/\s+/).length
-      chars  = input.length
-      # Rough token estimate: ~4 chars per token for English
-      tokens = (chars / 4.0).ceil
+      optimizer = ContextOptimizer.new
+      tokens    = optimizer.estimate_tokens(input)
+      words     = input.split(/\s+/).length
+      chars     = input.length
 
       puts 'Context stats:'
       puts "  Characters : #{chars}"

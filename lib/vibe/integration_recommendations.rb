@@ -248,7 +248,6 @@ module Vibe
       case name
       when 'superpowers' then 'Superpowers Skill Pack'
       when 'rtk' then 'RTK (Token Optimizer)'
-      when 'gstack' then 'gstack Skill Pack'
       else name.to_s.split('_').map(&:capitalize).join(' ')
       end
     end

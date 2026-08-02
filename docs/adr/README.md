@@ -34,13 +34,8 @@ Each ADR follows this structure:
 |--------|-------|--------|------|
 | 0001 | Use YAML as Configuration Format | Accepted | 2026-03-15 |
 | 0002 | Portable Core Architecture | Accepted | 2026-03-16 |
-
-### Related Architecture Documents
-
-See `docs/architecture/` for renderer-specific ADRs:
-- ADR-001: Configuration-Driven Renderer Architecture (Proposed)
-- ADR-002: Overlay System Improvements (Proposed)
-- ADR-003: Template System Design (Proposed)
+| 0003 | Three-Layer Memory System | Accepted | 2026-03-17 |
+| 0004 | Capability Tier Routing | Accepted | 2026-03-18 |
 
 ## Guidelines
 

@@ -5,9 +5,8 @@
 
 require_relative '../skill_manager'
 require_relative '../skill_installer'
+require_relative '../skill_detector'
 require_relative '../skill_adapter'
-require_relative '../skill_discovery'
-require_relative '../skill_registration'
 
 module Vibe
   # CLI commands for skill management, included in VibeCLI.
@@ -21,8 +20,6 @@ module Vibe
         run_skills_check(argv)
       when 'list'
         run_skills_list(argv)
-      when 'use'
-        run_skills_use(argv)
       when 'adapt'
         run_skills_adapt(argv)
       when 'skip'
@@ -31,10 +28,6 @@ module Vibe
         run_skills_docs(argv)
       when 'install'
         run_skills_install(argv)
-      when 'discover'
-        run_skills_discover(argv)
-      when 'register'
-        run_skills_register(argv)
       when nil, 'help', '--help', '-h'
         puts skills_usage
       else
@@ -55,7 +48,7 @@ module Vibe
         return
       end
 
-      changes = manager.check_skill_changes
+      changes = manager.detector.check_skill_changes
 
       if changes[:new_skills].empty? && changes[:new_packs].empty?
         puts "\n✓ No new skills found."
@@ -111,7 +104,9 @@ module Vibe
         skills[:not_adapted].first(10).each do |skill|
           puts "  • #{skill[:id]}"
         end
-        puts "    ... and #{skills[:not_adapted].length - 10} more" if skills[:not_adapted].length > 10
+        if skills[:not_adapted].length > 10
+          puts "    ... and #{skills[:not_adapted].length - 10} more"
+        end
         puts "   Run 'vibe skills check' to adapt these skills"
         puts
       end
@@ -243,118 +238,6 @@ module Vibe
       puts
     end
 
-    # vibe skills discover - Discover unregistered skills
-    def run_skills_discover(_argv)
-      puts '🔍 扫描技能目录...'
-      puts
-
-      discovery = SkillDiscovery.new(@repo_root)
-      registration = SkillRegistration.new(@repo_root)
-
-      # Show status
-      status = registration.status
-      puts "项目: #{@repo_root}"
-      puts "已发现技能: #{status[:total_discovered]}"
-      puts "已注册: #{status[:registered]}"
-      puts "未注册: #{status[:unregistered]}"
-      puts
-
-      # Discover unregistered skills
-      unregistered = discovery.unregistered_skills
-
-      if unregistered.empty?
-        puts '✅ 没有发现新的未注册技能'
-        puts
-        puts '所有已安装技能都已注册到路由配置中。'
-        return
-      end
-
-      puts "发现 #{unregistered.size} 个未注册技能:"
-      puts
-
-      unregistered.each_with_index do |skill, index|
-        puts "[#{index + 1}] #{skill[:display_name]}"
-        puts "    ID: #{skill[:id]}"
-        puts "    来源: #{skill[:namespace]}"
-        puts "    描述: #{skill[:description]}"
-        puts "    路径: #{skill[:path]}"
-
-        # Security audit
-        audit = discovery.security_audit(skill[:path])
-        if audit[:safe]
-          puts "    安全: ✅ 通过"
-        else
-          puts "    安全: ⚠️  风险 #{audit[:risk_level]}"
-          audit[:red_flags].first(3).each do |flag|
-            puts "      • #{flag}"
-          end
-        end
-        puts
-      end
-
-      puts '💡 使用 `vibe skills register` 注册这些技能'
-      puts
-    end
-
-    # vibe skills register - Register skills to project routing
-    def run_skills_register(argv)
-      options = parse_skills_register_options(argv)
-
-      registration = SkillRegistration.new(@repo_root)
-
-      if options[:interactive]
-        registration.interactive_register
-      elsif options[:auto]
-        puts '🤖 自动注册模式 (仅注册通过安全审查的技能)...'
-        puts
-
-        result = registration.register_new_skills(
-          auto_register: true,
-          interactive: false,
-          default_namespace: 'project'
-        )
-
-        puts "注册结果:"
-        puts "  发现: #{result[:discovered]}"
-        puts "  成功: #{result[:registered]}"
-        puts "  跳过: #{result[:skipped]}"
-        puts "  失败: #{result[:failed]}"
-        puts
-
-        if result[:skills].any? { |s| s[:status] == :failed }
-          puts '失败的技能:'
-          result[:skills].select { |s| s[:status] == :failed }.each do |s|
-            puts "  • #{s[:skill]}: #{s[:reason]}"
-          end
-          puts
-        end
-      else
-        # Default: show status and suggest interactive
-        status = registration.status
-
-        puts '📊 技能注册状态'
-        puts '=' * 40
-        puts
-        puts "配置文件: #{status[:project_file]}"
-        puts "  存在: #{status[:project_file_exists] ? '✅' : '❌'}"
-        puts
-        puts "技能统计:"
-        puts "  发现: #{status[:total_discovered]}"
-        puts "  注册: #{status[:registered]}"
-        puts "  未注册: #{status[:unregistered]}"
-        puts
-
-        if status[:unregistered] > 0
-          puts '💡 发现未注册技能!'
-          puts
-          puts '运行以下命令进行注册:'
-          puts '  vibe skills register --interactive  # 交互式注册'
-          puts '  vibe skills register --auto         # 自动注册 (安全技能)'
-          puts
-        end
-      end
-    end
-
     # vibe skills install <pack> - Install a skill pack
     def run_skills_install(argv)
       pack_name = argv.shift
@@ -389,13 +272,10 @@ module Vibe
         Subcommands:
           check              Check for new skills and adapt them
           list               List all skills and their status
-          use <id>           Directly use a skill (bypass AI routing)
           adapt <id>         Adapt a specific skill
           skip <id>          Skip a skill (mark as not applicable)
           docs <id>          Show skill documentation
           install <pack>     Install a skill pack
-          discover           Discover unregistered skills with security audit
-          register           Register skills to project routing
 
         Options for check:
           --auto-adapt       Automatically adapt all as suggest
@@ -406,10 +286,6 @@ module Vibe
           --auto-adapt       Auto-adapt skills after installation
           --dry-run          Preview installation without making changes
 
-        Options for register:
-          --interactive      Interactive registration wizard (default)
-          --auto             Auto-register safe skills only
-
         Examples:
           vibe skills check                    # Check for new skills
           vibe skills check --auto-adapt       # Auto-adapt all new skills
@@ -419,9 +295,6 @@ module Vibe
           vibe skills skip superpowers/optimize # Skip optimization skill
           vibe skills docs superpowers/tdd     # View TDD documentation
           vibe skills install superpowers      # Install superpowers pack
-          vibe skills discover                 # Discover unregistered skills
-          vibe skills register --interactive   # Interactive registration
-          vibe skills register --auto          # Auto-register safe skills
 
         See docs/design-skill-adaptation.md for detailed documentation.
       HELP
@@ -461,121 +334,6 @@ module Vibe
       end
 
       options
-    end
-
-    def parse_skills_register_options(argv)
-      options = { interactive: false, auto: false }
-
-      argv.each do |arg|
-        case arg
-        when '--interactive'
-          options[:interactive] = true
-        when '--auto'
-          options[:auto] = true
-        end
-      end
-
-      # Default to interactive if no option specified
-      options[:interactive] = true unless options[:auto]
-
-      options
-    end
-
-    # vibe skills use <skill-id> - Directly use a skill
-    def run_skills_use(argv)
-      if argv.empty?
-        puts 'Usage: vibe skills use <skill-id>'
-        puts
-        puts 'Examples:'
-        puts '  vibe skills use riper-workflow'
-        puts '  vibe skills use gstack/office-hours'
-        puts '  vibe skills use superpowers/tdd'
-        puts
-        puts 'This command loads and displays a skill for direct use,'
-        puts 'bypassing the AI routing recommendation.'
-        return 1
-      end
-
-      skill_id = argv.first
-
-      # Determine skill file path
-      skill_file = determine_skill_file(skill_id)
-
-      # Display skill information
-      puts "🎯 Loading skill: #{skill_id}"
-      puts "=" * 50
-      puts
-
-      if skill_file && File.exist?(skill_file)
-        # Read skill intent from file
-        intent = extract_skill_intent(skill_file)
-        puts "📋 #{intent || 'Development skill'}"
-        puts
-        puts "📄 Skill file: #{skill_file}"
-        puts
-        puts "=" * 50
-        puts
-        puts '💡 Next steps:'
-        puts "   1. Read the skill: read #{skill_file}"
-        puts '   2. Follow the steps defined in the skill'
-        puts '   3. Run any verification commands specified'
-      else
-        puts '⚠️  Skill file not found on disk.'
-        puts '   This may be an external skill or needs to be registered.'
-        puts
-        puts 'Try: vibe skills discover'
-      end
-
-      0
-    end
-
-    # Extract skill intent from SKILL.md file
-    def extract_skill_intent(skill_file)
-      return nil unless File.exist?(skill_file)
-
-      content = File.read(skill_file)
-
-      # Look for intent in frontmatter or first heading
-      if content =~ /^intent:\s*(.+)$/i
-        $1.strip
-      elsif content =~ /^#\s*(.+)$/m
-        $1.strip
-      else
-        nil
-      end
-    rescue StandardError
-      nil
-    end
-
-    # Determine the file path for a skill
-    def determine_skill_file(skill_id)
-      # Check builtin skills first
-      builtin_path = File.join(@repo_root, 'skills', skill_id, 'SKILL.md')
-      return builtin_path if File.exist?(builtin_path)
-
-      # Check project-local skills
-      project_path = File.join(Dir.pwd, 'skills', skill_id, 'SKILL.md')
-      return project_path if File.exist?(project_path)
-
-      # Check external skill packs
-      if skill_id.include?('/')
-        parts = skill_id.split('/')
-        pack = parts[0]
-        name = parts[1] || parts[0]
-
-        # Check common external skill locations
-        external_paths = [
-          File.expand_path("~/.config/skills/#{pack}/skills/#{name}/SKILL.md"),
-          File.expand_path("~/.config/skills/#{pack}/#{name}.md"),
-          File.expand_path("~/.claude/skills/#{pack}/skills/#{name}/SKILL.md")
-        ]
-
-        external_paths.each do |path|
-          return path if File.exist?(path)
-        end
-      end
-
-      nil
     end
 
     def time_ago(timestamp)
